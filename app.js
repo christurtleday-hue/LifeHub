@@ -8,6 +8,49 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const dOff = n => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+const TZ = 'Australia/Hobart';
+function hobartNowParts(d = new Date()) {
+  const f = new Intl.DateTimeFormat('en-AU', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  const o = {};
+  for (const p of f.formatToParts(d)) if (p.type !== 'literal') o[p.type] = p.value;
+  const hh = String(o.hour).padStart(2, '0'), mm = String(o.minute).padStart(2, '0');
+  return { iso: `${o.year}-${o.month}-${o.day}`, hh, mm };
+}
+function hobartToday() { return hobartNowParts().iso; }
+function addDays(iso, n) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + n));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+function wdIndex(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); }
+function onWeekday(want) { const t = hobartToday(); return addDays(t, (want - wdIndex(t) + 7) % 7); }
+function mondayOf(iso) { const w = wdIndex(iso); return addDays(iso, w === 0 ? -6 : 1 - w); }
+function fmtClock(hm) {
+  if (!hm) return '';
+  let [h, m] = hm.split(':').map(Number); if (Number.isNaN(h)) return hm;
+  const ap = h >= 12 ? 'pm' : 'am'; h = h % 12; if (h === 0) h = 12;
+  return `${h}:${String(m || 0).padStart(2, '0')}${ap}`;
+}
+function fmtDay(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+}
+function span(date, start, end) {
+  const endDate = end <= start ? addDays(date, 1) : date;
+  return { start: `${date}T${start}`, end: `${endDate}T${end}` };
+}
+function wallToMs(stamp) {
+  const [ds, ts] = String(stamp).split('T');
+  const [y, m, d] = ds.split('-').map(Number);
+  const [hh, mm] = (ts || '00:00').split(':').map(Number);
+  for (const off of [11, 10, 12]) {
+    const utc = Date.UTC(y, m - 1, d, hh - off, mm);
+    const p = hobartNowParts(new Date(utc));
+    if (p.iso === ds && Number(p.hh) === hh && Number(p.mm) === mm) return utc;
+  }
+  return Date.UTC(y, m - 1, d, hh - 11, mm);
+}
 const minsAgo = n => Date.now() - n * 60000;
 
 /* ---------- icons ---------- */
@@ -63,6 +106,7 @@ const P = {
   star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
   more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
   ext: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>',
+  cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
 };
 const ic = (n, s = 22, w = 2) => `<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
 
@@ -101,6 +145,7 @@ const REGIONS = {
 };
 const BANNERS = {
   emergency: { title: 'EMERGENCY', icon: 'alert', color: '#d61f1f', href: '#/emergency' },
+  calendar: { title: 'Calendar', icon: 'cal', color: '#1d4ed8', href: '#/calendar' },
   medical: { title: 'Medical', icon: 'cross', color: '#e0457b', href: '#/medical' },
   banking: { title: 'Banking', icon: 'bank', color: '#0f766e', href: '#/banking' },
   chat: { title: 'Chat', icon: 'msg', color: '#2557d6', href: '#/chat' },
@@ -155,15 +200,18 @@ function seed(name, regionCode, sample) {
     v: 1, created: Date.now(),
     profile: { name: name || 'Me', region: regionCode || 'AU', location: '' },
     auth: { method: null },
-    settings: { theme: 'system', textSize: 'normal', lockMinutes: 5, preferWifi: true, banners: Object.keys(BANNERS).map(id => ({ id, hidden: false })) },
-    medical: { bloodType: '', organDonor: false, allergies: [], conditions: [], medications: [], family: [], doctor: { name: '', clinic: '', phone: '' }, medicare: { number: '', irn: '', expiry: '' }, notes: '', showOnLock: true },
-    accounts: [], transactions: [], contacts: [], chats: [], platforms: [], notifications: [], posts: [], bills: [], apps: [], groups: [], reports: [],
+    settings: { theme: 'system', textSize: 'normal', lockMinutes: 5, preferWifi: true, banners: ['emergency', 'calendar', 'medical', 'banking', 'chat', 'contacts', 'social', 'utilities', 'addnew'].map(id => ({ id, hidden: false })) },
+    medical: { bloodType: '', organDonor: false, allergies: [], conditions: [], medications: [], appointments: [], family: [], doctor: { name: '', clinic: '', phone: '' }, medicare: { number: '', irn: '', expiry: '' }, notes: '', showOnLock: true },
+    accounts: [], transactions: [], contacts: [], chats: [], platforms: [], notifications: [], posts: [], bills: [], apps: [], groups: [], reports: [], scheduled: [], events: [], jobs: [],
+    cal: { dismissed: [], alerted: [], notices: [], skip: {}, linked: {}, fired: [] },
+    loc: { on: false, mode: '', until: null, ids: [] },
   };
   if (!sample) return st;
-  const c = (n, phone, extra = {}) => ({ id: uid(), name: n, phone, email: '', relation: '', ice: false, blocked: false, onLifeHub: true, notes: '', ...extra });
-  const sarah = c('Sarah Day', '0491 570 156', { relation: 'Partner', ice: true, email: 'sarah@example.com' });
-  const mum = c('Mum (Linda Day)', '0491 570 157', { relation: 'Mother', ice: true });
-  const jake = c('Jake Wilson', '0491 570 158', { relation: 'Friend' });
+  const c = (n, phone, extra = {}) => ({ id: uid(), name: n, phone, email: '', relation: '', ice: false, blocked: false, onLifeHub: true, notes: '', birthday: '', premium: false, ...extra });
+  const thu = onWeekday(4), tue = onWeekday(2), fri = onWeekday(5), tomorrow = addDays(hobartToday(), 1);
+  const sarah = c('Sarah Day', '0491 570 156', { relation: 'Partner', ice: true, email: 'sarah@example.com', premium: true, birthday: '1991-' + thu.slice(5) });
+  const mum = c('Mum (Linda Day)', '0491 570 157', { relation: 'Mother', ice: true, birthday: '1964-03-12' });
+  const jake = c('Jake Wilson', '0491 570 158', { relation: 'Friend', premium: true, birthday: '1990-06-15' });
   const emma = c('Emma Nguyen', '0491 570 159', { relation: 'Work' });
   const gp = c('Dr Anika Patel (GP)', '(03) 6000 0000', { relation: 'Doctor', onLifeHub: false });
   const tom = c('Tom Bennett', '0491 570 110', { relation: 'Neighbour', onLifeHub: false });
@@ -171,7 +219,8 @@ function seed(name, regionCode, sample) {
   st.medical = { bloodType: 'O+', organDonor: true,
     allergies: [{ id: uid(), name: 'Penicillin', severity: 'Severe', reaction: 'Hives, swelling' }, { id: uid(), name: 'Bee stings', severity: 'Moderate', reaction: 'Swelling' }],
     conditions: [{ id: uid(), name: 'Asthma (mild)', notes: 'Uses reliever when needed' }],
-    medications: [{ id: uid(), name: 'Ventolin (salbutamol)', dose: '100mcg, 2 puffs as needed' }],
+    medications: [{ id: uid(), name: 'Ventolin (salbutamol)', dose: '100mcg, 2 puffs as needed' }, { id: uid(), name: 'Vitamin D', dose: '1 tablet', time: '08:00' }],
+    appointments: [{ id: uid(), title: 'GP checkup', start: tue + 'T10:30', end: tue + 'T11:15', place: 'Launceston Medical Centre (sample)', notes: 'Bring Medicare card' }],
     family: [{ id: uid(), condition: 'Type 2 diabetes', relative: 'Father', status: 'Likely inherited' }, { id: uid(), condition: 'High cholesterol', relative: 'Mother', status: 'Confirmed inherited' }],
     doctor: { name: 'Dr Anika Patel', clinic: 'Launceston Medical Centre (sample)', phone: '(03) 6000 0000' },
     medicare: { number: '2123 45670 1', irn: '1', expiry: '2029-06' }, notes: '', showOnLock: true };
@@ -192,7 +241,7 @@ function seed(name, regionCode, sample) {
     { id: uid(), key: 'facebook', text: 'Sarah Day tagged you in 3 photos from Cataract Gorge', t: minsAgo(25) },
     { id: uid(), key: 'instagram', text: 'Jake Wilson: "Mate, check your DMs about Saturday"', t: minsAgo(70) },
     { id: uid(), key: 'linkedin', text: 'Priya Shah wants to connect (1 new request)', t: minsAgo(240) },
-    { id: uid(), key: 'facebook', text: 'Event reminder: Launceston Show is tomorrow', t: minsAgo(600) },
+    { id: uid(), key: 'facebook', text: 'Event reminder: Launceston Show is tomorrow', t: minsAgo(600), eventTitle: 'Launceston Show', eventStart: tomorrow + 'T10:00', eventEnd: tomorrow + 'T16:00' },
   ];
   const b = (provider, category, amount, due, type = 'owed', extra = {}) => ({ id: uid(), provider, category, amount, due, type, paid: false, reminder: true, remindDays: 3, ...extra });
   st.bills = [b('TasWater', 'Water', 182.75, dOff(-2)), b('Aurora Energy', 'Electricity', 286.4, dOff(4)), b('Launtel NBN', 'Internet', 89, dOff(9)), b('Telstra', 'Mobile', 65, dOff(12)), b('City of Launceston', 'Council rates', 420.5, dOff(26)), b('RACT Insurance', 'Insurance', 35.2, '', 'credit', { reminder: false })];
@@ -200,7 +249,16 @@ function seed(name, regionCode, sample) {
   const g2 = { id: uid(), name: 'Family', emoji: '🏡', onHome: true };
   st.groups = [g1, g2];
   st.apps = [{ id: uid(), name: 'Woolworths', url: 'https://www.woolworths.com.au/', emoji: '🥦', groupId: g1.id }, { id: uid(), name: 'Coles', url: 'https://www.coles.com.au/', emoji: '🍎', groupId: g1.id }, { id: uid(), name: 'eBay', url: 'https://www.ebay.com.au/', emoji: '🏷️', groupId: g1.id },
-    { id: uid(), name: 'School app', url: 'https://www.education.tas.gov.au/', emoji: '🎒', groupId: g2.id }, { id: uid(), name: 'Family calendar', url: 'https://calendar.google.com/', emoji: '📅', groupId: g2.id }, { id: uid(), name: 'Metro Tas', url: 'https://www.metrotas.com.au/', emoji: '🚌', groupId: '' }];
+    { id: uid(), name: 'School app', url: 'https://www.education.tas.gov.au/', emoji: '🎒', groupId: g2.id, nextOn: tomorrow, nextLabel: 'School pickup', nextStart: '15:00', nextEnd: '15:20' }, { id: uid(), name: 'Family calendar', url: 'https://calendar.google.com/', emoji: '📅', groupId: g2.id }, { id: uid(), name: 'Metro Tas', url: 'https://www.metrotas.com.au/', emoji: '🚌', groupId: '' }];
+  st.scheduled = [{ id: uid(), name: 'Rent', amount: 450, every: 'fortnight', next: fri }];
+  const job = { id: uid(), name: 'Day job', color: '#0f766e' };
+  st.jobs = [job];
+  const weekMon = mondayOf(hobartToday());
+  for (let i = 0; i < 5; i++) {
+    const d = addDays(weekMon, i);
+    const sp = span(d, '09:00', '17:00');
+    st.events.push({ id: uid(), title: 'Day job', start: sp.start, end: sp.end, allDay: false, source: 'shift', sourceLabel: 'Work', auto: false, hidden: false, color: job.color, jobId: job.id, loc: 'Launceston', notes: '', reminderMin: 60 });
+  }
   return st;
 }
 
@@ -270,7 +328,7 @@ function parseVCard(t) {
     else if (u.startsWith('END:VCARD')) { if (cur && (cur.name || cur.phone)) out.push(cur); cur = null; }
     else if (cur) { const i = ln.indexOf(':'); if (i < 0) continue; const k = ln.slice(0, i).toUpperCase(), v = ln.slice(i + 1).trim();
       if (k.startsWith('FN')) cur.name = v; else if (k.startsWith('N') && !k.startsWith('NOTE') && !k.startsWith('NICK') && !cur.name) cur.name = v.split(';').filter(Boolean).reverse().join(' ');
-      else if (k.includes('TEL') && !cur.phone) cur.phone = v; else if (k.includes('EMAIL') && !cur.email) cur.email = v; else if (k.startsWith('ORG')) cur.org = v.replace(/;/g, ' '); } }
+      else if (k.includes('TEL') && !cur.phone) cur.phone = v; else if (k.includes('EMAIL') && !cur.email) cur.email = v; else if (k.startsWith('BDAY')) { const m = v.match(/(\d{4})-?(\d{2})-?(\d{2})/); cur.birthday = m ? `${m[1]}-${m[2]}-${m[3]}` : ''; } else if (k.startsWith('ORG')) cur.org = v.replace(/;/g, ' '); } }
   return out;
 }
 const pick = (o, ...keys) => { for (const k of Object.keys(o)) { if (keys.some(x => k.includes(x)) && o[k]) return o[k]; } return ''; };
@@ -380,6 +438,7 @@ function bannerInfo(id) {
   const r = region();
   switch (id) {
     case 'emergency': return { sub: `Tap to call ${r.primary} · Medical ID` };
+    case 'calendar': { const today = hobartToday(); const n = (S.events || []).filter(e => !e.hidden && onDay(e, today)).length; const c = activePairs().length; return { sub: c ? `${c} overlap${c === 1 ? '' : 's'} · ${n} today` : n ? `${n} today` : 'Events, shifts and reminders', badge: c }; }
     case 'medical': return { sub: S.medical.bloodType ? `Blood ${S.medical.bloodType} · ${S.medical.allergies.length} allergies` : 'Add allergies, conditions, blood type' };
     case 'banking': return { sub: S.accounts.length ? `${money(S.accounts.reduce((a, x) => a + x.balance, 0))} net · ${S.accounts.length} accounts` : 'Link a bank or add an account' };
     case 'chat': { const u = S.chats.reduce((a, c) => a + (c.unread || 0), 0); return { sub: u ? `${u} unread message${u > 1 ? 's' : ''}` : 'Private messages & calls', badge: u }; }
@@ -397,13 +456,13 @@ function renderHome() {
     return `<a class="banner ${b.id === 'emergency' ? 'emergency' : ''}" href="${B.href}"><span class="chip" style="${b.id === 'emergency' ? '' : `background:${B.color}`}">${ic(B.icon, b.id === 'emergency' ? 30 : 26, 2.2)}</span><span class="txt"><b>${B.title}</b><span>${i.raw ? i.sub : esc(i.sub)}</span></span>${i.badge ? `<span class="badge">${i.badge}</span>` : ''}<span class="chev">${ic('chev')}</span></a>`; }).join('');
   const groups = S.groups.filter(g => g.onHome).map(g => `<a class="banner" href="#/group/${g.id}"><span class="chip" style="background:var(--card2);border:1px solid var(--line)">${esc(g.emoji || '📁')}</span><span class="txt"><b>${esc(g.name)}</b><span>${S.apps.filter(a => a.groupId === g.id).length} apps</span></span><span class="chev">${ic('chev')}</span></a>`).join('');
   return `<header class="home-head"><div class="hello"><small>${greet}</small><b>${esc(S.profile.name.split(' ')[0])}</b>${isPremium() ? ' ' + premBadge() : ''}</div><a class="iconbtn" href="#/search" aria-label="Search">${ic('search')}</a><a class="iconbtn" href="#/settings" aria-label="Settings">${ic('settings')}</a></header>
-  <nav class="banners" aria-label="Main sections">${html}${groups}</nav>${AdSlot('home-bottom')}`;
+  <nav class="banners" data-screen="home" aria-label="Main sections">${html}${groups}</nav>${AdSlot('home-bottom')}`;
 }
 
 /* ---------- search ---------- */
 let searchQ = '';
 function searchResults(q) {
-  q = q.trim().toLowerCase(); if (!q) return '<p class="empty">Search contacts, bills, apps, chats, medical info and emergency numbers.</p>';
+  q = q.trim().toLowerCase(); if (!q) return '<p class="empty">Search contacts, events, bills, apps, chats, medical info and emergency numbers.</p>';
   const R = [];
   Object.entries(BANNERS).forEach(([id, b]) => { if (b.title.toLowerCase().includes(q)) R.push([b.href, ic(b.icon), b.title, 'Section']); });
   region().services.forEach(s => { if ((s.name + s.num + s.desc).toLowerCase().includes(q)) R.push([telHref(s.num), ic('phone'), s.name, s.disp || s.num]); });
@@ -412,6 +471,8 @@ function searchResults(q) {
   S.apps.forEach(a => { if (a.name.toLowerCase().includes(q)) R.push([a.url, `<span style="font-size:1.3rem">${esc(a.emoji)}</span>`, a.name, 'App link']); });
   S.chats.forEach(c => { const ct = contactById(c.contactId); c.messages.forEach(m => { if (m.text.toLowerCase().includes(q)) R.push(['#/chat/' + c.id, ic('msg'), ct ? ct.name : 'Chat', m.text]); }); });
   ['allergies', 'conditions', 'medications'].forEach(k => S.medical[k].forEach(x => { if (x.name.toLowerCase().includes(q)) R.push(['#/medical', ic('cross'), x.name, k[0].toUpperCase() + k.slice(1)]); }));
+  (S.medical.appointments || []).forEach(a => { if ((a.title + (a.place || '')).toLowerCase().includes(q)) R.push(['#/calendar', ic('cross'), a.title, 'Appointment']); });
+  (S.events || []).forEach(e => { if (!e.hidden && (e.title + (e.loc || '') + (e.notes || '')).toLowerCase().includes(q)) R.push(['#/calendar', ic(SRC_ICON[e.source] || 'cal'), e.title, fmtWhen(e)]); });
   if (!R.length) return '<p class="empty">No results</p>';
   return `<div class="list">${R.slice(0, 40).map(([h, i, t, s]) => `<a class="li" href="${esc(h)}" ${/^https?:/.test(h) ? 'target="_blank" rel="noopener"' : ''}>${i}<span class="grow"><b>${esc(t)}</b><span>${esc(s)}</span></span></a>`).join('')}</div>`;
 }
@@ -451,7 +512,7 @@ function shareLocation() {
 const MED_SECTIONS = {
   allergies: { title: 'Allergies', fields: [{ k: 'name', label: 'Allergy', req: true, ph: 'e.g. Penicillin' }, { k: 'severity', label: 'Severity', type: 'select', options: ['Mild', 'Moderate', 'Severe', 'Anaphylaxis'] }, { k: 'reaction', label: 'Reaction', ph: 'e.g. hives' }], line: x => [x.name, `${x.severity || ''}${x.reaction ? ' · ' + x.reaction : ''}`], tag: x => /severe|anaph/i.test(x.severity) ? '<span class="tag red">' + esc(x.severity) + '</span>' : '' },
   conditions: { title: 'Medical conditions', fields: [{ k: 'name', label: 'Condition', req: true }, { k: 'notes', label: 'Notes' }], line: x => [x.name, x.notes] },
-  medications: { title: 'Medications', fields: [{ k: 'name', label: 'Medication', req: true }, { k: 'dose', label: 'Dose & frequency' }], line: x => [x.name, x.dose] },
+  medications: { title: 'Medications', fields: [{ k: 'name', label: 'Medication', req: true }, { k: 'dose', label: 'Dose & frequency' }, { k: 'time', label: 'Daily time (optional)', type: 'time' }], line: x => [x.name, [x.dose, x.time ? 'daily ' + fmtClock(x.time) : ''].filter(Boolean).join(' · ')] },
   family: { title: 'Family history', fields: [{ k: 'condition', label: 'Condition', req: true, ph: 'e.g. Heart disease' }, { k: 'relative', label: 'Relative', ph: 'e.g. Father' }, { k: 'status', label: 'Inheritance', type: 'select', options: ['Confirmed inherited', 'Likely inherited', 'Family history only'] }], line: x => [x.condition, x.relative], tag: x => `<span class="tag ${/Confirmed/.test(x.status) ? 'red' : /Likely/.test(x.status) ? 'amber' : ''}">${esc(x.status)}</span>` },
 };
 function medList(key) {
@@ -462,7 +523,7 @@ function renderMedical() {
   const m = S.medical;
   const body = `<div class="medhead"><button class="stat redbg" data-act="medBasics" style="text-align:left;border:0"><small>Blood type</small><b>${esc(m.bloodType || '—')}</b></button><button class="stat" data-act="medBasics" style="text-align:left"><small>Organ donor</small><b style="font-size:1.25rem">${m.organDonor ? '✅ Yes' : 'No'}</b></button></div>
   <a class="btn full" href="#/medical-id" style="margin-bottom:6px;color:var(--red)">${ic('cross', 18)} View Medical ID</a>
-  ${medList('allergies')}${medList('conditions')}${medList('medications')}${medList('family')}
+  ${medList('allergies')}${medList('conditions')}${apptSection()}${medList('medications')}${medList('family')}
   <div class="sec-h"><h2>Doctor & Medicare</h2><button class="btn sm" data-act="medBasics">${ic('edit', 16)} Edit</button></div>
   <div class="list"><div class="li">${ic('user')}<span class="grow"><b>${esc(m.doctor.name || 'No doctor added')}</b><span>${esc(m.doctor.clinic)}</span></span>${m.doctor.phone ? `<a class="callbtn sm" href="${telHref(m.doctor.phone)}" aria-label="Call doctor">${ic('phone', 20)}</a>` : ''}</div>
   <div class="li">${ic('card')}<span class="grow"><b>Medicare ${m.medicare.number ? esc(m.medicare.number) : 'not added'}</b><span>${m.medicare.number ? `IRN ${esc(m.medicare.irn)} · Exp ${esc(m.medicare.expiry)}` : 'Tap Edit to add'}</span></span></div></div>
@@ -511,7 +572,8 @@ function renderBanking() {
   <div class="actions"><button class="act" data-act="transfer">${ic('swap', 26)}Transfer</button><a class="act" href="#/banking/pay">${ic('nfc', 26)}Tap to pay</a><a class="act" href="#/banking/link">${ic('link', 26)}Link a bank</a></div>
   ${updatedLine()}<div class="sec-h"><h2>Recent transactions</h2><button class="btn sm" data-act="importTx">${ic('upload', 16)} Import CSV</button></div>
   <div class="list">${tx.length ? tx.map(t => { const a = acctById(t.accountId); return `<div class="li"><span class="av" style="background:var(--card2);color:var(--text);border:1px solid var(--line)">${t.amount > 0 ? '↓' : t.cat === 'App fee' ? '¢' : '↑'}</span><span class="grow"><b>${esc(t.desc)}</b><span>${fmtDate(t.date)} · ${esc(a ? a.name : 'Account')}${t.cat ? ' · ' + esc(t.cat) : ''}</span></span><span class="amt ${t.amount > 0 ? 'green' : ''}">${t.amount > 0 ? '+' : ''}${money(t.amount)}</span></div>`; }).join('') : '<p class="empty">No transactions</p>'}</div>
-  <p class="footnote">To go live in Australia, bank linking would use the Consumer Data Right (Open Banking) via an accredited data recipient, and payments via the New Payments Platform (PayTo / Osko).</p>`;
+  ${schedSection()}
+  <p class="footnote">To go live in Australia, bank linking would use the Consumer Data Right (Open Banking) via an accredited data recipient, and payments via the New Payments Platform (PayTo / Osko). Scheduled payments are a reminder on your calendar, not a real debit.</p>`;
   return screen({ title: 'Banking', body, right: `<button class="iconbtn" data-act="addAcct" aria-label="Add account">${ic('plus')}</button>` });
 }
 function addAccount(bank) {
@@ -662,17 +724,17 @@ function renderContacts() {
   <div id="clist">${contactRows(contactQ)}</div><p class="footnote">Import a vCard (.vcf) or CSV exported from Google Contacts, iCloud or Outlook.</p>`;
   return { html: screen({ title: 'Contacts', body }), after: () => { const i = $('#cq'); i.oninput = () => { contactQ = i.value; $('#clist').innerHTML = contactRows(contactQ); }; } };
 }
-const CONTACT_FIELDS = [{ k: 'name', label: 'Name', req: true }, { k: 'phone', label: 'Phone', type: 'tel', im: 'tel' }, { k: 'email', label: 'Email', type: 'email' }, { k: 'relation', label: 'Relationship', ph: 'e.g. Partner, Friend' }, { k: 'notes', label: 'Notes', type: 'textarea' }, { k: 'ice', label: 'Emergency contact (ICE)', type: 'checkbox' }, { k: 'onLifeHub', label: 'Uses LifeHub (in-app chat & calls)', type: 'checkbox' }];
+const CONTACT_FIELDS = [{ k: 'name', label: 'Name', req: true }, { k: 'phone', label: 'Phone', type: 'tel', im: 'tel' }, { k: 'email', label: 'Email', type: 'email' }, { k: 'relation', label: 'Relationship', ph: 'e.g. Partner, Friend' }, { k: 'birthday', label: 'Birthday', type: 'date' }, { k: 'notes', label: 'Notes', type: 'textarea' }, { k: 'ice', label: 'Emergency contact (ICE)', type: 'checkbox' }, { k: 'onLifeHub', label: 'Uses LifeHub (in-app chat & calls)', type: 'checkbox' }, { k: 'premium', label: 'LifeHub Premium (demo). Only Premium contacts can be picked for location sharing', type: 'checkbox' }];
 function editContact(id) {
   const c = id && contactById(id);
   formSheet({ title: c ? 'Edit contact' : 'New contact', fields: CONTACT_FIELDS, values: c || { onLifeHub: false }, onSave: v => { if (c) Object.assign(c, v); else S.contacts.push({ id: uid(), blocked: false, ...v }); toast('Saved'); },
-    danger: c ? { label: 'Delete contact', fn: () => { S.contacts = S.contacts.filter(x => x.id !== id); S.chats = S.chats.filter(t => t.contactId !== id); location.hash = '#/contacts'; } } : null });
+    danger: c ? { label: 'Delete contact', fn: () => { S.contacts = S.contacts.filter(x => x.id !== id); S.chats = S.chats.filter(t => t.contactId !== id); if (S.loc) { S.loc.ids = (S.loc.ids || []).filter(x => x !== id); if (!S.loc.ids.length) S.loc.on = false; } location.hash = '#/contacts'; } } : null });
 }
 function renderContact(id) {
   const c = contactById(id); if (!c) { location.hash = '#/contacts'; return ''; }
-  const body = `<div style="text-align:center;margin:8px 0 16px"><span class="av" style="margin:0 auto;font-size:2rem;width:96px;height:96px;background:${avColor(c.name)}">${esc(initials(c.name))}</span><h2 style="margin-top:10px;font-size:1.5rem">${esc(c.name)}</h2><p class="muted" style="margin:4px 0">${esc(c.relation || '')}${c.ice ? ' <span class="tag red">Emergency contact</span>' : ''}${c.blocked ? ' <span class="tag">Blocked</span>' : ''}</p></div>
+  const body = `<div style="text-align:center;margin:8px 0 16px"><span class="av" style="margin:0 auto;font-size:2rem;width:96px;height:96px;background:${avColor(c.name)}">${esc(initials(c.name))}</span><h2 style="margin-top:10px;font-size:1.5rem">${esc(c.name)}${c.premium ? ' ' + premBadge('Premium') : ''}</h2><p class="muted" style="margin:4px 0">${esc(c.relation || '')}${c.ice ? ' <span class="tag red">Emergency contact</span>' : ''}${c.blocked ? ' <span class="tag">Blocked</span>' : ''}</p></div>
   ${c.blocked ? '' : `<div class="actions"><a class="act" href="${telHref(c.phone)}">${ic('phone', 26)}Call</a><button class="act" data-act="msgContact" data-id="${c.id}">${ic('msg', 26)}Message</button>${c.onLifeHub ? `<a class="act" href="#/call/${c.id}/video">${ic('video', 26)}Video</a>` : `<a class="act" href="sms:${esc(c.phone.replace(/[^\d+]/g, ''))}">${ic('msg', 26)}SMS</a>`}</div>`}
-  <div class="list"><div class="li">${ic('phone')}<span class="grow"><b>${esc(c.phone || '—')}</b><span>Phone</span></span></div>${c.email ? `<a class="li" href="mailto:${esc(c.email)}">${ic('msg')}<span class="grow"><b>${esc(c.email)}</b><span>Email</span></span></a>` : ''}${c.notes ? `<div class="li">${ic('file')}<span class="grow"><b>Notes</b><span>${esc(c.notes)}</span></span></div>` : ''}</div>
+  <div class="list"><div class="li">${ic('phone')}<span class="grow"><b>${esc(c.phone || '—')}</b><span>Phone</span></span></div>${c.email ? `<a class="li" href="mailto:${esc(c.email)}">${ic('msg')}<span class="grow"><b>${esc(c.email)}</b><span>Email</span></span></a>` : ''}${c.birthday ? `<div class="li">${ic('star')}<span class="grow"><b>${esc(fmtDay(nextBday(c.birthday)))}</b><span>Birthday</span></span></div>` : ''}${c.notes ? `<div class="li">${ic('file')}<span class="grow"><b>Notes</b><span>${esc(c.notes)}</span></span></div>` : ''}</div>
   <div class="list"><button class="li" data-act="editContact" data-id="${c.id}">${ic('edit')}<span class="grow"><b>Edit contact</b></span></button><button class="li" data-act="toggleIce" data-id="${c.id}">${ic('alert')}<span class="grow"><b>${c.ice ? 'Remove from' : 'Add to'} emergency contacts</b></span></button>
   <button class="li" data-act="toggleBlock" data-id="${c.id}" style="color:var(--red)">${ic('block')}<span class="grow"><b>${c.blocked ? 'Unblock' : 'Block'} ${esc(c.name.split(' ')[0])}</b></span></button><button class="li" data-act="reportContact" data-id="${c.id}" style="color:var(--red)">${ic('flag')}<span class="grow"><b>Report</b></span></button></div>`;
   return screen({ title: 'Contact', back: '#/contacts', body });
@@ -693,7 +755,7 @@ async function importContacts() {
   addImported(rows);
 }
 function addImported(rows) {
-  let n = 0; rows.forEach(r => { if (!r || !(r.name || r.phone)) return; if (S.contacts.some(c => c.name === r.name && c.phone === r.phone)) return; S.contacts.push({ id: uid(), name: r.name || r.phone, phone: r.phone || '', email: r.email || '', relation: r.org || '', ice: false, blocked: false, onLifeHub: false, notes: '' }); n++; });
+  let n = 0; rows.forEach(r => { if (!r || !(r.name || r.phone)) return; if (S.contacts.some(c => c.name === r.name && c.phone === r.phone)) return; S.contacts.push({ id: uid(), name: r.name || r.phone, phone: r.phone || '', email: r.email || '', relation: r.org || '', ice: false, blocked: false, onLifeHub: false, notes: '', birthday: r.birthday || '', premium: false }); n++; });
   save(); render(); toast(`Imported ${n} contact${n === 1 ? '' : 's'}`);
 }
 async function pickContacts() {
@@ -744,7 +806,7 @@ function mountAds() {
 
 /* Premium perk: instant section preloading (sections are pre-rendered while idle). */
 const routeCache = new Map();
-const PRELOAD = ['/emergency', '/medical', '/banking', '/chat', '/contacts', '/social', '/utilities', '/addnew', '/settings'];
+const PRELOAD = ['/emergency', '/medical', '/banking', '/chat', '/contacts', '/social', '/utilities', '/addnew', '/calendar', '/location', '/settings'];
 function invalidateCache() { routeCache.clear(); }
 function preloadSections() {
   if (!isPremium() || !unlocked) return;
@@ -754,7 +816,7 @@ function preloadSections() {
 
 function renderPlan() {
   const p = S.plan, prem = isPremium();
-  const rows = [['All sections & imports', '✓', '✓'], ['Emergency & Medical ID', 'Always free', 'Always free'], ['Ads', '1 small ad on Home', 'No ads'],
+  const rows = [['All sections & imports', '✓', '✓'], ['Emergency & Medical ID', 'Always free', 'Always free'], ['Calendar, reminders & work schedule', '✓', '✓'], ['Share live location with contacts', '–', 'Only people you tick'], ['Ads', '1 small ad on Home', 'No ads'],
     ['Themes', 'Light, Dark, Auto', '+ Midnight & Tassie Forest'], ['Accent colours', 'Blue', '+ 5 premium accents'], ['Icon style', 'Standard', '+ Glass icons'],
     ['Photo & image quality', 'Standard (up to 1080px)', 'Full resolution, sharper'], ['Auto-refresh (feeds, balances, chat)', 'Manual, every 15 or 5 min', '+ every 1 min & Live'], ['Pull to refresh', '✓', '✓'],
     ['Animations', 'Smooth', 'Extra snappy'], ['Opening sections', 'Fast', 'Instant (preloaded)'], ['Priority features & early access', '–', '★']];
@@ -770,7 +832,7 @@ function renderPlan() {
     : `<button class="btn full danger" data-act="cancelSub">Cancel subscription</button>`}
   <button class="btn ghost full" style="margin-top:8px" data-act="restore">Restore purchase</button>
   ${prem ? '<button class="linkbtn" style="width:100%" data-act="endNow">Switch to Free now (demo/testing)</button>' : ''}
-  <p class="footnote">Free is never slowed down on purpose. Emergency numbers, location sharing and Medical ID are never behind a paywall and never show ads.</p>`;
+  <p class="footnote">Free is never slowed down on purpose. Emergency numbers, the Emergency screen location readout and Medical ID are never behind a paywall and never show ads. Sharing your live location with contacts is part of Premium.</p>`;
   return screen({ title: 'Your plan', back: '#/settings', body });
 }
 function upgrade() {
@@ -828,7 +890,7 @@ function refreshAll(manual) {
   S.lastRefresh = Date.now();
   if (Math.random() < 0.35 && S.platforms.length) { const [k, t] = DEMO_NEW[Math.floor(Math.random() * DEMO_NEW.length)]; const p = S.platforms.find(x => x.key === k); if (p) { S.notifications.push({ id: uid(), key: k, text: t, t: Date.now() }); p.dms += k === 'x' ? 0 : 1; } }
   save();
-  const h = location.hash; if (/^#\/(home|social|banking|chat|utilities)?$/.test(h) || h === '') { const y = scrollY; render(); scrollTo(0, y); }
+  const h = location.hash; if (/^#\/(home|social|banking|chat|utilities|calendar|location)?$/.test(h) || h === '') { const y = scrollY; render(); scrollTo(0, y); }
   if (manual) toast('Refreshed');
 }
 const updatedLine = () => { const t = S.lastRefresh; const v = refreshSetting(); const ago = !t ? 'not yet' : Date.now() - t < 60000 ? 'just now' : `${Math.round((Date.now() - t) / 60000)} min ago`;
@@ -931,7 +993,7 @@ async function importBills() {
 }
 function askNotify() { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {}); }
 function checkReminders() {
-  if (!S) return; const due = S.bills.filter(b => b.reminder && !b.paid && b.type !== 'credit' && b.due && daysUntil(b.due) <= (b.remindDays ?? 3));
+  if (!S) return; checkEventReminders(); const due = S.bills.filter(b => b.reminder && !b.paid && b.type !== 'credit' && b.due && daysUntil(b.due) <= (b.remindDays ?? 3));
   if (!due.length) return; const od = due.filter(b => daysUntil(b.due) < 0).length;
   const msg = `${due.length} bill${due.length > 1 ? 's' : ''} due soon${od ? ` (${od} overdue)` : ''}`;
   setTimeout(() => toast('🔔 ' + msg), 600);
@@ -959,7 +1021,7 @@ function renderGroup(id) {
 }
 function editApp(id, groupId) {
   const a = id && S.apps.find(x => x.id === id);
-  formSheet({ title: a ? 'Edit app' : 'Add app or link', fields: [{ k: 'name', label: 'Name', req: true }, { k: 'url', label: 'Web address or app link', req: true, ph: 'https://… or app-name://' }, { k: 'emoji', label: 'Icon (emoji)', ph: '🔗' }, { k: 'groupId', label: 'Group', type: 'select', options: [['', 'No group'], ...S.groups.map(g => [g.id, `${g.emoji || ''} ${g.name}`])] }],
+  formSheet({ title: a ? 'Edit app' : 'Add app or link', fields: [{ k: 'name', label: 'Name', req: true }, { k: 'url', label: 'Web address or app link', req: true, ph: 'https://… or app-name://' }, { k: 'emoji', label: 'Icon (emoji)', ph: '🔗' }, { k: 'groupId', label: 'Group', type: 'select', options: [['', 'No group'], ...S.groups.map(g => [g.id, `${g.emoji || ''} ${g.name}`])] }, { k: 'nextLabel', label: 'Calendar label (optional)', ph: 'e.g. School pickup' }, { k: 'nextOn', label: 'Next date', type: 'date' }, { k: 'nextStart', label: 'Starts', type: 'time' }, { k: 'nextEnd', label: 'Ends', type: 'time' }],
     values: a || { groupId: groupId || '' }, onSave: v => { if (!/^[a-z][\w+.-]*:/i.test(v.url)) v.url = 'https://' + v.url; v.emoji = v.emoji || '🔗'; if (a) Object.assign(a, v); else S.apps.push({ id: uid(), ...v }); toast('Saved'); },
     danger: a ? { label: 'Remove app', fn: () => S.apps = S.apps.filter(x => x.id !== id) } : null });
 }
@@ -975,7 +1037,8 @@ function renderSettings() {
   const s = S.settings; const bs = s.banners;
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${String(s[key]) === String(v) ? 'on' : ''}" data-act="setPref" data-k="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
   const body = `<div class="list"><button class="li" data-act="editProfile">${av(S.profile.name)}<span class="grow"><b>${esc(S.profile.name)}</b><span>${region().flag} ${region().name} · ${region().currency}</span></span>${ic('edit', 18)}</button>
-  <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>Plan: ${isPremium() ? 'Premium ' + premBadge(S.plan.status === 'cancelled' ? 'Ends soon' : 'Active') : 'Free'}</b><span>${isPremium() ? 'No ads · premium themes & icons' : `Go ad-free for ${money(PRICE, 'AUD')}/month`}</span></span>${ic('chev')}</a></div>
+  <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>Plan: ${isPremium() ? 'Premium ' + premBadge(S.plan.status === 'cancelled' ? 'Ends soon' : 'Active') : 'Free'}</b><span>${isPremium() ? 'No ads · location sharing · premium themes' : `Go ad-free for ${money(PRICE, 'AUD')}/month`}</span></span>${ic('chev')}</a>
+  <a class="li" href="#/location">${ic('pin')}<span class="grow"><b>Location ${isPremium() ? premBadge() : '<span class="tag">Premium</span>'}</b><span>${S.loc && S.loc.on ? 'Sharing is on' : 'Off until you pick people'}</span></span>${ic('chev')}</a></div>
   <div class="sec-h"><h2>Security</h2></div>
   <div class="list"><button class="li" data-act="changeLogin">${ic('lock')}<span class="grow"><b>Sign-in method</b><span>${METHODS[S.auth.method].label}</span></span>${ic('chev')}</button>
   <div class="li" style="display:block">${ic('clock')} <b>Auto-lock when idle</b><div style="margin-top:8px">${seg('lockMinutes', [[1, '1 min'], [5, '5 min'], [15, '15 min'], [0, 'Never']])}</div></div>
@@ -1001,7 +1064,7 @@ function renderSettings() {
   <button class="li" data-act="loadSample">${ic('grid')}<span class="grow"><b>Reload sample data</b><span>Replace current data with demo data</span></span></button>
   <button class="li" data-act="forgot" style="color:var(--red)">${ic('trash')}<span class="grow"><b>Delete all data</b><span>Erase everything from this device</span></span></button></div>
   <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>Everything you enter stays in this browser on this device. Nothing is uploaded, and there are no ads or trackers. Bank, social and chat connections are simulated in this prototype. Export a backup regularly: clearing browser data erases LifeHub.</div>
-  <p class="footnote">LifeHub prototype v1.0 · ${navigator.onLine ? 'Online' : 'Offline'} · Installable as an app from your browser menu ("Add to Home Screen").</p>`;
+  <p class="footnote">LifeHub prototype v1.2 · ${navigator.onLine ? 'Online' : 'Offline'} · Installable as an app from your browser menu ("Add to Home Screen"). Dates use Australia/Hobart time.</p>`;
   return screen({ title: 'Settings', body });
 }
 function editProfile() {
@@ -1025,10 +1088,692 @@ async function importData() {
   catch (e) { toast('That file is not a LifeHub backup'); }
 }
 
+/* ---------- calendar, work schedule, location ---------- */
+const SRC_ICON = { bill: 'zap', medical: 'cross', banking: 'bank', birthday: 'star', social: 'share', app: 'grid', shift: 'clock', manual: 'cal', import: 'download' };
+const REMIND = [['', 'No reminder'], ['0', 'At the time'], ['15', '15 minutes before'], ['30', '30 minutes before'], ['60', '1 hour before'], ['1440', '1 day before']];
+const JOB_COLORS = ['#1d4ed8', '#0f766e', '#d97706', '#7c3aed', '#be123c', '#0891b2'];
+const WDAYS = [['Mon', 1], ['Tue', 2], ['Wed', 3], ['Thu', 4], ['Fri', 5], ['Sat', 6], ['Sun', 0]];
+const DAYNAMES = { sun: 0, sunday: 0, mon: 1, monday: 1, tue: 2, tues: 2, tuesday: 2, wed: 3, weds: 3, wednesday: 3, thu: 4, thur: 4, thurs: 4, thursday: 4, fri: 5, friday: 5, sat: 6, saturday: 6 };
+const DEMO_PLACES = [
+  { label: 'Cataract Gorge', lat: -41.4462, lng: 147.1186 },
+  { label: 'UTAS Stadium', lat: -41.4258, lng: 147.1386 },
+  { label: 'Civic Square', lat: -41.4352, lng: 147.1374 },
+  { label: 'Kings Meadows', lat: -41.4694, lng: 147.1622 },
+  { label: 'Invermay', lat: -41.4185, lng: 147.1468 },
+];
+let calView = 'month';
+let calCursor = '';
+let work = null;
+let locMap = null;
+let leafletP = null;
+
+function fmtWhen(ev) {
+  const day = fmtDay(ev.start.slice(0, 10));
+  if (ev.allDay) return day + ' · all day';
+  const endExtra = ev.end.slice(0, 10) !== ev.start.slice(0, 10) ? ' +1' : '';
+  return `${day} · ${fmtClock(ev.start.slice(11, 16))}–${fmtClock(ev.end.slice(11, 16))}${endExtra}`;
+}
+function rangesOverlap(a, b) { return !!(a && b && a.start < b.end && b.start < a.end); }
+function onDay(ev, day) { const a = day + 'T00:00', b = addDays(day, 1) + 'T00:00'; return ev.start < b && ev.end > a; }
+function pairKey(a, b) { const ka = a.id + '@' + a.start, kb = b.id + '@' + b.start; return ka < kb ? ka + '|' + kb : kb + '|' + ka; }
+function findConflicts() {
+  const ev = (S.events || []).filter(e => !e.hidden);
+  const pairs = [];
+  for (let i = 0; i < ev.length; i++) for (let j = i + 1; j < ev.length; j++) if (rangesOverlap(ev[i], ev[j])) pairs.push([ev[i], ev[j]]);
+  return pairs;
+}
+function activePairs() {
+  const gone = new Set((S && S.cal && S.cal.dismissed) || []);
+  return findConflicts().filter(([a, b]) => !gone.has(pairKey(a, b)));
+}
+function plusMinutes(hm, mins) {
+  const [h, m] = hm.split(':').map(Number);
+  const t = Math.min(h * 60 + m + mins, 23 * 60 + 59);
+  return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+}
+function monthStep(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const next = new Date(Date.UTC(y, m, 1));
+  const dim = new Date(Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 0)).getUTCDate();
+  const dd = Math.min(d, dim);
+  return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+}
+function everyStep(iso, every) { if (every === 'weekly') return addDays(iso, 7); if (every === 'monthly') return monthStep(iso); return addDays(iso, 14); }
+function nextBday(iso) {
+  if (!iso) return '';
+  const bits = String(iso).split('-');
+  const m = String(bits.length === 3 ? bits[1] : bits[0]).padStart(2, '0');
+  const d = String(bits.length === 3 ? bits[2] : bits[1]).padStart(2, '0');
+  const today = hobartToday();
+  const clamp = yr => { const dim = new Date(Date.UTC(yr, Number(m), 0)).getUTCDate(); return `${yr}-${m}-${String(Math.min(Number(d), dim)).padStart(2, '0')}`; };
+  let y = Number(today.slice(0, 4));
+  let cand = clamp(y);
+  if (cand < today) cand = clamp(y + 1);
+  return cand;
+}
+function autoId(key) { return 'auto_' + String(key).replace(/[^a-zA-Z0-9_]/g, '_'); }
+function pushAuto(out, key, ev) {
+  if (S.cal.skip[key]) return;
+  out.push({ id: autoId(key), sourceKey: key, auto: true, hidden: false, allDay: false, loc: '', notes: '', color: '#1d4ed8', reminderMin: null, ...ev });
+}
+function socialTextEvent(n) {
+  const text = n.text || '';
+  const m = text.match(/event reminder:\s*(.+)$/i);
+  if (!m) return null;
+  const title = m[1].replace(/\s+is\s+(tomorrow|today)\s*$/i, '').trim() || 'Social event';
+  const today = hobartToday();
+  const day = /tomorrow/i.test(text) ? addDays(today, 1) : today;
+  return { title, start: day + 'T10:00', end: day + 'T16:00' };
+}
+function syncAutoEvents() {
+  const out = [];
+  const today = hobartToday();
+  (S.bills || []).forEach(b => {
+    if (!b.due || b.paid || b.type === 'credit') return;
+    pushAuto(out, 'bill_' + b.id, { title: 'Bill due: ' + b.provider, start: b.due + 'T00:00', end: addDays(b.due, 1) + 'T00:00', allDay: true, source: 'bill', sourceLabel: 'Utilities', color: '#d97706', reminderMin: (Number(b.remindDays) || 0) * 1440 });
+  });
+  (S.medical.appointments || []).forEach(a => {
+    if (!a.start || !a.end) return;
+    pushAuto(out, 'appt_' + a.id, { title: a.title || 'Appointment', start: a.start, end: a.end, loc: a.place || '', notes: a.notes || '', source: 'medical', sourceLabel: 'Medical', color: '#e0457b', reminderMin: 60 });
+  });
+  (S.medical.medications || []).forEach(med => {
+    if (!med.time) return;
+    for (let i = 0; i < 14; i++) {
+      const d = addDays(today, i);
+      const sp = span(d, med.time, plusMinutes(med.time, 15));
+      pushAuto(out, 'med_' + med.id + '_' + d, { title: 'Medication: ' + med.name, start: sp.start, end: sp.end, notes: med.dose || '', source: 'medical', sourceLabel: 'Medical', color: '#e0457b', reminderMin: 0 });
+    }
+  });
+  (S.scheduled || []).forEach(p => {
+    if (!p.next) return;
+    let d = p.next, guard = 0;
+    while (d < addDays(today, -1) && guard++ < 36) d = everyStep(d, p.every);
+    for (let i = 0; i < 6 && d <= addDays(today, 120); i++) {
+      pushAuto(out, 'pay_' + p.id + '_' + d, { title: `${p.name} · ${money(p.amount)}`, start: d + 'T00:00', end: addDays(d, 1) + 'T00:00', allDay: true, source: 'banking', sourceLabel: 'Banking', color: '#0f766e', reminderMin: 1440 });
+      d = everyStep(d, p.every);
+    }
+  });
+  (S.contacts || []).forEach(c => {
+    if (!c.birthday || c.blocked) return;
+    const when = nextBday(c.birthday);
+    if (!when) return;
+    const first = String(c.name || 'Contact').split(' ')[0];
+    pushAuto(out, 'bday_' + c.id + '_' + when.slice(0, 4), { title: first + "'s birthday", start: when + 'T00:00', end: addDays(when, 1) + 'T00:00', allDay: true, source: 'birthday', sourceLabel: 'Birthday', color: '#db2777', reminderMin: 1440 });
+  });
+  (S.notifications || []).forEach(n => {
+    let title = n.eventTitle, start = n.eventStart, end = n.eventEnd;
+    if (!start) { const parsed = socialTextEvent(n); if (!parsed) return; title = parsed.title; start = parsed.start; end = parsed.end; }
+    if (!end) end = start.slice(0, 10) + 'T23:59';
+    pushAuto(out, 'social_' + n.id, { title: title || n.text || 'Social event', start, end, source: 'social', sourceLabel: 'Social', color: '#db2777', reminderMin: 60 });
+  });
+  (S.apps || []).forEach(a => {
+    if (!a.nextOn) return;
+    const sp = span(a.nextOn, a.nextStart || '09:00', a.nextEnd || '10:00');
+    pushAuto(out, 'app_' + a.id, { title: a.nextLabel || a.name, start: sp.start, end: sp.end, source: 'app', sourceLabel: a.name || 'App', color: '#475569', reminderMin: 30 });
+  });
+  const prev = new Map((S.events || []).filter(e => e.auto).map(e => [e.id, e]));
+  out.forEach(e => { const old = prev.get(e.id); if (old) { e.hidden = !!old.hidden; if (old.reminderTouched) e.reminderMin = old.reminderMin; } });
+  S.events = (S.events || []).filter(e => !e.auto).concat(out);
+}
+function eventSig(list) { return (list || []).map(e => [e.id, e.title, e.start, e.end, e.hidden ? 1 : 0, e.auto ? 1 : 0, e.reminderMin ?? '', e.source || ''].join('\u001f')).sort().join('\n'); }
+function ensureBanners() {
+  if (!S.settings) S.settings = {};
+  if (!Array.isArray(S.settings.banners)) S.settings.banners = [];
+  let changed = false;
+  if (!S.settings.banners.some(b => b.id === 'calendar')) {
+    const i = S.settings.banners.findIndex(b => b.id === 'emergency');
+    S.settings.banners.splice(i < 0 ? 0 : i + 1, 0, { id: 'calendar', hidden: false });
+    changed = true;
+  }
+  const filtered = S.settings.banners.filter(b => BANNERS[b.id]);
+  if (filtered.length !== S.settings.banners.length) { S.settings.banners = filtered; changed = true; }
+  return changed;
+}
+function tidyLoc() {
+  if (!S.loc || typeof S.loc !== 'object') S.loc = { on: false, mode: '', until: null, ids: [] };
+  if (!Array.isArray(S.loc.ids)) S.loc.ids = [];
+  let changed = false;
+  const ok = new Set((S.contacts || []).filter(c => c.premium && !c.blocked).map(c => c.id));
+  const ids = S.loc.ids.filter(id => ok.has(id));
+  if (ids.length !== S.loc.ids.length) { S.loc.ids = ids; changed = true; }
+  if (S.loc.on && !S.loc.ids.length) { S.loc.on = false; changed = true; }
+  if (S.loc.on && S.loc.mode === '1h' && S.loc.until && Date.now() > S.loc.until) { S.loc.on = false; changed = true; }
+  return changed;
+}
+function ensureHub() {
+  if (!S.medical) return;
+  if (!Array.isArray(S.medical.appointments)) S.medical.appointments = [];
+  if (!Array.isArray(S.events)) S.events = [];
+  if (!Array.isArray(S.jobs)) S.jobs = [];
+  if (!Array.isArray(S.scheduled)) S.scheduled = [];
+  if (!S.cal || typeof S.cal !== 'object') S.cal = {};
+  ['dismissed', 'alerted', 'notices', 'fired'].forEach(k => { if (!Array.isArray(S.cal[k])) S.cal[k] = []; });
+  if (!S.cal.skip || typeof S.cal.skip !== 'object') S.cal.skip = {};
+  if (!S.cal.linked || typeof S.cal.linked !== 'object') S.cal.linked = {};
+  (S.contacts || []).forEach(c => { if (c.birthday == null) c.birthday = ''; if (typeof c.premium !== 'boolean') c.premium = false; });
+  (S.apps || []).forEach(a => { if (a.nextOn == null) a.nextOn = ''; });
+  const bannersChanged = ensureBanners();
+  const before = eventSig(S.events);
+  syncAutoEvents();
+  if (bannersChanged || eventSig(S.events) !== before || tidyLoc()) save();
+}
+function announceConflicts() {
+  if (!unlocked || !S || !S.cal) return;
+  let changed = false;
+  activePairs().forEach(([a, b]) => {
+    const k = pairKey(a, b);
+    if (S.cal.alerted.includes(k)) return;
+    S.cal.alerted.push(k);
+    S.cal.notices.unshift({ id: uid(), text: `${a.title} overlaps ${b.title}`, t: Date.now(), k });
+    changed = true;
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification('LifeHub: schedule overlap', { body: `${a.title} overlaps ${b.title}`, icon: 'icons/icon-192.png' }); } catch (e) {}
+  });
+  if (S.cal.notices.length > 30) S.cal.notices.length = 30;
+  if (changed) { save(); setTimeout(() => toast('Schedule overlap. Open Calendar to sort it out.'), 350); }
+}
+function checkEventReminders() {
+  if (!S || !S.events || !S.cal) return;
+  const now = Date.now();
+  let changed = false;
+  S.events.forEach(e => {
+    if (e.hidden || e.reminderMin == null || e.reminderMin === '') return;
+    const mins = Number(e.reminderMin);
+    if (Number.isNaN(mins)) return;
+    const startMs = wallToMs(e.start);
+    const fireAt = startMs - mins * 60000;
+    if (now < fireAt || now > startMs + 15 * 60000) return;
+    const key = e.id + '@' + e.start;
+    if (S.cal.fired.includes(key)) return;
+    S.cal.fired.push(key); changed = true;
+    setTimeout(() => toast('Reminder: ' + e.title), 400);
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification('LifeHub reminder', { body: e.title + '\n' + fmtWhen(e), icon: 'icons/icon-192.png' }); } catch (err) {}
+  });
+  if (S.cal.fired.length > 200) S.cal.fired.splice(0, S.cal.fired.length - 200);
+  if (changed) save();
+}
+function parseTimeToken(s) {
+  s = String(s || '').trim().toLowerCase().replace(/\./g, ':');
+  const m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+  if (!m) return null;
+  let h = +m[1], min = +(m[2] || 0);
+  if (min > 59 || h > 23) return null;
+  if (m[3] === 'pm' && h < 12) h += 12;
+  if (m[3] === 'am' && h === 12) h = 0;
+  if (h > 23) return null;
+  return String(h).padStart(2, '0') + ':' + String(min).padStart(2, '0');
+}
+function parseRoster(text, fromISO) {
+  const from = fromISO || hobartToday();
+  const out = [];
+  String(text || '').split(/\r?\n/).forEach(line => {
+    line = line.trim();
+    if (!line || /^(date|day)\b/i.test(line)) return;
+    const csv = line.split(',').map(s => s.trim());
+    if (/^\d{4}-\d{2}-\d{2}$/.test(csv[0]) && csv.length >= 3) {
+      const st = parseTimeToken(csv[1]), en = parseTimeToken(csv[2]);
+      if (st && en) out.push({ date: csv[0], start: st, end: en, title: csv[3] || 'Shift' });
+      return;
+    }
+    const m = line.match(/^([A-Za-z]+)\s+(\d{1,2}(?:[:.]\d{2})?\s*(?:am|pm)?)\s*(?:-|–|—|to)\s*(\d{1,2}(?:[:.]\d{2})?\s*(?:am|pm)?)(?:\s+(.+))?$/i);
+    if (!m) return;
+    const wd = DAYNAMES[m[1].toLowerCase()];
+    const st = parseTimeToken(m[2]), en = parseTimeToken(m[3]);
+    if (wd == null || !st || !en) return;
+    out.push({ date: addDays(from, (wd - wdIndex(from) + 7) % 7), start: st, end: en, title: (m[4] || 'Shift').trim() });
+  });
+  return out;
+}
+function parseICS(text) {
+  const out = [];
+  String(text || '').replace(/\r\n[ \t]/g, '').split(/BEGIN:VEVENT/i).slice(1).forEach(block => {
+    const lines = block.split(/END:VEVENT/i)[0].split(/\r?\n/);
+    const val = k => { const ln = lines.find(l => l.toUpperCase().startsWith(k)); if (!ln) return ''; const i = ln.indexOf(':'); return i < 0 ? '' : ln.slice(i + 1).trim().replace(/\\n/gi, ' ').replace(/\\,/g, ','); };
+    const ds = val('DTSTART'), de = val('DTEND');
+    const one = raw => {
+      const m = String(raw).match(/(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?/);
+      if (!m) return null;
+      const date = `${m[1]}-${m[2]}-${m[3]}`;
+      if (!m[4]) return { date, time: '00:00', allDay: true };
+      if (/Z$/i.test(raw)) { const p = hobartNowParts(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]))); return { date: p.iso, time: p.hh + ':' + p.mm, allDay: false }; }
+      return { date, time: m[4] + ':' + m[5], allDay: false };
+    };
+    const a = one(ds); if (!a) return;
+    const b = de ? one(de) : null;
+    let start, end, allDay;
+    if (a.allDay) { allDay = true; start = a.date + 'T00:00'; end = (b && b.allDay ? b.date : addDays(a.date, 1)) + 'T00:00'; if (end <= start) end = addDays(a.date, 1) + 'T00:00'; }
+    else { allDay = false; start = a.date + 'T' + a.time; end = b && !b.allDay ? b.date + 'T' + b.time : span(a.date, a.time, plusMinutes(a.time, 60)).end; if (end <= start) end = addDays(a.date, 1) + 'T' + (b && b.time ? b.time : a.time); }
+    out.push({ title: val('SUMMARY') || 'Imported event', start, end, allDay, loc: val('LOCATION') });
+  });
+  return out;
+}
+function cursor() { if (!calCursor) calCursor = hobartToday(); return calCursor; }
+function eventRow(e) {
+  return `<button class="li" data-act="openEvent" data-id="${e.id}"><span class="evdot" style="background:${esc(e.color || '#1d4ed8')}"></span><span class="grow"><b>${esc(e.title)}</b><span>${esc(fmtWhen(e))}${e.loc ? ' · ' + esc(e.loc) : ''}</span></span><span class="tag">${ic(SRC_ICON[e.source] || 'cal', 14)} ${esc(e.sourceLabel || 'Event')}</span></button>`;
+}
+function dayEvents(day) { return S.events.filter(e => !e.hidden && onDay(e, day)).sort((a, b) => a.start.localeCompare(b.start)); }
+function clashBlock(pairs) {
+  if (!pairs.length) return '';
+  const victim = (a, b) => (a.auto ? 2 : a.source === 'shift' ? 0 : 1) <= (b.auto ? 2 : b.source === 'shift' ? 0 : 1) ? a : b;
+  return `<section class="clash" id="clashes" data-role="clash"><h3>${ic('alert', 18)} ${pairs.length} overlap${pairs.length === 1 ? '' : 's'}</h3>
+    ${pairs.slice(0, 8).map(([a, b]) => { const del = victim(a, b); return `<div class="clash-row"><b>${esc(a.title)}</b> overlaps <b>${esc(b.title)}</b><div class="small">${esc(fmtWhen(a))}</div>
+      <div class="row gap wrap" style="margin-top:8px"><button class="btn sm" data-act="keepPair" data-a="${a.id}" data-b="${b.id}">Keep both</button><button class="btn sm" data-act="movePair" data-a="${a.id}" data-b="${b.id}">Move</button><button class="btn sm danger" data-act="deleteEv" data-id="${del.id}">${del.auto ? 'Hide' : 'Delete'} ${esc(del.title)}</button></div></div>`; }).join('')}
+    ${pairs.length > 8 ? `<p class="small">And ${pairs.length - 8} more. Resolve these and the rest will show.</p>` : ''}
+    <button class="btn sm" data-act="askClashNotify" style="margin-top:8px">${ic('bell', 16)} Notify me about overlaps</button></section>`;
+}
+function noticesBlock() {
+  const notes = (S.cal.notices || []).slice(0, 5);
+  if (!notes.length) return '';
+  return `<div class="sec-h"><h2>Notifications</h2></div><div class="list">${notes.map(n => `<div class="li">${ic('bell')}<span class="grow"><b>${esc(n.text)}</b><span>${fmtTime(n.t)}</span></span><button class="iconbtn" style="box-shadow:none;width:36px;height:36px" data-act="dismissNotice" data-id="${n.id}" aria-label="Dismiss notification">${ic('x', 16)}</button></div>`).join('')}</div>`;
+}
+function monthCells(iso) {
+  const [y, m] = iso.split('-').map(Number);
+  const first = `${y}-${String(m).padStart(2, '0')}-01`;
+  const lead = (wdIndex(first) + 6) % 7;
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push('');
+  for (let d = 1; d <= days; d++) cells.push(`${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+  while (cells.length % 7) cells.push('');
+  return cells;
+}
+function monthLabel(iso) { const [y, m] = iso.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-AU', { month: 'long', year: 'numeric', timeZone: 'UTC' }); }
+function navRow(label, mode) {
+  const prev = mode === 'month' ? 'data-m="-1"' : 'data-d="-7"';
+  const next = mode === 'month' ? 'data-m="1"' : 'data-d="7"';
+  return `<div class="cal-nav"><button class="iconbtn" data-act="calNav" ${prev} aria-label="Previous">${ic('back')}</button><b>${esc(label)}</b><button class="iconbtn" data-act="calNav" data-today="1" aria-label="Today">${ic('cal', 18)}</button><button class="iconbtn" data-act="calNav" ${next} aria-label="Next">${ic('chev')}</button></div>`;
+}
+function monthView(day) {
+  const cells = monthCells(day);
+  const today = hobartToday();
+  const grid = cells.map(d => {
+    if (!d) return '<span class="cal-day" style="visibility:hidden"></span>';
+    const ev = dayEvents(d).slice(0, 3);
+    return `<button class="cal-day ${d === today ? 'today' : ''} ${d === day ? 'on' : ''}" data-act="calDay" data-d="${d}" aria-current="${d === today ? 'date' : 'false'}" aria-label="${esc(fmtDay(d))}"><span class="n">${Number(d.slice(8))}</span><span class="dots">${ev.map(e => `<i class="dot" style="background:${esc(e.color || '#1d4ed8')}"></i>`).join('')}</span></button>`;
+  }).join('');
+  const list = dayEvents(day);
+  return `${navRow(monthLabel(day), 'month')}<div class="cal-grid cal-dow">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => `<span>${d}</span>`).join('')}</div><div class="cal-grid">${grid}</div>
+    <div class="sec-h"><h2>${esc(fmtDay(day))}${day === today ? ' · today' : ''}</h2></div><div class="list">${list.length ? list.map(eventRow).join('') : '<p class="empty">Nothing on this day</p>'}</div>`;
+}
+function weekView(day) {
+  const start = mondayOf(day);
+  const today = hobartToday();
+  const rows = WDAYS.map(([name, i], idx) => {
+    const d = addDays(start, idx);
+    const list = dayEvents(d);
+    return `<div class="sec-h"><h2>${name} ${Number(d.slice(8))}${d === today ? ' · today' : ''}</h2></div><div class="list">${list.length ? list.map(eventRow).join('') : '<p class="empty">Nothing scheduled</p>'}</div>`;
+  }).join('');
+  return navRow('Week of ' + fmtDay(start), 'week') + rows;
+}
+function agendaView(day) {
+  const end = addDays(day, 45);
+  const items = S.events.filter(e => !e.hidden && e.end > day + 'T00:00' && e.start < end + 'T00:00').sort((a, b) => a.start.localeCompare(b.start));
+  if (!items.length) return '<p class="empty">Nothing coming up. Add an event or set up your work schedule.</p>';
+  let html = '', last = '';
+  items.forEach(e => {
+    const d = e.start.slice(0, 10);
+    if (d !== last) { if (last) html += '</div>'; html += `<div class="sec-h"><h2>${esc(fmtDay(d))}${d === hobartToday() ? ' · today' : ''}</h2></div><div class="list">`; last = d; }
+    html += eventRow(e);
+  });
+  return html + '</div>';
+}
+function importBlock() {
+  const linked = S.cal.linked || {};
+  return `<div class="row gap wrap" style="margin:4px 0 12px"><a class="btn" href="#/calendar/work">${ic('clock', 18)} Work schedule</a><a class="btn" href="#/location">${ic('pin', 18)} Location</a><button class="btn" data-act="importIcs">${ic('upload', 16)} Import .ics</button></div>
+    <div class="sec-h"><h2>Link a calendar</h2></div><div class="list">${['Google', 'Outlook', 'Apple'].map(n => `<button class="li" data-act="linkCal" data-name="${n}">${ic('link')}<span class="grow"><b>${n} Calendar</b><span>${linked[n] ? 'Demo events added on this device' : 'Demo only. Nothing is read from ' + n}</span></span><span class="tag">${linked[n] ? 'Demo on' : 'Demo'}</span></button>`).join('')}</div>
+    <p class="footnote">Bills, appointments, medication times, scheduled payments, birthdays, social events and dated apps appear here automatically. Hide one, or turn it into a normal event.</p>`;
+}
+function renderCalendar() {
+  const day = cursor();
+  const pairs = activePairs();
+  const btn = (v, label) => `<button type="button" class="${calView === v ? 'on' : ''}" data-act="calView" data-v="${v}">${label}</button>`;
+  const hidden = S.events.filter(e => e.hidden);
+  const body = `<div data-screen="calendar"><div class="seg" style="margin-bottom:12px" role="tablist" aria-label="Calendar view">${btn('month', 'Month')}${btn('week', 'Week')}${btn('agenda', 'Agenda')}</div>
+    ${clashBlock(pairs)}${noticesBlock()}${calView === 'month' ? monthView(day) : calView === 'week' ? weekView(day) : agendaView(day)}
+    ${importBlock()}${hidden.length ? `<div class="sec-h"><h2>Hidden</h2></div><div class="list">${hidden.map(e => `<div class="li"><span class="grow"><b>${esc(e.title)}</b><span>${esc(e.sourceLabel || '')}</span></span><button class="btn sm" data-act="showAuto" data-id="${e.id}">Show</button></div>`).join('')}</div>` : ''}</div>`;
+  return screen({ title: 'Calendar', body, right: `<button class="iconbtn" data-act="addEvent" aria-label="Add event">${ic('plus')}</button>` });
+}
+function calNav(el) {
+  const day = cursor();
+  if (el.dataset.today) calCursor = hobartToday();
+  else if (el.dataset.m) {
+    const [y, m, d] = day.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1 + Number(el.dataset.m), 1));
+    const dim = new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + 1, 0)).getUTCDate();
+    calCursor = `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(Math.min(d, dim)).padStart(2, '0')}`;
+  } else if (el.dataset.d) calCursor = addDays(day, Number(el.dataset.d));
+  render();
+}
+function commitEvent(ev) {
+  const i = S.events.findIndex(x => x.id === ev.id);
+  if (i >= 0) S.events[i] = ev; else S.events.push(ev);
+  if (ev.reminderMin != null) askNotify();
+  save(); announceConflicts(); render(); toast('Saved');
+}
+function deleteEv(id) {
+  const e = S.events.find(x => x.id === id); if (!e) return;
+  if (e.auto) { e.hidden = true; toast('Hidden from the calendar'); } else { S.events = S.events.filter(x => x.id !== id); toast('Deleted'); }
+  save(); render();
+}
+function keepPair(aId, bId) {
+  const a = S.events.find(x => x.id === aId), b = S.events.find(x => x.id === bId); if (!a || !b) return;
+  const k = pairKey(a, b); if (!S.cal.dismissed.includes(k)) S.cal.dismissed.push(k);
+  save(); render(); toast('Kept both');
+}
+function movePair(aId, bId) {
+  const a = S.events.find(x => x.id === aId), b = S.events.find(x => x.id === bId);
+  const manual = [a, b].find(e => e && !e.auto);
+  if (manual) editManual(manual); else toast('Edit that item in Medical, Utilities, Banking or Contacts, or hide one of them.');
+}
+function convertAuto(id) {
+  const e = S.events.find(x => x.id === id); if (!e) return;
+  if (e.sourceKey) S.cal.skip[e.sourceKey] = true;
+  S.events.push({ ...e, id: uid(), auto: false, source: 'manual', sourceLabel: 'Calendar', converted: true, hidden: false });
+  syncAutoEvents(); save(); render(); toast('Kept as a normal event');
+}
+function openEvent(id) { const e = S.events.find(x => x.id === id); if (!e) return; if (e.auto) autoSheet(e); else editManual(e); }
+function autoSheet(e) {
+  openSheet(`<h2>${esc(e.title)}</h2><p class="muted">${esc(fmtWhen(e))}</p><p class="small">From ${esc(e.sourceLabel || 'LifeHub')}. This stays in step when that information changes.</p>
+    <label class="fld"><span>Reminder</span><select id="rem">${REMIND.map(([v, l]) => `<option value="${v}" ${String(e.reminderMin ?? '') === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+    <button class="btn primary full" id="remSave">Save reminder</button>
+    <button class="btn full" id="toManual" style="margin-top:8px">Make this a normal event</button>
+    <button class="btn ghost danger full" id="hideEv" style="margin-top:8px">Hide</button>`, el => {
+    $('#remSave', el).onclick = () => { const v = $('#rem', el).value; e.reminderMin = v === '' ? null : Number(v); e.reminderTouched = true; if (e.reminderMin != null) askNotify(); save(); closeSheet(true); render(); toast('Reminder saved'); };
+    $('#toManual', el).onclick = () => { closeSheet(true); convertAuto(e.id); };
+    $('#hideEv', el).onclick = () => { closeSheet(true); e.hidden = true; save(); render(); toast('Hidden'); };
+  });
+}
+function editManual(existing, draft) {
+  const base = draft || existing || {};
+  const date = base.date || (base.start ? base.start.slice(0, 10) : cursor());
+  const startTime = base.startTime || (base.start && String(base.start).length > 11 ? base.start.slice(11, 16) : '09:00');
+  const endTime = base.endTime || (base.end && String(base.end).length > 11 ? base.end.slice(11, 16) : '10:00');
+  const allDay = !!base.allDay;
+  const reminder = base.reminderMin == null || base.reminderMin === '' ? (existing ? '' : '30') : String(base.reminderMin);
+  openSheet(`<h2>${existing ? 'Edit event' : 'New event'}</h2><form id="evForm">
+    <label class="fld"><span>Title</span><input name="title" required value="${esc(base.title || '')}" placeholder="e.g. Dentist"></label>
+    <label class="fld"><span>Date</span><input name="date" type="date" required value="${esc(date)}"></label>
+    <label class="fld chk"><input name="allDay" type="checkbox" ${allDay ? 'checked' : ''}><span>All day</span></label>
+    <div class="row gap"><label class="fld" style="flex:1"><span>Start</span><input name="startTime" type="time" value="${esc(startTime)}"></label><label class="fld" style="flex:1"><span>End</span><input name="endTime" type="time" value="${esc(endTime)}"></label></div>
+    <label class="fld"><span>Place</span><input name="loc" value="${esc(base.loc || '')}" placeholder="Optional"></label>
+    <label class="fld"><span>Notes</span><textarea name="notes">${esc(base.notes || '')}</textarea></label>
+    <label class="fld"><span>Reminder</span><select name="reminderMin">${REMIND.map(([v, l]) => `<option value="${v}" ${reminder === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+    <div class="row gap"><button type="button" class="btn" data-close>Cancel</button><button class="btn primary" type="submit">Save</button></div>
+    ${existing ? '<button type="button" class="btn ghost danger full" id="evDel" style="margin-top:8px">Delete</button>' : ''}</form>`, el => {
+    const form = $('#evForm', el);
+    const syncDis = () => { form.startTime.disabled = form.allDay.checked; form.endTime.disabled = form.allDay.checked; };
+    form.allDay.onchange = syncDis; syncDis();
+    form.onsubmit = e => {
+      e.preventDefault();
+      const title = form.title.value.trim(); if (!title) return toast('Add a title');
+      const day = form.date.value; if (!day) return toast('Choose a date');
+      const isAll = form.allDay.checked;
+      let start, end;
+      if (isAll) { start = day + 'T00:00'; end = addDays(day, 1) + 'T00:00'; }
+      else { if (!form.startTime.value || !form.endTime.value) return toast('Add a start and end'); const sp = span(day, form.startTime.value, form.endTime.value); start = sp.start; end = sp.end; }
+      const ev = { id: existing ? existing.id : uid(), title, start, end, allDay: isAll, loc: form.loc.value.trim(), notes: form.notes.value.trim(), reminderMin: form.reminderMin.value === '' ? null : Number(form.reminderMin.value), source: existing && existing.source === 'shift' ? 'shift' : 'manual', sourceLabel: existing && existing.source === 'shift' ? 'Work' : 'Calendar', auto: false, hidden: false, color: (existing && existing.color) || '#1d4ed8', jobId: (existing && existing.jobId) || '' };
+      const back = { title, date: day, startTime: form.startTime.value, endTime: form.endTime.value, allDay: isAll, loc: ev.loc, notes: ev.notes, reminderMin: ev.reminderMin };
+      const hits = S.events.filter(o => o.id !== ev.id && !o.hidden && rangesOverlap(ev, o));
+      if (!hits.length) { closeSheet(true); commitEvent(ev); return; }
+      openSheet(`<h2>These overlap</h2><p><b>${esc(ev.title)}</b> overlaps something already on your calendar.</p><div class="list">${hits.slice(0, 6).map(h => `<div class="li"><span class="grow"><b>${esc(h.title)}</b><span>${esc(fmtWhen(h))}</span></span></div>`).join('')}</div>
+        <button class="btn primary full" id="keepBoth">Keep both</button><button class="btn full" id="changeTime" style="margin-top:8px">Change the time</button><button class="btn ghost full" id="dropEv" style="margin-top:8px">Don't save</button>`, el2 => {
+        $('#keepBoth', el2).onclick = () => { closeSheet(true); commitEvent(ev); };
+        $('#changeTime', el2).onclick = () => { closeSheet(true); editManual(existing, back); };
+        $('#dropEv', el2).onclick = () => closeSheet();
+      });
+    };
+    const del = $('#evDel', el); if (del) del.onclick = () => { closeSheet(true); deleteEv(existing.id); };
+  });
+}
+async function importIcs() {
+  const f = await pickFile('.ics,text/calendar'); if (!f) return;
+  const evs = parseICS(await readText(f));
+  if (!evs.length) return toast('No events found in that file');
+  evs.forEach(e => S.events.push({ ...e, id: uid(), source: 'import', sourceLabel: 'Imported', auto: false, hidden: false, color: '#475569', reminderMin: 30, notes: '', loc: e.loc || '' }));
+  save(); announceConflicts(); render(); toast(`Imported ${evs.length} event${evs.length === 1 ? '' : 's'}`);
+}
+function linkExternal(name) {
+  if (!S.cal.linked) S.cal.linked = {};
+  if (S.cal.linked[name]) return toast(name + ' is already linked (demo)');
+  S.cal.linked[name] = true;
+  const day = addDays(hobartToday(), 3);
+  S.events.push({ id: uid(), title: name + ' sample: Team catch-up', start: day + 'T14:00', end: day + 'T14:45', allDay: false, source: 'import', sourceLabel: name, auto: false, hidden: false, color: '#64748b', reminderMin: 15, loc: '', notes: 'Demo event. Nothing was read from ' + name + '.' });
+  save(); announceConflicts(); render(); toast(name + ' linked (demo)');
+}
+function apptSection() {
+  const arr = S.medical.appointments || [];
+  return `<div class="sec-h"><h2>Appointments</h2><button class="btn sm" data-act="addAppt">${ic('plus', 16)} Add</button></div><div class="list">${arr.length ? arr.map(a => `<button class="li" data-act="editAppt" data-id="${a.id}"><span class="grow"><b>${esc(a.title)}</b><span>${esc(fmtWhen(a))}${a.place ? ' · ' + esc(a.place) : ''}</span></span>${ic('edit', 18)}</button>`).join('') : '<p class="empty">No appointments yet. Add one and it shows on your calendar.</p>'}</div>`;
+}
+function editAppt(id) {
+  const a = id && (S.medical.appointments || []).find(x => x.id === id);
+  const date = a ? a.start.slice(0, 10) : hobartToday();
+  const start = a ? a.start.slice(11, 16) : '10:00';
+  const end = a ? a.end.slice(11, 16) : '10:30';
+  formSheet({ title: a ? 'Edit appointment' : 'Add appointment', fields: [{ k: 'title', label: 'Appointment', req: true, ph: 'e.g. GP checkup' }, { k: 'date', label: 'Date', type: 'date', req: true }, { k: 'start', label: 'Start', type: 'time', req: true }, { k: 'end', label: 'End', type: 'time', req: true }, { k: 'place', label: 'Place' }, { k: 'notes', label: 'Notes', type: 'textarea' }],
+    values: { title: a ? a.title : '', date, start, end, place: a ? a.place || '' : '', notes: a ? a.notes || '' : '' },
+    onSave: v => { if (!v.date || !v.start || !v.end) { toast('Add a date and times'); return false; } const sp = span(v.date, v.start, v.end); const row = { title: v.title, start: sp.start, end: sp.end, place: v.place, notes: v.notes }; if (a) Object.assign(a, row); else S.medical.appointments.push({ id: uid(), ...row }); toast('Appointment saved'); },
+    danger: a ? { label: 'Delete appointment', fn: () => { S.medical.appointments = S.medical.appointments.filter(x => x.id !== id); } } : null });
+}
+function schedSection() {
+  const rows = (S.scheduled || []).map(p => `<button class="li" data-act="editSched" data-id="${p.id}"><span class="grow"><b>${esc(p.name)}</b><span>${esc(p.every)} · next ${esc(fmtDay(p.next))}</span></span><span class="amt">${money(p.amount)}</span></button>`).join('');
+  return `<div class="sec-h"><h2>Scheduled payments</h2><button class="btn sm" data-act="addSched">${ic('plus', 16)} Add</button></div><div class="list">${rows || '<p class="empty">Add rent, a loan or a transfer and it appears on your calendar. This does not move any money.</p>'}</div>`;
+}
+function editSched(id) {
+  const p = id && (S.scheduled || []).find(x => x.id === id);
+  formSheet({ title: p ? 'Edit scheduled payment' : 'Scheduled payment', intro: 'Demo reminder only. No money leaves your account.', fields: [{ k: 'name', label: 'What is it?', req: true, ph: 'e.g. Rent' }, { k: 'amount', label: 'Amount', type: 'number', step: '0.01', req: true, im: 'decimal' }, { k: 'every', label: 'Repeats', type: 'select', options: [['weekly', 'Every week'], ['fortnight', 'Every fortnight'], ['monthly', 'Every month']] }, { k: 'next', label: 'Next date', type: 'date', req: true }],
+    values: p || { every: 'fortnight', next: hobartToday() },
+    onSave: v => { if (!(v.amount > 0) || !v.next) { toast('Add an amount and a date'); return false; } v.amount = Math.abs(v.amount); if (p) Object.assign(p, v); else S.scheduled.push({ id: uid(), ...v }); toast('Saved to your calendar'); },
+    danger: p ? { label: 'Delete schedule', fn: () => { S.scheduled = S.scheduled.filter(x => x.id !== id); } } : null });
+}
+
+/* work schedule wizard */
+function workState() {
+  if (!work) work = { step: 'menu', jobId: '', mode: '95', until: addDays(hobartToday(), 27), days: [1, 2, 3, 4, 5], start: '09:00', end: '17:00', date: hobartToday(), text: '' };
+  if (!work.until) work.until = addDays(hobartToday(), 27);
+  if (!work.date) work.date = hobartToday();
+  return work;
+}
+function selectedJob() { const w = workState(); return S.jobs.find(j => j.id === w.jobId) || S.jobs[0] || null; }
+function eachDate(from, until, days) { const out = []; let d = from, g = 0; while (d <= until && g++ < 400) { if (days.includes(wdIndex(d))) out.push(d); d = addDays(d, 1); } return out; }
+function shiftEvent(job, date, start, end, title) {
+  const sp = span(date, start, end);
+  return { id: uid(), title: title || job.name, start: sp.start, end: sp.end, allDay: false, source: 'shift', sourceLabel: 'Work', auto: false, hidden: false, color: job.color, jobId: job.id, loc: '', notes: '', reminderMin: 60 };
+}
+function buildDrafts() {
+  const w = workState(); const job = selectedJob(); if (!job) return [];
+  const from = hobartToday();
+  if (w.mode === '95') return eachDate(from, w.until, [1, 2, 3, 4, 5]).map(d => shiftEvent(job, d, '09:00', '17:00'));
+  if (w.mode === 'night') return eachDate(from, w.until, [1, 2, 3, 4, 5]).map(d => shiftEvent(job, d, '22:00', '06:00'));
+  if (w.mode === 'rotate') {
+    const mon0 = mondayOf(from);
+    return eachDate(from, w.until, [1, 2, 3, 4, 5]).map(d => {
+      const weeks = Math.round((Date.parse(d + 'T00:00:00Z') - Date.parse(mon0 + 'T00:00:00Z')) / 86400000 / 7);
+      const afternoon = Math.abs(weeks) % 2 === 1;
+      return shiftEvent(job, d, afternoon ? '15:00' : '07:00', afternoon ? '23:00' : '15:30');
+    });
+  }
+  if (w.mode === 'build') return eachDate(from, w.until, w.days.length ? w.days : [1]).map(d => shiftEvent(job, d, w.start || '09:00', w.end || '17:00'));
+  if (w.mode === 'quick') return w.date ? [shiftEvent(job, w.date, w.start || '09:00', w.end || '17:00')] : [];
+  if (w.mode === 'paste') return parseRoster(w.text).map(r => shiftEvent(job, r.date, r.start, r.end, r.title && r.title !== 'Shift' ? r.title : job.name));
+  return [];
+}
+function confirmDrafts(drafts) {
+  if (!drafts.length) return toast('Nothing to add. Check the days and times.');
+  const clashes = drafts.map(d => ({ d, hits: S.events.filter(e => !e.hidden && rangesOverlap(d, e)) })).filter(x => x.hits.length);
+  const go = () => { drafts.forEach(d => S.events.push(d)); save(); announceConflicts(); workState().step = 'menu'; location.hash = '#/calendar'; toast(`Added ${drafts.length} shift${drafts.length === 1 ? '' : 's'}`); };
+  if (!clashes.length) return go();
+  openSheet(`<h2>Some shifts overlap</h2><p>${clashes.length} of ${drafts.length} overlap something already on your calendar.</p><div class="list">${clashes.slice(0, 6).map(c => `<div class="li"><span class="grow"><b>${esc(c.d.title)}</b><span>${esc(fmtWhen(c.d))} overlaps ${esc(c.hits[0].title)}</span></span></div>`).join('')}</div>
+    <div class="row gap"><button class="btn" id="noAdd">Go back</button><button class="btn primary" id="yesAdd">Keep both</button></div>`, el => {
+    $('#noAdd', el).onclick = () => closeSheet();
+    $('#yesAdd', el).onclick = () => { closeSheet(true); go(); };
+  });
+}
+function readWorkFields() {
+  const w = workState();
+  const until = $('#workUntil'); if (until && until.value) w.until = until.value;
+  const st = $('#workStart'); if (st && st.value) w.start = st.value;
+  const en = $('#workEnd'); if (en && en.value) w.end = en.value;
+  const tx = $('#workText'); if (tx) w.text = tx.value;
+  const dt = $('#workDate'); if (dt && dt.value) w.date = dt.value;
+}
+function workSave() { readWorkFields(); confirmDrafts(buildDrafts()); }
+function workDay(d) { const w = workState(); w.days = w.days.includes(d) ? w.days.filter(x => x !== d) : w.days.concat(d); render(); }
+function copyLastWeek() {
+  const mon = mondayOf(hobartToday()), prev = addDays(mon, -7);
+  const shifts = S.events.filter(e => e.source === 'shift' && e.start.slice(0, 10) >= prev && e.start.slice(0, 10) < mon);
+  if (!shifts.length) return toast('No shifts last week to copy');
+  const drafts = shifts.map(s => { const j = S.jobs.find(x => x.id === s.jobId) || selectedJob() || { id: s.jobId || uid(), name: s.title, color: s.color || '#0f766e' }; return shiftEvent(j, addDays(s.start.slice(0, 10), 7), s.start.slice(11, 16), s.end.slice(11, 16), s.title); });
+  confirmDrafts(drafts);
+}
+function newJob() {
+  openSheet(`<h2>New job</h2><label class="fld"><span>Job name</span><input id="jn" placeholder="e.g. Warehouse, Office"></label><div class="swatches" id="jcols">${JOB_COLORS.map((c, i) => `<button type="button" class="sw ${i === 0 ? 'on' : ''}" style="background:${c}" data-c="${c}" aria-label="Colour ${i + 1}"></button>`).join('')}</div><button class="btn primary full" id="jok">Add job</button>`, el => {
+    let col = JOB_COLORS[0];
+    $$('.sw', el).forEach(b => b.onclick = () => { col = b.dataset.c; $$('.sw', el).forEach(x => x.classList.remove('on')); b.classList.add('on'); });
+    $('#jok', el).onclick = () => { const name = $('#jn', el).value.trim(); if (!name) return toast('Add a job name'); const j = { id: uid(), name, color: col }; S.jobs.push(j); workState().jobId = j.id; save(); closeSheet(true); render(); toast('Job added'); };
+  });
+}
+async function importRoster() {
+  const f = await pickFile('.ics,.csv,.txt,text/calendar,text/csv,text/plain'); if (!f) return;
+  const txt = await readText(f); const job = selectedJob();
+  if (/BEGIN:VCALENDAR/i.test(txt)) {
+    if (!job) return toast('Add a job first');
+    const evs = parseICS(txt).map(e => ({ id: uid(), title: e.title || job.name, start: e.start, end: e.end, allDay: !!e.allDay, source: 'shift', sourceLabel: 'Work', auto: false, hidden: false, color: job.color, jobId: job.id, loc: e.loc || '', notes: '', reminderMin: 60 }));
+    return confirmDrafts(evs);
+  }
+  workState().text = ((workState().text ? workState().text + '\n' : '') + txt).trim();
+  workState().mode = 'paste'; workState().step = 'form'; render();
+}
+function renderWork() {
+  const w = workState();
+  if (!S.jobs.length) {
+    const body = `<div data-screen="work"><h2 style="font-size:1.3rem;margin-bottom:6px">Add my work schedule</h2><p class="muted">Start with the job, then pick an easy pattern.</p><button class="btn primary full" data-act="newJob">${ic('plus', 18)} Add a job</button></div>`;
+    return screen({ title: 'Work schedule', back: '#/calendar', body });
+  }
+  if (!w.jobId || !S.jobs.some(j => j.id === w.jobId)) w.jobId = S.jobs[0].id;
+  const job = S.jobs.find(j => j.id === w.jobId);
+  if (w.step !== 'form') {
+    const body = `<div data-screen="work"><h2 style="font-size:1.3rem;margin-bottom:6px">Add my work schedule</h2><p class="muted">Choose the job, then a pattern you can live with. Shifts are checked against the rest of your calendar.</p>
+      <div class="sec-h"><h2>Job</h2><button class="linkbtn" data-act="newJob">New job</button></div>
+      <div class="list">${S.jobs.map(j => `<button class="li" data-act="pickJob" data-id="${j.id}"><span class="evdot" style="background:${j.color}"></span><span class="grow"><b>${esc(j.name)}</b><span>${j.id === job.id ? 'Selected' : 'Tap to use this job'}</span></span>${j.id === job.id ? ic('check') : ''}</button>`).join('')}</div>
+      <button class="btn primary full" data-act="workGo" data-m="95">9–5, Monday to Friday</button>
+      <button class="btn full" style="margin-top:8px" data-act="workGo" data-m="rotate">Rotating roster</button>
+      <button class="btn full" style="margin-top:8px" data-act="workGo" data-m="night">Night shift, Monday to Friday</button>
+      <button class="btn full" style="margin-top:8px" data-act="workGo" data-m="build">Build my own week</button>
+      <button class="btn full" style="margin-top:8px" data-act="workGo" data-m="quick">Add one shift</button>
+      <button class="btn full" style="margin-top:8px" data-act="workGo" data-m="paste">Paste or import a roster</button>
+      <button class="btn ghost full" style="margin-top:8px" data-act="copyWeek">${ic('download', 18)} Copy last week</button>
+      <p class="footnote">Paste lines such as Mon 7:00-15:30, or a CSV of date, start, end, title. .ics files work too.</p></div>`;
+    return screen({ title: 'Work schedule', back: '#/calendar', body });
+  }
+  const help = { '95': 'Weekdays, 9:00am to 5:00pm, from today until the date you pick.', rotate: 'Weekdays alternate: one week 7:00am–3:30pm, the next 3:00pm–11:00pm.', night: 'Weekdays 10:00pm to 6:00am the next morning.', build: 'Tap the days you work and set one start and finish.', quick: 'Just this one shift.', paste: 'One shift per line. Examples: Mon 7:00-15:30 or 2026-11-02,09:00,17:30,Office.' }[w.mode] || '';
+  const drafts = buildDrafts();
+  const hits = drafts.filter(d => S.events.some(e => !e.hidden && rangesOverlap(d, e))).length;
+  const body = `<div data-screen="work"><button class="btn sm" data-act="workBack">${ic('back', 16)} Patterns</button>
+    <h2 style="font-size:1.25rem;margin:12px 0 6px">${esc(job.name)}</h2><p class="muted">${esc(help)}</p>
+    ${w.mode === 'build' ? `<div class="days" role="group" aria-label="Days worked">${WDAYS.map(([n, i]) => `<button type="button" class="${w.days.includes(i) ? 'on' : ''}" data-act="workDay" data-d="${i}" aria-pressed="${w.days.includes(i)}">${n}</button>`).join('')}</div>` : ''}
+    ${w.mode === 'build' || w.mode === 'quick' ? `<div class="row gap"><label class="fld" style="flex:1"><span>Start</span><input id="workStart" type="time" value="${esc(w.start)}"></label><label class="fld" style="flex:1"><span>End</span><input id="workEnd" type="time" value="${esc(w.end)}"></label></div>` : ''}
+    ${w.mode === 'quick' ? `<label class="fld"><span>Date</span><input id="workDate" type="date" value="${esc(w.date)}"></label>` : ''}
+    ${w.mode !== 'quick' ? `<label class="fld"><span>Repeat until</span><input id="workUntil" type="date" value="${esc(w.until)}"></label>` : ''}
+    ${w.mode === 'paste' ? `<label class="fld"><span>Roster</span><textarea id="workText" placeholder="Mon 7:00-15:30&#10;Tue 7:00-15:30">${esc(w.text)}</textarea></label><button class="btn sm" data-act="importRoster">${ic('upload', 16)} Import file</button><button class="btn sm" data-act="workPreview">Preview</button>` : ''}
+    <div class="card"><h3>${drafts.length} shift${drafts.length === 1 ? '' : 's'}${hits ? ` · ${hits} overlap` : ''}</h3>${drafts.slice(0, 6).map(d => `<div class="small" style="margin:4px 0">${esc(fmtWhen(d))}</div>`).join('') || '<p class="small muted">Nothing matches yet.</p>'}${drafts.length > 6 ? `<div class="small muted">And ${drafts.length - 6} more.</div>` : ''}</div>
+    <button class="btn primary full" data-act="workSave">Add these shifts</button></div>`;
+  return { html: screen({ title: 'Work schedule', back: '#/calendar', body }), after: () => {} };
+}
+
+/* location (premium) */
+function demoPlace(c) { const n = [...String(c.id)].reduce((a, ch) => a + ch.charCodeAt(0), 0); return DEMO_PLACES[n % DEMO_PLACES.length]; }
+function shareNames() { return (S.loc.ids || []).map(contactById).filter(Boolean); }
+function locTick(id) {
+  if (!S.loc.ids) S.loc.ids = [];
+  S.loc.ids = S.loc.ids.includes(id) ? S.loc.ids.filter(x => x !== id) : S.loc.ids.concat(id);
+  if (S.loc.on && !S.loc.ids.length) { S.loc.on = false; S.loc.until = null; }
+  save(); render();
+}
+function locMode(v) { S.loc.mode = v; if (S.loc.on) S.loc.until = v === '1h' ? Date.now() + 3600000 : null; save(); render(); }
+function locStart() {
+  if (!S.loc.ids.length) return toast('Tick at least one Premium contact');
+  if (!S.loc.mode) return toast('Choose how long to share');
+  S.loc.on = true; S.loc.until = S.loc.mode === '1h' ? Date.now() + 3600000 : null; save(); render();
+  toast('Sharing with ' + shareNames().map(c => c.name.split(' ')[0]).join(', '));
+}
+function locStop() { S.loc.on = false; S.loc.until = null; save(); render(); toast('Sharing stopped'); }
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (leafletP) return leafletP;
+  leafletP = new Promise((res, rej) => {
+    if (!document.querySelector('link[data-leaflet]')) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.dataset.leaflet = '1'; l.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(l); }
+    const s = document.createElement('script'); s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'; s.onload = () => res(); s.onerror = () => rej(new Error('map')); document.head.appendChild(s);
+  });
+  return leafletP;
+}
+function getPos() {
+  const fallback = { lat: -41.4332, lng: 147.1441, acc: null, demo: true };
+  return new Promise(res => {
+    if (!navigator.geolocation) return res(fallback);
+    navigator.geolocation.getCurrentPosition(p => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy, demo: false }), () => res(fallback), { enableHighAccuracy: true, timeout: 8000, maximumAge: 120000 });
+  });
+}
+function drawMap(me) {
+  const el = $('#locMap'); if (!el || !window.L) return;
+  if (locMap) { locMap.remove(); locMap = null; }
+  locMap = L.map(el, { zoomControl: true }).setView([me.lat, me.lng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', { maxZoom: 19, subdomains: 'abc', attribution: '&copy; OpenStreetMap France &copy; OpenStreetMap' }).addTo(locMap);
+  const bounds = [[me.lat, me.lng]];
+  L.circleMarker([me.lat, me.lng], { radius: 11, color: '#fff', weight: 2, fillColor: '#d61f1f', fillOpacity: 1 }).addTo(locMap).bindPopup(me.demo ? 'Sample pin · Launceston' : 'You');
+  if (S.loc.on) S.loc.ids.forEach(id => {
+    const c = contactById(id); if (!c) return; const p = demoPlace(c); bounds.push([p.lat, p.lng]);
+    L.circleMarker([p.lat, p.lng], { radius: 9, color: '#fff', weight: 2, fillColor: '#1d4ed8', fillOpacity: 1 }).addTo(locMap).bindPopup(c.name + ' · ' + p.label + ' (demo)');
+  });
+  if (bounds.length > 1) locMap.fitBounds(bounds, { padding: [28, 28], maxZoom: 14 });
+  setTimeout(() => { if (locMap) locMap.invalidateSize(); }, 250);
+  cleanupFn = () => { if (locMap) { locMap.remove(); locMap = null; } };
+}
+async function fillAddress(me) {
+  const el = $('#locAddr'); if (!el) return;
+  if (me.demo) { el.textContent = 'Showing a sample pin in Launceston. Allow location to use where you actually are.'; return; }
+  el.textContent = `${me.lat.toFixed(5)}, ${me.lng.toFixed(5)}${me.acc ? ' (±' + Math.round(me.acc) + ' m)' : ''}`;
+  try {
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 6000);
+    const r = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + me.lat + '&lon=' + me.lng, { signal: ctrl.signal, headers: { Accept: 'application/json' } });
+    clearTimeout(t); if (!r.ok) return; const j = await r.json(); if (j.display_name && $('#locAddr')) $('#locAddr').textContent = j.display_name;
+  } catch (e) {}
+}
+function mountLocation() {
+  loadLeaflet().then(async () => { const me = await getPos(); if (!$('#locMap')) return; drawMap(me); fillAddress(me); }).catch(() => { const m = $('#locAddr'); if (m) m.textContent = 'The map could not be loaded. Check your connection and try again.'; });
+}
+function renderLocation() {
+  if (!isPremium()) {
+    const body = `<div class="card lockcard" data-screen="location" data-role="locked"><div class="logo" style="width:64px;height:64px;border-radius:18px;margin:0 auto 12px">${ic('pin', 30)}</div>
+      <h2 style="font-size:1.35rem">Location is part of Premium</h2>
+      <p class="muted">See where you are on a map. If you want, share that only with LifeHub Premium contacts you tick yourself. Sharing stays off until you start it.</p>
+      <p class="small muted">On the Emergency screen, anyone can still show their location to read out to emergency services. That stays free.</p>
+      <a class="btn primary full" href="#/plan">${ic('star', 18)} See Premium · ${money(PRICE, 'AUD')}/month</a></div>`;
+    return screen({ title: 'Location', body });
+  }
+  const selected = shareNames();
+  const modeBtn = (v, label) => `<button type="button" class="${S.loc.mode === v ? 'on' : ''}" data-act="locMode" data-v="${v}">${label}</button>`;
+  const premiumContacts = S.contacts.filter(c => c.premium && !c.blocked);
+  const skipped = S.contacts.filter(c => !c.blocked && !c.premium).length;
+  const picks = selected.length ? selected.map(c => `<span class="pick">${esc(c.name)} <button type="button" data-act="locRemove" data-id="${c.id}" aria-label="Remove ${esc(c.name)}">${ic('x', 16)}</button></span>`).join('') : '<span class="muted">No one selected yet</span>';
+  const list = premiumContacts.length ? premiumContacts.map(c => { const on = S.loc.ids.includes(c.id); return `<button class="li" data-act="locTick" data-id="${c.id}" aria-pressed="${on}">${on ? ic('check') : ic('plus')}<span class="grow"><b>${esc(c.name)}</b><span>${on ? 'Selected' : 'Tap to select'} · demo pin at ${esc(demoPlace(c).label)}</span></span></button>`; }).join('') : '<p class="empty">No Premium contacts yet. Edit a contact and turn on LifeHub Premium (demo) if you want to share with them.</p>';
+  const untilTxt = S.loc.mode === '1h' && S.loc.until ? ' until ' + new Date(S.loc.until).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit', timeZone: TZ }) : '';
+  const who = selected.map(c => c.name.split(' ')[0]).join(', ');
+  const body = `<div data-screen="location">${S.loc.on ? `<div class="share-on" data-role="sharing">${ic('pin', 18)} Sharing is on${esc(untilTxt)} with ${esc(who)}</div>` : `<div class="notice blue">${ic('shield', 18)}<div>Sharing is off. Tick each person, choose how long, then start. There is no option to share with everyone.</div></div>`}
+    <div id="locMap" role="region" aria-label="Map"></div><p id="locAddr" class="small" style="margin:0 0 4px">Finding your position…</p>
+    <p class="small muted">Map data © OpenStreetMap contributors, tiles © OpenStreetMap France. Other people's pins are simulated on this device.</p>
+    <div class="card"><h3>Sharing with</h3><div class="picks" id="sharePicks" data-role="share-picks">${picks}</div>
+      <div class="seg" style="margin:12px 0" role="group" aria-label="How long to share">${modeBtn('1h', '1 hour')}${modeBtn('until', 'Until I stop')}${modeBtn('always', 'Always')}</div>
+      <div class="list">${list}</div>
+      ${skipped ? `<p class="small muted">${skipped} contact${skipped === 1 ? " isn't" : "s aren't"} on LifeHub Premium, so they can't be selected.</p>` : ''}
+      ${S.loc.on ? '<button class="btn redb full" data-act="locStop">Stop sharing now</button>' : `<button class="btn primary full" data-act="locStart" ${!S.loc.ids.length || !S.loc.mode ? 'disabled' : ''}>Start sharing</button>`}
+      <p class="small muted" style="margin:8px 0 0">Only the people in the list above are included. Removing someone, or stopping, takes effect straight away.</p>
+    </div></div>`;
+  return { html: screen({ title: 'Location', body }), after: mountLocation };
+}
+
 /* ---------- router & prefs ---------- */
 const ROUTES = [[/^\/home$/, renderHome], [/^\/search$/, renderSearch], [/^\/emergency$/, renderEmergency], [/^\/medical$/, renderMedical], [/^\/medical-id$/, renderMedicalID],
   [/^\/banking$/, renderBanking], [/^\/banking\/pay$/, renderPay], [/^\/banking\/link$/, renderLink], [/^\/chat$/, renderChats], [/^\/chat\/(\w+)$/, renderThread], [/^\/call\/(\w+)(?:\/(video))?$/, renderCall],
-  [/^\/contacts$/, renderContacts], [/^\/contacts\/(\w+)$/, renderContact], [/^\/social$/, renderSocial], [/^\/utilities$/, renderUtilities], [/^\/addnew$/, renderAddNew], [/^\/group\/(\w+)$/, renderGroup], [/^\/settings$/, renderSettings], [/^\/plan$/, renderPlan]];
+  [/^\/contacts$/, renderContacts], [/^\/contacts\/(\w+)$/, renderContact], [/^\/social$/, renderSocial], [/^\/utilities$/, renderUtilities], [/^\/addnew$/, renderAddNew], [/^\/group\/(\w+)$/, renderGroup], [/^\/calendar$/, renderCalendar], [/^\/calendar\/work$/, renderWork], [/^\/location$/, renderLocation], [/^\/settings$/, renderSettings], [/^\/plan$/, renderPlan]];
 const PUBLIC = ['/emergency', '/medical-id'];
 let lastPath = '';
 function applyPrefs() {
@@ -1043,12 +1788,12 @@ function applyPrefs() {
 function render() {
   if (cleanupFn) { try { cleanupFn(); } catch (e) {} cleanupFn = null; }
   if (lockUnbind) { lockUnbind(); lockUnbind = null; }
-  ensurePlan(); applyPrefs(); const app = $('#app');
+  ensurePlan(); if (S && S.auth && S.auth.method) ensureHub(); applyPrefs(); const app = $('#app');
   if (!S || !S.auth || !S.auth.method) { app.innerHTML = renderOnboarding(); afterOnboarding(); return; }
   const path = (location.hash || '#/home').slice(1) || '/home';
   if (path !== '/banking/pay' && pay && pay.step !== 'tap') pay = null;
   if (!unlocked && !PUBLIC.includes(path)) { app.innerHTML = renderLock(); afterLock(); lastPath = '/lock'; return; }
-  for (const [re, fn] of ROUTES) { const m = path.match(re); if (m) { const out = (isPremium() && routeCache.get(path)) || fn(...m.slice(1)); if (isPremium() && PRELOAD.includes(path)) routeCache.delete(path); if (out === '') return; app.innerHTML = typeof out === 'string' ? out : out.html; if (out.after) out.after(); if (path !== lastPath) { window.scrollTo(0, 0); lastPath = path; } if (path === '/home') { mountAds(); preloadSections(); } return; } }
+  for (const [re, fn] of ROUTES) { const m = path.match(re); if (m) { const out = (isPremium() && routeCache.get(path)) || fn(...m.slice(1)); if (isPremium() && PRELOAD.includes(path)) routeCache.delete(path); if (out === '') return; app.innerHTML = typeof out === 'string' ? out : out.html; if (out.after) out.after(); if (path !== lastPath) { window.scrollTo(0, 0); lastPath = path; } if (path === '/home') { mountAds(); preloadSections(); } if (unlocked) announceConflicts(); return; } }
   location.replace('#/home');
 }
 
@@ -1089,7 +1834,23 @@ const A = {
   hideBanner: el => { const b = S.settings.banners[+el.dataset.i]; b.hidden = !b.hidden; save(); render(); },
   exportData: () => { const { auth, ...rest } = S; download(`lifehub-backup-${todayISO()}.json`, JSON.stringify(rest, null, 2)); toast('Backup downloaded'); },
   importData,
-  loadSample: async () => { if (!(await confirmSheet('Load sample data?', 'This replaces your current data with demo data.', 'Replace', true))) return; const auth = S.auth, settings = S.settings; S = seed(S.profile.name, S.profile.region, true); S.auth = auth; S.settings = settings; save(); render(); toast('Sample data loaded'); },
+  loadSample: async () => { if (!(await confirmSheet('Load sample data?', 'This replaces your current data with demo data.', 'Replace', true))) return; const auth = S.auth, settings = S.settings; S = seed(S.profile.name, S.profile.region, true); S.auth = auth; S.settings = settings; ensureHub(); save(); render(); toast('Sample data loaded'); },
+  addEvent: () => editManual(null), openEvent: el => openEvent(el.dataset.id),
+  calView: el => { calView = el.dataset.v; render(); }, calNav, calDay: el => { calCursor = el.dataset.d; render(); },
+  hideAuto: el => { const e = S.events.find(x => x.id === el.dataset.id); if (e) { e.hidden = true; save(); render(); toast('Hidden'); } },
+  showAuto: el => { const e = S.events.find(x => x.id === el.dataset.id); if (e) { e.hidden = false; save(); render(); } },
+  convertAuto: el => convertAuto(el.dataset.id),
+  keepPair: el => keepPair(el.dataset.a, el.dataset.b), movePair: el => movePair(el.dataset.a, el.dataset.b),
+  deleteEv: el => deleteEv(el.dataset.id), dismissNotice: el => { S.cal.notices = S.cal.notices.filter(n => n.id !== el.dataset.id); save(); render(); },
+  askClashNotify: () => { askNotify(); toast('If you allow notifications, LifeHub will ping you about overlaps and reminders'); },
+  importIcs, linkCal: el => linkExternal(el.dataset.name),
+  addAppt: () => editAppt(), editAppt: el => editAppt(el.dataset.id),
+  addSched: () => editSched(), editSched: el => editSched(el.dataset.id),
+  workGo: el => { const w = workState(); w.mode = el.dataset.m; w.step = 'form'; render(); },
+  workBack: () => { workState().step = 'menu'; render(); },
+  workDay: el => workDay(Number(el.dataset.d)), workSave, workPreview: () => { readWorkFields(); render(); },
+  copyWeek: copyLastWeek, newJob, pickJob: el => { workState().jobId = el.dataset.id; render(); }, importRoster,
+  locMode: el => locMode(el.dataset.v), locTick: el => locTick(el.dataset.id), locRemove: el => locTick(el.dataset.id), locStart, locStop,
 };
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el) return; invalidateCache();
@@ -1115,7 +1876,11 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyPre
 
 /* idle lock */
 ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(ev => addEventListener(ev, touchSession, { passive: true }));
-setInterval(() => { if (unlocked && S && S.settings.lockMinutes > 0 && Date.now() - lastAct > S.settings.lockMinutes * 60000 && !/^#\/call/.test(location.hash)) lock(); }, 10000);
+setInterval(() => {
+  if (unlocked && S && S.settings.lockMinutes > 0 && Date.now() - lastAct > S.settings.lockMinutes * 60000 && !/^#\/call/.test(location.hash)) lock();
+  if (unlocked && S && S.loc && S.loc.on && S.loc.mode === '1h' && S.loc.until && Date.now() > S.loc.until) { S.loc.on = false; save(); toast('Location sharing has ended'); if ((location.hash || '') === '#/location') render(); }
+  if (unlocked && S) checkEventReminders();
+}, 10000);
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (unlocked && S && S.settings.lockMinutes > 0 && hiddenAt && Date.now() - hiddenAt > S.settings.lockMinutes * 60000) lock(); });
 
@@ -1124,5 +1889,5 @@ render();
 if (unlocked) checkReminders();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.1.0', isPremium: () => isPremium() };
+window.LifeHub = { version: '1.2.0', isPremium: () => isPremium(), cal: { parseRoster, parseICS, rangesOverlap, onDay } };
 })();
