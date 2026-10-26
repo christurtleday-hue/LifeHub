@@ -377,8 +377,12 @@ function unlock() { unlocked = true; touchSession(); checkReminders(); if (!loca
 function lock() { invalidateCache(); unlocked = false; sessionStorage.removeItem('lh.session'); closeSheet(true); render(); }
 
 /* ---------- layout ---------- */
-function screen({ title, back = '#/home', body, right = '', cls = '' }) {
-  return `<header class="topbar ${cls}">${back ? `<a class="iconbtn" href="${back}" aria-label="Back">${ic('back')}</a>` : '<span class="iconbtn-sp"></span>'}<h1>${esc(title)}</h1><div class="tb-right">${right || '<span class="iconbtn-sp"></span>'}</div></header><main class="content">${body}</main>`;
+function legalFooter() {
+  return `<footer class="legalfoot"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="support.html">Support</a><a href="delete-account.html">Delete data</a></footer>`;
+}
+function screen({ title, back = '#/home', body, right = '', cls = '', demo = '' }) {
+  const line = demo ? `<p class="demoline"><span class="tag amber">Demo</span> ${demo}</p>` : '';
+  return `<header class="topbar ${cls}">${back ? `<a class="iconbtn" href="${back}" aria-label="Back">${ic('back')}</a>` : '<span class="iconbtn-sp"></span>'}<h1>${esc(title)}</h1><div class="tb-right">${right || '<span class="iconbtn-sp"></span>'}</div></header><main class="content">${line}${body}</main>${legalFooter()}`;
 }
 const demoNote = txt => `<div class="notice">${ic('alert', 18)}<div>${txt}</div></div>`;
 
@@ -566,15 +570,14 @@ const acctById = id => S.accounts.find(a => a.id === id);
 function renderBanking() {
   const net = S.accounts.reduce((a, x) => a + x.balance, 0);
   const tx = [...S.transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 25);
-  const body = `${demoNote('<b>Demo data.</b> No real bank is connected. Balances and payments are simulated on this device.')}
-  <div class="total"><span class="muted">Net balance</span><b>${money(net)}</b></div>
+  const body = `<div class="total"><span class="muted">Net balance</span><b>${money(net)}</b></div>
   <div class="bcards">${S.accounts.map(a => `<button class="bcard" style="background:${a.color}" data-act="acctMenu" data-id="${a.id}"><div class="row between"><small>${esc(a.bank)}</small><small>${esc(a.type)}</small></div><div><small>${esc(a.name)}</small><div class="bal">${money(a.balance)}</div><small>${esc(a.number)}</small></div></button>`).join('') || '<p class="empty">No accounts yet</p>'}</div>
   <div class="actions"><button class="act" data-act="transfer">${ic('swap', 26)}Transfer</button><a class="act" href="#/banking/pay">${ic('nfc', 26)}Tap to pay</a><a class="act" href="#/banking/link">${ic('link', 26)}Link a bank</a></div>
   ${updatedLine()}<div class="sec-h"><h2>Recent transactions</h2><button class="btn sm" data-act="importTx">${ic('upload', 16)} Import CSV</button></div>
   <div class="list">${tx.length ? tx.map(t => { const a = acctById(t.accountId); return `<div class="li"><span class="av" style="background:var(--card2);color:var(--text);border:1px solid var(--line)">${t.amount > 0 ? '↓' : t.cat === 'App fee' ? '¢' : '↑'}</span><span class="grow"><b>${esc(t.desc)}</b><span>${fmtDate(t.date)} · ${esc(a ? a.name : 'Account')}${t.cat ? ' · ' + esc(t.cat) : ''}</span></span><span class="amt ${t.amount > 0 ? 'green' : ''}">${t.amount > 0 ? '+' : ''}${money(t.amount)}</span></div>`; }).join('') : '<p class="empty">No transactions</p>'}</div>
   ${schedSection()}
   <p class="footnote">To go live in Australia, bank linking would use the Consumer Data Right (Open Banking) via an accredited data recipient, and payments via the New Payments Platform (PayTo / Osko). Scheduled payments are a reminder on your calendar, not a real debit.</p>`;
-  return screen({ title: 'Banking', body, right: `<button class="iconbtn" data-act="addAcct" aria-label="Add account">${ic('plus')}</button>` });
+  return screen({ title: 'Banking', demo: 'No real bank is connected. Balances, transfers and payments are simulated on this device.', body, right: `<button class="iconbtn" data-act="addAcct" aria-label="Add account">${ic('plus')}</button>` });
 }
 function addAccount(bank) {
   formSheet({ title: 'Add account manually', fields: [{ k: 'bank', label: 'Bank', req: true }, { k: 'name', label: 'Account name', req: true, ph: 'e.g. Everyday' }, { k: 'type', label: 'Type', type: 'select', options: ['transaction', 'savings', 'credit', 'loan'] }, { k: 'number', label: 'BSB / account (last 4 is enough)' }, { k: 'balance', label: 'Current balance', type: 'number', step: '0.01', req: true, im: 'decimal' }],
@@ -588,7 +591,7 @@ function acctMenu(id) {
 function transfer() {
   if (S.accounts.length < 1) return toast('Add an account first');
   const opts = S.accounts.map(a => [a.id, `${a.name} (${money(a.balance)})`]);
-  formSheet({ title: 'Transfer money', intro: 'Demo transfer between your accounts or to a payee (BSB/account or PayID).', submit: 'Review & authorise',
+  formSheet({ title: 'Transfer money', intro: '<span class="tag amber">Demo</span> No money moves. This transfer stays on this device.', submit: 'Review & authorise',
     fields: [{ k: 'from', label: 'From', type: 'select', options: opts }, { k: 'to', label: 'To', type: 'select', options: [...opts, ['payee', 'Someone else (payee / PayID)']] }, { k: 'payee', label: 'Payee name, BSB & account, or PayID', ph: 'Only if paying someone else' }, { k: 'amount', label: 'Amount', type: 'number', step: '0.01', min: 0, req: true, im: 'decimal' }, { k: 'desc', label: 'Description', ph: 'e.g. Rent' }],
     onSave: async v => {
       if (!(v.amount > 0)) { toast('Enter an amount'); return false; } if (v.from === v.to) { toast('Choose different accounts'); return false; } if (v.to === 'payee' && !v.payee) { toast('Enter payee details'); return false; }
@@ -612,16 +615,15 @@ function renderPay() {
   const a = acctById(pay.accountId) || cards[0]; const fee = 0.01;
   let body;
   if (!a) body = `<p class="empty">Add a transaction or credit account to use Tap to pay.</p><a class="btn primary full" href="#/banking/link">Link a bank</a>`;
-  else if (pay.step === 'setup') body = `${demoNote('<b>Demo.</b> No real payment is made. Real tap-to-pay needs Apple Pay / Google Pay or a bank-issued wallet.')}
-    <div class="paycard" style="background:${a.color}"><div class="row between"><b>${esc(a.bank)}</b>${ic('nfc', 30)}</div><div><small style="opacity:.85">${esc(a.name)} · ${esc(a.number)}</small><div style="font-size:1.4rem;font-weight:800;margin-top:4px">${money(a.balance)}</div></div></div>
+  else if (pay.step === 'setup') body = `<div class="paycard" style="background:${a.color}"><div class="row between"><b>${esc(a.bank)}</b>${ic('nfc', 30)}</div><div><small style="opacity:.85">${esc(a.name)} · ${esc(a.number)}</small><div style="font-size:1.4rem;font-weight:800;margin-top:4px">${money(a.balance)}</div></div></div>
     ${cards.length > 1 ? `<label class="fld"><span>Pay with</span><select id="payAcct">${cards.map(c => `<option value="${c.id}" ${c.id === a.id ? 'selected' : ''}>${esc(c.bank)} · ${esc(c.name)}</option>`).join('')}</select></label>` : ''}
     <label class="fld"><span>Amount (${region().currency})</span><input id="payAmt" class="amount-in" type="number" step="0.01" min="0.01" inputmode="decimal" value="${pay.amount.toFixed(2)}"></label>
     <div class="feebox"><div><span>Merchant</span><b>${esc(pay.merchant)}</b></div><div><span>Purchase</span><span id="fPur">${money(pay.amount)}</span></div><div><span>LifeHub app fee</span><span>${money(fee)}</span></div><div class="tot"><span>Total</span><span id="fTot">${money(pay.amount + fee)}</span></div></div>
     <button class="btn primary full" data-act="payAuth">${ic('lock', 18)} Authorise & pay</button>
-    <p class="footnote">A ${money(fee)} fee applies to each payment made through LifeHub. You'll confirm with your ${METHODS[S.auth.method].label.toLowerCase()} first.</p>`;
+    <p class="footnote">The ${money(fee)} line is part of the demo. No money is taken.</p>`;
   else if (pay.step === 'tap') body = `<div class="nfc">${ic('nfc', 80, 1.6)}</div><h2 style="text-align:center">Hold near the reader</h2><p class="muted" style="text-align:center">${money(pay.amount + fee)} to ${esc(pay.merchant)}</p><button class="btn primary full" data-act="payTap" style="margin-top:20px">Simulate tap</button><button class="btn ghost full" data-act="payCancel" style="margin-top:8px">Cancel</button>`;
   else body = `<div class="okc">${ic('check', 60, 3)}</div><h2 style="text-align:center">Payment approved</h2><p class="muted" style="text-align:center">${money(pay.amount)} + ${money(fee)} app fee<br>${esc(pay.merchant)} · ${esc(a.name)}</p><a class="btn primary full" href="#/banking" data-act="payDone">Done</a>`;
-  return { html: screen({ title: 'Tap to pay', back: '#/banking', body }), after: () => {
+  return { html: screen({ title: 'Tap to pay', back: '#/banking', demo: 'No real payment is made. This does not use NFC or charge a card.', body }), after: () => {
     const amt = $('#payAmt'); if (amt) amt.oninput = () => { const v = parseFloat(amt.value) || 0; pay.amount = v; $('#fPur').textContent = money(v); $('#fTot').textContent = money(v + fee); };
     const sel = $('#payAcct'); if (sel) sel.onchange = () => { pay.accountId = sel.value; render(); };
     if (pay.step === 'tap') { const t = setTimeout(() => { if (pay && pay.step === 'tap') completePay(); }, 3500); cleanupFn = () => clearTimeout(t); }
@@ -646,7 +648,7 @@ function renderLink() {
   <div class="searchbox">${ic('search', 20)}<input class="input" id="lq" type="search" placeholder="Find your bank" value="${esc(linkQ)}"></div>
   <div class="list" id="bankList">${list.map(b => `<button class="li" data-act="linkBank" data-b="${esc(b)}">${av(b)}<span class="grow"><b>${esc(b)}</b><span>Open Banking (CDR) · demo</span></span>${ic('chev')}</button>`).join('')}</div>
   <button class="btn full" data-act="addAcct">${ic('plus', 18)} Add an account manually</button>`;
-  return { html: screen({ title: 'Link a bank', back: '#/banking', body }), after: () => { const i = $('#lq'); i.oninput = () => { linkQ = i.value; const p = i.selectionStart; render(); const j = $('#lq'); j.focus(); j.setSelectionRange(p, p); }; } };
+  return { html: screen({ title: 'Link a bank', back: '#/banking', demo: 'This does not connect to a real bank. The sign-in step is simulated.', body }), after: () => { const i = $('#lq'); i.oninput = () => { linkQ = i.value; const p = i.selectionStart; render(); const j = $('#lq'); j.focus(); j.setSelectionRange(p, p); }; } };
 }
 function linkBank(b) {
   openSheet(`<h2>Connect ${esc(b)}</h2><p class="muted small">LifeHub is requesting access to:</p>
@@ -671,8 +673,8 @@ function renderChats() {
   const body = `<div class="row between" style="margin-bottom:6px">${netChip()}</div>${updatedLine()}
   <label class="card row between" style="padding:12px 14px"><span><b>Prefer Wi‑Fi</b><br><span class="small muted">Fall back to mobile data when Wi‑Fi isn't available</span></span><span class="switch"><input type="checkbox" data-change="preferWifi" ${S.settings.preferWifi ? 'checked' : ''}><i></i></span></label>
   <div class="list">${threads.length ? threads.map(t => { const c = contactById(t.contactId); const last = t.messages.at(-1); return `<a class="li" href="#/chat/${t.id}">${av(c.name)}<span class="grow"><b>${esc(c.name)}</b><span>${last ? (last.me ? 'You: ' : '') + esc(last.text) : 'No messages yet'}</span></span><span style="text-align:right"><span class="small muted">${last ? fmtTime(last.t) : ''}</span><br>${t.unread ? `<span class="badge">${t.unread}</span>` : ''}</span></a>`; }).join('') : '<p class="empty">No conversations yet</p>'}</div>
-  <p class="footnote">Demo: messages stay on this device and replies are simulated. Calls & chat would use end-to-end encryption in a live version.</p>`;
-  return screen({ title: 'Chat', body, right: `<button class="iconbtn" data-act="newChat" aria-label="New chat">${ic('edit')}</button>` });
+  <p class="footnote">A live version would use end-to-end encryption. This one does not contact a chat server.</p>`;
+  return screen({ title: 'Chat', demo: 'Messages stay on this device. Replies and calls are simulated.', body, right: `<button class="iconbtn" data-act="newChat" aria-label="New chat">${ic('edit')}</button>` });
 }
 function openChatWith(cid) { let t = S.chats.find(x => x.contactId === cid); if (!t) { t = { id: uid(), contactId: cid, unread: 0, messages: [] }; S.chats.push(t); save(); } location.hash = '#/chat/' + t.id; }
 function newChat() {
@@ -684,7 +686,8 @@ function renderThread(id) {
   const t = S.chats.find(x => x.id === id); if (!t) { location.hash = '#/chat'; return ''; }
   const c = contactById(t.contactId); if (t.unread) { t.unread = 0; save(); }
   const html = `<div class="thread"><header class="topbar"><a class="iconbtn" href="#/chat" aria-label="Back">${ic('back')}</a>${av(c.name, 38)}<h1 style="font-size:1.1rem">${esc(c.name)}<br><span class="small muted" style="font-weight:500">${c.onLifeHub ? 'LifeHub · private chat' : 'SMS contact'}</span></h1><div class="tb-right"><a class="iconbtn" href="#/call/${c.id}" aria-label="Voice call">${ic('phone')}</a><a class="iconbtn" href="#/call/${c.id}/video" aria-label="Video call">${ic('video')}</a></div></header>
-  <div class="msgs" id="msgs"><div style="align-self:center;margin:4px 0 8px">${netChip()}</div>${t.messages.map(m => `<div class="bub ${m.me ? 'me' : 'them'}">${esc(m.text)}<time>${fmtTime(m.t)}</time></div>`).join('')}</div>
+  <div class="msgs" id="msgs"><div style="align-self:center;margin:4px 0 8px">${netChip()}</div><p class="demoline" style="align-self:stretch"><span class="tag amber">Demo</span> Replies are simulated on this device.</p>${t.messages.map(m => `<div class="bub ${m.me ? 'me' : 'them'}">${esc(m.text)}<time>${fmtTime(m.t)}</time></div>`).join('')}</div>
+  ${legalFooter()}
   <form class="composer" id="cmp"><input name="m" placeholder="Message" autocomplete="off" aria-label="Message"><button aria-label="Send">${ic('send', 20)}</button></form></div>`;
   return { html, after: () => {
     const ms = $('#msgs'); ms.scrollTop = ms.scrollHeight;
@@ -698,9 +701,9 @@ let cleanupFn = null;
 function renderCall(cid, video) {
   const c = contactById(cid); if (!c) { location.hash = '#/chat'; return ''; }
   const n = netStatus();
-  const html = `<div class="call">${video ? '<video id="selfv" autoplay playsinline muted></video>' : ''}<div class="over">${av(c.name)}<h1>${esc(c.name)}</h1><p id="cst" style="opacity:.85">${video ? 'Video calling' : 'Calling'} over ${n.cls === 'warn' ? 'mobile data' : 'Wi‑Fi'}…</p><p class="small" style="opacity:.6">Demo call: no audio is transmitted</p>
+  const html = `<div class="call">${video ? '<video id="selfv" autoplay playsinline muted></video>' : ''}<div class="over">${av(c.name)}<h1>${esc(c.name)}</h1><p id="cst" style="opacity:.85">${video ? 'Video calling' : 'Calling'} over ${n.cls === 'warn' ? 'mobile data' : 'Wi‑Fi'}…</p><p class="demoline" style="color:#fff"><span class="tag amber">Demo</span> No audio or video is sent to the other person.</p>
   <div class="call-ctrls"><button data-act="tgl" aria-label="Mute">${ic('mic', 28)}</button><button class="end" data-act="endCall" aria-label="End call">${ic('phone', 30)}</button><button data-act="tgl" aria-label="Speaker">${ic('speaker', 28)}</button></div>
-  <a class="btn" style="margin-top:18px;background:transparent;color:#fff;border-color:rgba(255,255,255,.3)" href="${telHref(c.phone)}">Call ${esc(c.phone)} by phone instead</a></div></div>`;
+  <a class="btn" style="margin-top:18px;background:transparent;color:#fff;border-color:rgba(255,255,255,.3)" href="${telHref(c.phone)}">Call ${esc(c.phone)} by phone instead</a>${legalFooter()}</div></div>`;
   return { html, after: () => {
     let stream = null, sec = 0; const st = $('#cst');
     const t1 = setTimeout(() => { st.textContent = '00:00'; }, 2200);
@@ -909,8 +912,7 @@ function platBadge(p, sz = 42) { const P0 = PLATFORMS[p.key] || PLATFORMS.custom
 const platName = p => p.key === 'custom' ? p.name : (PLATFORMS[p.key] || {}).name;
 function renderSocial() {
   const notes = [...S.notifications].sort((a, b) => b.t - a.t);
-  const body = `${demoNote('<b>Demo.</b> Counts and notifications are samples. Live feeds need each platform\'s official API and your permission.')}
-  <div class="plats">${S.platforms.map(p => `<button class="plat" data-act="platMenu" data-id="${p.id}">${platBadge(p)}<span style="min-width:0"><b>${esc(platName(p))}</b><span class="counts"><span class="cnt ${p.friendReq ? '' : 'zero'}" title="Friend requests">${ic('user', 12, 2.6)}${p.friendReq}</span><span class="cnt ${p.dms ? '' : 'zero'}" title="Direct messages">${ic('msg', 12, 2.6)}${p.dms}</span></span></span></button>`).join('')}
+  const body = `<div class="plats">${S.platforms.map(p => `<button class="plat" data-act="platMenu" data-id="${p.id}">${platBadge(p)}<span style="min-width:0"><b>${esc(platName(p))}</b><span class="counts"><span class="cnt ${p.friendReq ? '' : 'zero'}" title="Friend requests">${ic('user', 12, 2.6)}${p.friendReq}</span><span class="cnt ${p.dms ? '' : 'zero'}" title="Direct messages">${ic('msg', 12, 2.6)}${p.dms}</span></span></span></button>`).join('')}
   <button class="plat" data-act="addPlatform" style="border-style:dashed;box-shadow:none;justify-content:center">${ic('plus')}<b>Add platform</b></button></div>
   <div class="card compose"><h3>${ic('edit', 18)} Create a post</h3><textarea id="postTxt" placeholder="What's on your mind, ${esc(S.profile.name.split(' ')[0])}?" aria-label="Post text"></textarea>
   <div id="pmedia">${postMedia ? `<div class="preview">${postMedia.type.startsWith('video') ? `<video src="${postMedia.url}" controls></video>` : `<img src="${postMedia.url}" alt="Attached photo">`}${postMedia.note ? `<div class="small muted">${esc(postMedia.note)}${isPremium() ? '' : ' · <a class="linkbtn small" href="#/plan">Full quality with Premium</a>'}</div>` : ''}<button class="iconbtn" style="position:absolute;top:8px;right:8px" data-act="clearMedia" aria-label="Remove">${ic('x')}</button></div>` : ''}</div>
@@ -920,7 +922,7 @@ function renderSocial() {
   ${updatedLine()}<div class="sec-h"><h2>Important notifications</h2>${notes.length ? '<button class="linkbtn" data-act="clearNotes">Clear all</button>' : ''}</div>
   <div class="list">${notes.length ? notes.map(n => { const p = S.platforms.find(x => x.key === n.key) || { key: n.key }; return `<div class="li">${platBadge(p, 36)}<span class="grow"><b style="font-weight:600;font-size:.95rem">${esc(n.text)}</b><span>${esc((PLATFORMS[n.key] || {}).name || '')} · ${fmtTime(n.t)}</span></span><button class="iconbtn" style="box-shadow:none;width:36px;height:36px" data-act="dismissNote" data-id="${n.id}" aria-label="Dismiss">${ic('x', 18)}</button></div>`; }).join('') : '<p class="empty">You\'re all caught up 🎉</p>'}</div>
   ${S.posts.length ? `<div class="sec-h"><h2>Your recent posts</h2></div><div class="list">${S.posts.slice(-5).reverse().map(p => `<div class="li"><span class="grow"><b style="font-weight:550">${esc(p.text || '(media)')}</b><span>${fmtTime(p.t)} · ${esc(p.to.join(', '))}${p.media ? ' · 📷' : ''}</span></span><span class="tag green">Posted</span></div>`).join('')}</div>` : ''}`;
-  return screen({ title: 'Social', body });
+  return screen({ title: 'Social', demo: 'Feeds, counts and posts are samples. No social network is connected.', body });
 }
 function addPlatform() {
   formSheet({ title: 'Add a platform', intro: 'Demo: a live version would sign in with the platform (OAuth) to read notifications and post on your behalf.', submit: 'Add',
@@ -1062,9 +1064,14 @@ function renderSettings() {
   <div class="list"><button class="li" data-act="exportData">${ic('download')}<span class="grow"><b>Export backup</b><span>Download everything as a JSON file</span></span></button>
   <button class="li" data-act="importData">${ic('upload')}<span class="grow"><b>Import backup or data</b><span>LifeHub backup (.json), contacts (.vcf/.csv)</span></span></button>
   <button class="li" data-act="loadSample">${ic('grid')}<span class="grow"><b>Reload sample data</b><span>Replace current data with demo data</span></span></button>
-  <button class="li" data-act="forgot" style="color:var(--red)">${ic('trash')}<span class="grow"><b>Delete all data</b><span>Erase everything from this device</span></span></button></div>
-  <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>Everything you enter stays in this browser on this device. Nothing is uploaded, and there are no ads or trackers. Bank, social and chat connections are simulated in this prototype. Export a backup regularly: clearing browser data erases LifeHub.</div>
-  <p class="footnote">LifeHub prototype v1.2 · ${navigator.onLine ? 'Online' : 'Offline'} · Installable as an app from your browser menu ("Add to Home Screen"). Dates use Australia/Hobart time.</p>`;
+  <button class="li" data-act="wipeData" style="color:var(--red)">${ic('trash')}<span class="grow"><b>Delete all my data</b><span>Clears local storage, caches and the on-device database</span></span></button></div>
+  <div class="sec-h"><h2>Policies</h2></div>
+  <div class="list"><a class="li" href="privacy.html">${ic('shield')}<span class="grow"><b>Privacy Policy</b><span>What stays on this device</span></span>${ic('chev')}</a>
+  <a class="li" href="terms.html">${ic('file')}<span class="grow"><b>Terms of Use</b></span>${ic('chev')}</a>
+  <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>Support</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
+  <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>Delete your data</b><span>How account deletion works</span></span>${ic('chev')}</a></div>
+  <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample placeholder, not a tracking network. Banking, chat, social feeds and other people's map pins are demos. Export a backup before you delete your data.</div>
+  <p class="footnote">LifeHub prototype v1.3 · ${navigator.onLine ? 'Online' : 'Offline'} · Installable as an app from your browser menu ("Add to Home Screen"). Dates use Australia/Hobart time.</p>`;
   return screen({ title: 'Settings', body });
 }
 function editProfile() {
@@ -1419,7 +1426,7 @@ function agendaView(day) {
 function importBlock() {
   const linked = S.cal.linked || {};
   return `<div class="row gap wrap" style="margin:4px 0 12px"><a class="btn" href="#/calendar/work">${ic('clock', 18)} Work schedule</a><a class="btn" href="#/location">${ic('pin', 18)} Location</a><button class="btn" data-act="importIcs">${ic('upload', 16)} Import .ics</button></div>
-    <div class="sec-h"><h2>Link a calendar</h2></div><div class="list">${['Google', 'Outlook', 'Apple'].map(n => `<button class="li" data-act="linkCal" data-name="${n}">${ic('link')}<span class="grow"><b>${n} Calendar</b><span>${linked[n] ? 'Demo events added on this device' : 'Demo only. Nothing is read from ' + n}</span></span><span class="tag">${linked[n] ? 'Demo on' : 'Demo'}</span></button>`).join('')}</div>
+    <div class="sec-h"><h2>Link a calendar</h2></div><p class="demoline"><span class="tag amber">Demo</span> Nothing is read from Google, Outlook or Apple.</p><div class="list">${['Google', 'Outlook', 'Apple'].map(n => `<button class="li" data-act="linkCal" data-name="${n}">${ic('link')}<span class="grow"><b>${n} Calendar</b><span>${linked[n] ? 'Sample event added on this device' : 'Nothing is read from ' + n}</span></span><span class="tag amber">Demo</span></button>`).join('')}</div>
     <p class="footnote">Bills, appointments, medication times, scheduled payments, birthdays, social events and dated apps appear here automatically. Hide one, or turn it into a normal event.</p>`;
 }
 function renderCalendar() {
@@ -1759,7 +1766,8 @@ function renderLocation() {
   const who = selected.map(c => c.name.split(' ')[0]).join(', ');
   const body = `<div data-screen="location">${S.loc.on ? `<div class="share-on" data-role="sharing">${ic('pin', 18)} Sharing is on${esc(untilTxt)} with ${esc(who)}</div>` : `<div class="notice blue">${ic('shield', 18)}<div>Sharing is off. Tick each person, choose how long, then start. There is no option to share with everyone.</div></div>`}
     <div id="locMap" role="region" aria-label="Map"></div><p id="locAddr" class="small" style="margin:0 0 4px">Finding your position…</p>
-    <p class="small muted">Map data © OpenStreetMap contributors, tiles © OpenStreetMap France. Other people's pins are simulated on this device.</p>
+    <p class="demoline"><span class="tag amber">Demo</span> Other people's pins are simulated on this device, not their real location.</p>
+    <p class="small muted">Map data © OpenStreetMap contributors, tiles © OpenStreetMap France.</p>
     <div class="card"><h3>Sharing with</h3><div class="picks" id="sharePicks" data-role="share-picks">${picks}</div>
       <div class="seg" style="margin:12px 0" role="group" aria-label="How long to share">${modeBtn('1h', '1 hour')}${modeBtn('until', 'Until I stop')}${modeBtn('always', 'Always')}</div>
       <div class="list">${list}</div>
@@ -1797,6 +1805,40 @@ function render() {
   location.replace('#/home');
 }
 
+async function wipeAllData() {
+  const ok = await confirmSheet('Delete all my data?', 'This permanently erases LifeHub on this device: your profile, medical details, contacts, calendar, photos and settings. It clears this site\'s local storage, caches and on-device database. This cannot be undone. You will return to the welcome screen.', 'Delete all my data', true);
+  if (!ok) return;
+  try { localStorage.clear(); } catch (e) {}
+  try { sessionStorage.clear(); } catch (e) {}
+  try {
+    if (typeof caches !== 'undefined' && caches.keys) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch (e) {}
+  await new Promise(res => {
+    const finish = names => {
+      const left = names.slice();
+      const next = () => {
+        const name = left.shift();
+        if (!name) return res();
+        try {
+          const req = indexedDB.deleteDatabase(name);
+          req.onsuccess = req.onerror = req.onblocked = () => next();
+        } catch (e) { next(); }
+      };
+      next();
+    };
+    if (indexedDB.databases) indexedDB.databases().then(list => finish([...new Set(['lifehub-media'].concat((list || []).map(d => d.name).filter(Boolean)))])).catch(() => finish(['lifehub-media']));
+    else finish(['lifehub-media']);
+  });
+  S = null; unlocked = false; pay = null; work = null;
+  ob = { step: 0, name: '', region: 'AU', method: 'pin', sample: true };
+  closeSheet(true);
+  if ((location.hash || '') && location.hash !== '#' && location.hash !== '#/') location.hash = '';
+  else render();
+}
+
 /* ---------- actions ---------- */
 const A = {
   obNext: () => { ob.step++; render(); }, obBack: () => { ob.step = Math.max(0, ob.step - 1); render(); },
@@ -1804,7 +1846,8 @@ const A = {
   obPasskey: async () => { let credId = null; if (passkeySupported()) { try { credId = await createPasskey(ob.name); } catch (e) { toast('Passkey not created: using simulated biometric'); } } finishOnboarding({ method: 'passkey', credId }); },
   obSSO: () => finishOnboarding({ method: ob.method }),
   lockAuth: async () => { if (await authorize('Unlock LifeHub')) unlock(); },
-  forgot: async () => { if (await confirmSheet('Erase LifeHub?', 'Your data is stored only on this device, so resetting erases everything: medical info, contacts, bills and settings. Export a backup first if you can.', 'Erase everything', true)) { localStorage.removeItem(KEY); sessionStorage.clear(); S = null; unlocked = false; ob = { step: 0, name: '', region: 'AU', method: 'pin', sample: true }; location.hash = ''; render(); } },
+  forgot: () => wipeAllData(),
+  wipeData: () => wipeAllData(),
   shareLoc: shareLocation,
   medAdd: el => editMedItem(el.dataset.k), medEdit: el => editMedItem(el.dataset.k, el.dataset.id), medBasics: editMedBasics,
   transfer, addAcct: () => addAccount(), acctMenu: el => acctMenu(el.dataset.id), importTx,
@@ -1889,5 +1932,5 @@ render();
 if (unlocked) checkReminders();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.2.0', isPremium: () => isPremium(), cal: { parseRoster, parseICS, rangesOverlap, onDay } };
+window.LifeHub = { version: '1.3.0', isPremium: () => isPremium(), cal: { parseRoster, parseICS, rangesOverlap, onDay } };
 })();

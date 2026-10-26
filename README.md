@@ -16,7 +16,14 @@ Onboarding asks for your name and region (AU default; NZ/US/UK/EU also available
 
 ## Files
 - `index.html`, `styles.css`, `app.js`: the app (hash router, single file of logic)
-- `manifest.webmanifest`, `sw.js`, `icons/`: PWA install and offline cache
+- `manifest.webmanifest`, `sw.js`, `icons/`, `screenshots/`: PWA install, offline cache and store listing images
+- `privacy.html`, `terms.html`, `support.html`, `delete-account.html`: store and privacy pages
+- `CNAME`: custom domain name `lifehubapp.app` (GitHub Actions Pages ignores this file for domain setup; set the domain in Settings > Pages)
+- `.well-known/assetlinks.json`: Android link placeholder (`[]` until a signing key exists)
+- `.nojekyll`: so Pages serves dot paths such as `.well-known`
+
+## Website
+The same files are served at `https://christurtleday-hue.github.io/LifeHub/` and, once DNS and Pages are pointed, at `https://lifehubapp.app/`. Paths in the app, manifest and service worker are relative, so both addresses work. Support: support@lifehubapp.app (Chris Day, Launceston TAS).
 
 ## Import formats
 - Contacts: `.vcf` (vCard, including `BDAY`), `.csv` (Google/Outlook exports: name, phone, email), `.json` array; Contact Picker API on Android Chrome. Birthday and a demo "LifeHub Premium" flag are on each contact.
@@ -28,7 +35,7 @@ Onboarding asks for your name and region (AU default; NZ/US/UK/EU also available
 ## Demo-only parts
 Bank linking, balances, transfers and tap-to-pay (incl. the $0.01 fee) are simulated. Scheduled payments are calendar reminders only. Chat replies and calls are simulated. Social counts and feeds are samples. Google, Outlook and Apple calendar linking is a demo (sample events, no real account). Google/Apple sign-in is simulated. Shared contact locations are simulated pins. Labels in the app make all of this clear.
 
-## Plans (v1.1)
+## Plans (v1.3)
 - **Free (default):** everything works, including Calendar (month, week and agenda), automatic events, overlap warnings, reminders and the work-schedule wizard. One slim, dismissible "Ad" card sits at the bottom of Home only (house ads / clearly-marked sample sponsors). Never shown on Emergency, Medical ID, lock, payment/authorisation, call or Location screens. Photos are kept at standard quality (max 1080px, JPEG 0.75). Auto-refresh: Manual, 15 min or 5 min. Pull-to-refresh for everyone. Free is never deliberately slowed down. The Emergency screen can still show your current location to read out to emergency services.
 - **Premium ($0.99 AUD/month, demo billing):** no ads, **Location** (your position on an OpenStreetMap map (tiles from OpenStreetMap France), and live sharing only with Premium contacts you tick one by one), full-resolution photos (JPEG 0.92 / originals kept), 1-minute and Live refresh, Midnight & Tassie Forest themes, 5 extra accent colours, glass icons, snappier animations, instant section preloading, Premium badge. Location sharing is off until you choose people and a duration (1 hour, until you stop, or always). There is no share-with-everyone option. Stopping or removing a person takes effect immediately.
 - Plan screen: Settings > Plan (also "Go Premium" in the ad). Demo checkout with a confirm step + PIN/biometric, Cancel (keeps Premium to period end), Resume, Restore purchase.

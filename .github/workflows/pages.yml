@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: '.'
-          # .nojekyll is a hidden file; v5 excludes dotfiles unless this is set.
+          # .nojekyll and .well-known are hidden; v5 excludes dotfiles unless this is set.
           include-hidden-files: true
 
       - name: Deploy to GitHub Pages

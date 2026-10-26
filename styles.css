@@ -243,6 +243,20 @@ h1,h2,h3{margin:0;line-height:1.2}
 .reorder .mv{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card2);display:grid;place-items:center}
 .reorder .mv:disabled{opacity:.3}
 .footnote{color:var(--muted);font-size:.8rem;text-align:center;margin:18px 8px}
+.demoline{display:flex;align-items:flex-start;gap:8px;margin:0 0 12px;font-size:.95rem;line-height:1.35}
+.demoline .tag{flex:none;margin:1px 0 0}
+.legalfoot{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;padding:4px 16px 28px;font-size:.82rem;color:var(--muted)}
+.legalfoot a{text-decoration:underline;text-underline-offset:3px}
+.thread .legalfoot{padding:2px 12px 8px}
+.call .legalfoot{padding:14px 0 0}
+.call .legalfoot a{color:#fff}
+.legal{max-width:40rem;margin:0 auto;padding:28px 20px 72px}
+.legal h1{font-size:1.85rem;margin:10px 0 6px}
+.legal h2{font-size:1.2rem;margin:26px 0 8px}
+.legal p,.legal li{font-size:1.05rem;line-height:1.5}
+.legal ul{padding-left:1.2rem}
+.legal a{color:var(--primary);text-decoration:underline;text-underline-offset:2px}
+.legal .legal-nav{margin-top:28px}
 
 .li .grow .red,.li .grow span.red{color:var(--red)} .li .grow .amber{color:var(--amber)} .li .grow .green{color:var(--green)}
 .li .grow span.tag{display:inline-block}
