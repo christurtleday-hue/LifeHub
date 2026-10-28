@@ -350,3 +350,9 @@ html.fast img{image-rendering:high-quality}
 .chips button{flex:none}
 .update-banner{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:180;display:flex;gap:10px;align-items:center;justify-content:space-between;background:#111827;color:#fff;padding:10px 12px 10px 16px;border-radius:16px;width:min(440px,calc(100% - 20px));box-shadow:0 10px 30px rgba(0,0,0,.28);font-weight:650}
 .update-banner button{background:#fff;color:#111;border:0;border-radius:12px;min-height:42px;padding:0 14px;font-weight:800}
+.dropzone{border:2px dashed var(--line);border-radius:16px;padding:14px 12px;text-align:center;margin:0 0 12px;background:var(--card);color:var(--muted)}
+.dropzone b{display:block;color:var(--text);font-size:1.02rem;margin-bottom:4px}
+.dropzone span{display:block;font-size:.85rem}
+.dropzone.over{border-color:var(--primary);background:var(--primary-soft);color:var(--text)}
+.home-drop{display:none;margin:0 16px 12px}
+html.can-drop .home-drop{display:block}

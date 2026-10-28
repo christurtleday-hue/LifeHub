@@ -465,7 +465,9 @@ function renderHome() {
     return `<a class="banner ${b.id === 'emergency' ? 'emergency' : ''}" href="${B.href}"><span class="chip" style="${b.id === 'emergency' ? '' : `background:${B.color}`}">${ic(B.icon, b.id === 'emergency' ? 30 : 26, 2.2)}</span><span class="txt"><b>${B.title}</b><span>${i.raw ? i.sub : esc(i.sub)}</span></span>${i.badge ? `<span class="badge">${i.badge}</span>` : ''}<span class="chev">${ic('chev')}</span></a>`; }).join('');
   const groups = S.groups.filter(g => g.onHome).map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="banner" href="#/group/${g.id}"><span class="chip" style="background:var(--card2);border:1px solid var(--line)">${esc(g.emoji || '📁')}</span><span class="txt"><b>${esc(g.name)}</b><span>${n} app${n === 1 ? '' : 's'}</span></span><span class="chev">${ic('chev')}</span></a>`; }).join('');
   return `<header class="home-head"><div class="hello"><small>${greet}</small><b>${esc(S.profile.name.split(' ')[0])}</b>${isPremium() ? ' ' + premBadge() : ''}</div><a class="iconbtn" href="#/search" aria-label="Search">${ic('search')}</a><a class="iconbtn" href="#/settings" aria-label="Settings">${ic('settings')}</a></header>
-  <nav class="banners" data-screen="home" aria-label="Main sections">${html}${groups}</nav>${AdSlot('home-bottom')}`;
+  <nav class="banners" data-screen="home" aria-label="Main sections">${html}${groups}</nav>
+  <div class="dropzone home-drop" data-drop="home"><b>Drop an app, shortcut or link here</b><span>On this computer you can drop a browser link, a store link, or a shortcut file. LifeHub only reads what you drop.</span></div>
+  ${AdSlot('home-bottom')}`;
 }
 
 /* ---------- search ---------- */
@@ -1014,12 +1016,14 @@ const appTile = a => `<a class="app" href="${esc(a.url)}" target="_blank" rel="n
 function renderAddNew() {
   const ung = S.apps.filter(a => !a.groupId || !S.groups.some(g => g.id === a.groupId));
   const body = `<div class="card"><b>Quick sync</b><p class="muted" style="margin:6px 0 10px">Tick apps you might already use and add them in one step. LifeHub cannot see what is installed on this device.</p><button class="btn primary full" data-act="quickSync">${ic('grid', 18)} Apps you might use</button></div>
+  <div class="dropzone" data-drop="add"><b>Drop an app, shortcut or link here</b><span>A browser link, a Play Store or App Store link, or a shortcut (.lnk, .url, .desktop, .webloc). LifeHub only reads what you drop.</span></div>
+  <button class="btn full" data-act="pasteLink" style="margin-bottom:12px">Paste a link</button>
   <div class="row gap" style="margin-bottom:14px"><button class="btn" data-act="addOne">${ic('plus', 18)} Add one link</button><button class="btn" data-act="addGroup">${ic('grid', 18)} New group</button></div>
   <div class="sec-h"><h2>Your groups</h2></div>
   <div class="list">${S.groups.length ? S.groups.map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="li" href="#/group/${g.id}"><span class="ai" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);font-size:1.4rem">${esc(g.emoji || '📁')}</span><span class="grow"><b>${esc(g.name)}</b><span>${n} app${n === 1 ? '' : 's'}${g.onHome ? ' · on Home' : ''}</span></span>${ic('chev')}</a>`; }).join('') : '<p class="empty">No groups yet</p>'}</div>
   <div class="sec-h"><h2>Other apps</h2></div><div class="appgrid">${ung.map(appTile).join('')}<button class="app add" data-act="addApp"><span class="ai">${ic('plus', 26)}</span>Add</button></div>
-  <p class="footnote">Tip: long-press (or right-click) an app to edit it. Deep links like spotify: or whatsapp: also work.</p>`;
-  return screen({ title: 'Add New', body });
+  <p class="footnote">Tip: long-press (or right-click) an app to edit it. Deep links like spotify: or whatsapp: also work. On a phone, use Share and choose LifeHub.</p>`;
+  return { html: screen({ title: 'Add New', body }), after: () => openPendingDraft() };
 }
 function renderGroup(id) {
   const g = S.groups.find(x => x.id === id); if (!g) { location.hash = '#/addnew'; return ''; }
@@ -1028,10 +1032,12 @@ function renderGroup(id) {
   <button class="btn full" data-act="editGroup" data-id="${id}">${ic('edit', 18)} Edit group</button><p class="footnote">Long-press (or right-click) an app to edit or move it.</p>`;
   return screen({ title: `${g.emoji || ''} ${g.name}`.trim(), back: '#/addnew', body });
 }
-function editApp(id, groupId) {
+function editApp(id, groupId, preset) {
   const a = id && S.apps.find(x => x.id === id);
-  formSheet({ title: a ? 'Edit app' : 'Add app or link', fields: [{ k: 'name', label: 'Name', req: true }, { k: 'url', label: 'Web address or app link', req: true, ph: 'https://… or app-name://' }, { k: 'emoji', label: 'Icon (emoji)', ph: '🔗' }, { k: 'groupId', label: 'Group', type: 'select', options: [['', 'No group'], ...S.groups.map(g => [g.id, `${g.emoji || ''} ${g.name}`])] }, { k: 'nextLabel', label: 'Calendar label (optional)', ph: 'e.g. School pickup' }, { k: 'nextOn', label: 'Next date', type: 'date' }, { k: 'nextStart', label: 'Starts', type: 'time' }, { k: 'nextEnd', label: 'Ends', type: 'time' }],
-    values: a || { groupId: groupId || '' }, onSave: v => { if (!/^[a-z][\w+.-]*:/i.test(v.url)) v.url = 'https://' + v.url; v.emoji = v.emoji || '🔗'; if (a) Object.assign(a, v); else S.apps.push({ id: uid(), ...v }); toast('Saved'); },
+  const base = a || { groupId: groupId || '', emoji: '🔗', name: '', url: '', ...(preset || {}) };
+  const intro = !a && preset && preset.note ? preset.note : '';
+  formSheet({ title: a ? 'Edit app' : 'Add app or link', intro, fields: [{ k: 'name', label: 'Name', req: true }, { k: 'url', label: 'Web address or app link', req: true, ph: 'https://… or app-name://' }, { k: 'emoji', label: 'Icon (emoji)', ph: '🔗' }, { k: 'groupId', label: 'Group', type: 'select', options: [['', 'No group'], ...S.groups.map(g => [g.id, `${g.emoji || ''} ${g.name}`])] }, { k: 'nextLabel', label: 'Calendar label (optional)', ph: 'e.g. School pickup' }, { k: 'nextOn', label: 'Next date', type: 'date' }, { k: 'nextStart', label: 'Starts', type: 'time' }, { k: 'nextEnd', label: 'Ends', type: 'time' }],
+    values: base, onSave: v => { if (!/^[a-z][\w+.-]*:/i.test(v.url)) v.url = 'https://' + v.url; v.emoji = v.emoji || '🔗'; if (a) Object.assign(a, v); else S.apps.push({ id: uid(), catalogId: (preset && preset.catalogId) || '', android: (preset && preset.android) || '', ios: (preset && preset.ios) || '', ...v }); toast('Saved'); },
     danger: a ? { label: 'Remove app', fn: () => S.apps = S.apps.filter(x => x.id !== id) } : null });
 }
 function editGroup(id) {
@@ -1078,7 +1084,7 @@ function renderSettings() {
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>Support</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
   <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>Delete your data</b><span>How account deletion works</span></span>${ic('chev')}</a></div>
   <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample placeholder, not a tracking network. Banking, chat, social feeds and other people's map pins are demos. Export a backup before you delete your data.</div>
-  <p class="footnote">LifeHub prototype v1.4 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
+  <p class="footnote">LifeHub prototype v1.4.1 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
   return screen({ title: 'Settings', body });
 }
 function editProfile() {
@@ -2320,38 +2326,179 @@ function newFolder() {
 }
 
 /* ---------- quick sync ---------- */
+/* android = Play package name. ios = URL scheme without ://. appleId = App Store id.
+   These are for a future Capacitor build that may check installed apps with a
+   <queries> list. This website does not use them to detect what is installed. */
 const APP_CATALOG = [
-  { id: 'gcal', name: 'Google Calendar', emoji: '📅', cat: 'Calendar', url: 'https://calendar.google.com/', cal: 'Google' },
-  { id: 'outlook', name: 'Outlook', emoji: '📧', cat: 'Calendar', url: 'https://outlook.live.com/calendar/', cal: 'Outlook' },
+  { id: 'gcal', name: 'Google Calendar', emoji: '📅', cat: 'Calendar', url: 'https://calendar.google.com/', cal: 'Google', android: 'com.google.android.calendar', ios: 'googlecalendar', appleId: '909319292' },
+  { id: 'outlook', name: 'Outlook', emoji: '📧', cat: 'Calendar', url: 'https://outlook.live.com/calendar/', cal: 'Outlook', android: 'com.microsoft.office.outlook', ios: 'ms-outlook', appleId: '951937596' },
   { id: 'applecal', name: 'Apple Calendar', emoji: '🗓️', cat: 'Calendar', url: 'https://www.icloud.com/calendar/', cal: 'Apple' },
-  { id: 'teams', name: 'Microsoft Teams', emoji: '👥', cat: 'Work', url: 'https://teams.microsoft.com/' },
-  { id: 'zoom', name: 'Zoom', emoji: '🎥', cat: 'Work', url: 'https://zoom.us/' },
-  { id: 'gmail', name: 'Gmail', emoji: '✉️', cat: 'Messages', url: 'https://mail.google.com/' },
-  { id: 'whatsapp', name: 'WhatsApp', emoji: '💬', cat: 'Messages', url: 'https://web.whatsapp.com/' },
-  { id: 'messenger', name: 'Messenger', emoji: '💬', cat: 'Messages', url: 'https://www.messenger.com/' },
-  { id: 'telegram', name: 'Telegram', emoji: '✈️', cat: 'Messages', url: 'https://web.telegram.org/' },
-  { id: 'signal', name: 'Signal', emoji: '🔒', cat: 'Messages', url: 'https://signal.org/' },
-  { id: 'facebook', name: 'Facebook', emoji: '📘', cat: 'Social', url: 'https://www.facebook.com/' },
-  { id: 'instagram', name: 'Instagram', emoji: '📷', cat: 'Social', url: 'https://www.instagram.com/' },
-  { id: 'tiktok', name: 'TikTok', emoji: '🎵', cat: 'Social', url: 'https://www.tiktok.com/' },
-  { id: 'youtube', name: 'YouTube', emoji: '▶️', cat: 'Social', url: 'https://www.youtube.com/' },
-  { id: 'x', name: 'X', emoji: '𝕏', cat: 'Social', url: 'https://x.com/' },
-  { id: 'commbank', name: 'CommBank', emoji: '🏦', cat: 'Money', url: 'https://www.commbank.com.au/' },
-  { id: 'westpac', name: 'Westpac', emoji: '🏦', cat: 'Money', url: 'https://www.westpac.com.au/' },
-  { id: 'nab', name: 'NAB', emoji: '🏦', cat: 'Money', url: 'https://www.nab.com.au/' },
-  { id: 'anz', name: 'ANZ', emoji: '🏦', cat: 'Money', url: 'https://www.anz.com.au/' },
-  { id: 'paypal', name: 'PayPal', emoji: '💳', cat: 'Money', url: 'https://www.paypal.com/' },
-  { id: 'gmaps', name: 'Google Maps', emoji: '📍', cat: 'Travel', url: 'https://maps.google.com/' },
-  { id: 'uber', name: 'Uber', emoji: '🚗', cat: 'Travel', url: 'https://m.uber.com/' },
+  { id: 'teams', name: 'Microsoft Teams', emoji: '👥', cat: 'Work', url: 'https://teams.microsoft.com/', android: 'com.microsoft.teams', ios: 'msteams', appleId: '1113153706' },
+  { id: 'zoom', name: 'Zoom', emoji: '🎥', cat: 'Work', url: 'https://zoom.us/', android: 'us.zoom.videomeetings', ios: 'zoomus', appleId: '546505307' },
+  { id: 'gmail', name: 'Gmail', emoji: '✉️', cat: 'Messages', url: 'https://mail.google.com/', android: 'com.google.android.gm', ios: 'googlegmail', appleId: '422689480' },
+  { id: 'whatsapp', name: 'WhatsApp', emoji: '💬', cat: 'Messages', url: 'https://web.whatsapp.com/', android: 'com.whatsapp', ios: 'whatsapp', appleId: '310633997' },
+  { id: 'messenger', name: 'Messenger', emoji: '💬', cat: 'Messages', url: 'https://www.messenger.com/', android: 'com.facebook.orca', ios: 'fb-messenger', appleId: '454638411' },
+  { id: 'telegram', name: 'Telegram', emoji: '✈️', cat: 'Messages', url: 'https://web.telegram.org/', android: 'org.telegram.messenger', ios: 'tg', appleId: '686449807' },
+  { id: 'signal', name: 'Signal', emoji: '🔒', cat: 'Messages', url: 'https://signal.org/', android: 'org.thoughtcrime.securesms', ios: 'sgnl', appleId: '874139669' },
+  { id: 'facebook', name: 'Facebook', emoji: '📘', cat: 'Social', url: 'https://www.facebook.com/', android: 'com.facebook.katana', ios: 'fb', appleId: '284882215' },
+  { id: 'instagram', name: 'Instagram', emoji: '📷', cat: 'Social', url: 'https://www.instagram.com/', android: 'com.instagram.android', ios: 'instagram', appleId: '389801252' },
+  { id: 'tiktok', name: 'TikTok', emoji: '🎵', cat: 'Social', url: 'https://www.tiktok.com/', android: 'com.zhiliaoapp.musically', ios: 'tiktok', appleId: '835599320' },
+  { id: 'youtube', name: 'YouTube', emoji: '▶️', cat: 'Social', url: 'https://www.youtube.com/', android: 'com.google.android.youtube', ios: 'youtube', appleId: '544007664' },
+  { id: 'x', name: 'X', emoji: '𝕏', cat: 'Social', url: 'https://x.com/', android: 'com.twitter.android', ios: 'twitter', appleId: '333903271' },
+  { id: 'commbank', name: 'CommBank', emoji: '🏦', cat: 'Money', url: 'https://www.commbank.com.au/', android: 'com.commbank.netbank', ios: 'commbank' },
+  { id: 'westpac', name: 'Westpac', emoji: '🏦', cat: 'Money', url: 'https://www.westpac.com.au/', android: 'org.westpac.bank' },
+  { id: 'nab', name: 'NAB', emoji: '🏦', cat: 'Money', url: 'https://www.nab.com.au/', android: 'au.com.nab.mobile' },
+  { id: 'anz', name: 'ANZ', emoji: '🏦', cat: 'Money', url: 'https://www.anz.com.au/', android: 'com.anz.android.gomoney' },
+  { id: 'paypal', name: 'PayPal', emoji: '💳', cat: 'Money', url: 'https://www.paypal.com/', android: 'com.paypal.android.p2pmobile', ios: 'paypal', appleId: '283646709' },
+  { id: 'gmaps', name: 'Google Maps', emoji: '📍', cat: 'Travel', url: 'https://maps.google.com/', android: 'com.google.android.apps.maps', ios: 'comgooglemaps', appleId: '585027354' },
+  { id: 'uber', name: 'Uber', emoji: '🚗', cat: 'Travel', url: 'https://m.uber.com/', android: 'com.ubercab', ios: 'uber', appleId: '368677368' },
   { id: 'medicare', name: 'Medicare', emoji: '🩺', cat: 'Health', url: 'https://www.servicesaustralia.gov.au/medicare' },
   { id: 'hotdoc', name: 'HotDoc', emoji: '🩺', cat: 'Health', url: 'https://www.hotdoc.com.au/' },
   { id: 'mygov', name: 'myGov', emoji: '🇦🇺', cat: 'Health', url: 'https://my.gov.au/' },
-  { id: 'spotify', name: 'Spotify', emoji: '🎧', cat: 'Everyday', url: 'https://open.spotify.com/' },
-  { id: 'netflix', name: 'Netflix', emoji: '🎬', cat: 'Everyday', url: 'https://www.netflix.com/' },
+  { id: 'spotify', name: 'Spotify', emoji: '🎧', cat: 'Everyday', url: 'https://open.spotify.com/', android: 'com.spotify.music', ios: 'spotify', appleId: '324684580' },
+  { id: 'netflix', name: 'Netflix', emoji: '🎬', cat: 'Everyday', url: 'https://www.netflix.com/', android: 'com.netflix.mediaclient', ios: 'nflx', appleId: '363590051' },
   { id: 'auspost', name: 'Australia Post', emoji: '📦', cat: 'Everyday', url: 'https://auspost.com.au/' },
 ];
 const CAT_EMOJI = { Calendar: '📅', Work: '💼', Messages: '💬', Social: '📣', Money: '🏦', Travel: '✈️', Health: '🩺', Everyday: '⭐' };
 let syncQ = '', syncPick = null, syncRelated = '';
+
+function bytesToText(buf) {
+  const u8 = new Uint8Array(buf);
+  let ascii = '', utf16 = '';
+  for (let i = 0; i < u8.length; i++) ascii += (u8[i] >= 32 && u8[i] < 127) ? String.fromCharCode(u8[i]) : '\n';
+  for (let i = 0; i + 1 < u8.length; i += 2) {
+    const c = u8[i] | (u8[i + 1] << 8);
+    utf16 += (c >= 32 && c < 127) ? String.fromCharCode(c) : '\n';
+  }
+  return ascii + '\n' + utf16;
+}
+function normName(s) {
+  return String(s || '').toLowerCase().replace(/\.(lnk|url|desktop|webloc|png|jpe?g|svg|ico|html)$/i, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function nameHits(spec, label) {
+  const n = normName(spec.name), h = normName(label);
+  if (!n || !h) return false;
+  if (n.length <= 2 || h.length <= 2) return h === n;
+  return h === n || h.includes(n);
+}
+function hostOf(url) { try { return new URL(url).hostname.replace(/^www\./, '').toLowerCase(); } catch (e) { return ''; } }
+function rootHost(h) {
+  const p = h.split('.');
+  if (p.length >= 3 && p[p.length - 2] === 'com' && ['au', 'uk', 'nz'].includes(p[p.length - 1])) return p.slice(-3).join('.');
+  return p.length >= 2 ? p.slice(-2).join('.') : h;
+}
+const SHARED_HOSTS = new Set(['google.com', 'live.com', 'microsoft.com', 'apple.com', 'icloud.com', 'office.com']);
+function hostsRelated(dropped, catalog) {
+  if (!dropped || !catalog) return false;
+  const close = dropped === catalog || dropped.endsWith('.' + catalog) || catalog.endsWith('.' + dropped);
+  if (!close) return false;
+  if (SHARED_HOSTS.has(rootHost(dropped)) || SHARED_HOSTS.has(rootHost(catalog))) return dropped === catalog || dropped.endsWith('.' + catalog);
+  return true;
+}
+function firstUrl(text) {
+  const m = String(text || '').match(/[a-z][a-z0-9+.-]*:\/\/[^\s<>"')\]]+/i);
+  return m ? m[0].replace(/[),.;]+$/, '') : '';
+}
+function matchAppLink(raw) {
+  const text = String(raw || '');
+  const url = firstUrl(text);
+  const play = (text.match(/[?&]id=([A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+)/) || [])[1] || '';
+  const apple = (text.match(/\/id(\d{6,})/) || [])[1] || '';
+  let scheme = '';
+  try { if (url) scheme = new URL(url).protocol.replace(':', '').toLowerCase(); } catch (e) {}
+  if (scheme === 'http' || scheme === 'https') scheme = '';
+  const fileLabel = text.split(/[\n\r]+/).map(s => s.trim().split(/[/\\]/).pop()).find(s => /\.(lnk|url|desktop|webloc|png|jpe?g|svg|ico)$/i.test(s || '')) || '';
+  const spec = APP_CATALOG.find(s => play && s.android && s.android === play)
+    || APP_CATALOG.find(s => apple && s.appleId && String(s.appleId) === apple)
+    || APP_CATALOG.find(s => scheme && s.ios && s.ios.toLowerCase() === scheme)
+    || APP_CATALOG.find(s => url && hostsRelated(hostOf(url), hostOf(s.url)))
+    || APP_CATALOG.find(s => nameHits(s, fileLabel) || nameHits(s, text));
+  if (spec) {
+    const store = /play\.google\.com|apps\.apple\.com|itunes\.apple\.com/i.test(url);
+    const useDropped = url && !store && (scheme || hostsRelated(hostOf(url), hostOf(spec.url)));
+    const how = play ? 'the Play Store link' : apple ? 'the App Store link' : scheme ? 'the app link' : fileLabel ? 'the file name' : 'the link';
+    return { matched: true, name: spec.name, url: useDropped ? url : spec.url, emoji: spec.emoji || '🔗', catalogId: spec.id, android: spec.android || '', ios: spec.ios || '', groupId: '', note: 'Matched ' + spec.name + ' from ' + how + '. Check it, then save. LifeHub has not checked whether it is installed.' };
+  }
+  let name = '';
+  if (fileLabel) name = fileLabel.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+  else if (url) { try { name = new URL(url).hostname.replace(/^www\./, '').split('.')[0]; } catch (e) {} }
+  else { const line = text.split(/[\n\r]+/).map(s => s.trim()).find(Boolean) || ''; name = line.slice(0, 40); }
+  name = name.replace(/\b\w/g, c => c.toUpperCase());
+  if (!name && !url) return null;
+  return { matched: false, name: name || 'App', url: (scheme ? url : url) || '', emoji: '🔗', catalogId: '', android: '', ios: '', groupId: '', note: 'No popular app matched. The name and link are filled in from what you dropped.' };
+}
+async function rawFromDrop(dt) {
+  const chunks = [];
+  try { ['text/uri-list', 'text/plain', 'text/html', 'URL'].forEach(t => { const v = dt.getData(t); if (v) chunks.push(v); }); } catch (e) {}
+  for (const f of [...(dt.files || [])]) {
+    chunks.push(f.name || '');
+    if (f.size > 524288) continue;
+    try { chunks.push(bytesToText(await f.arrayBuffer())); } catch (e) {}
+  }
+  return chunks.join('\n');
+}
+function openPreset(preset) {
+  if (!preset) { toast('Nothing readable in that drop'); return; }
+  sessionStorage.setItem('lh.addDraft', JSON.stringify(preset));
+  if ((location.hash || '') !== '#/addnew') location.hash = '#/addnew';
+  else openPendingDraft();
+}
+function openPendingDraft() {
+  const raw = sessionStorage.getItem('lh.addDraft'); if (!raw || !unlocked) return;
+  sessionStorage.removeItem('lh.addDraft');
+  let preset = null; try { preset = JSON.parse(raw); } catch (e) { return; }
+  editApp(null, '', preset);
+}
+function pasteLink() {
+  formSheet({ title: 'Paste a link', intro: 'Paste a website, Play Store or App Store link. LifeHub cannot see which apps are installed.', submit: 'Continue', fields: [{ k: 'link', label: 'Link', req: true, ph: 'https://…' }],
+    onSave: v => { const preset = matchAppLink(v.link); setTimeout(() => openPreset(preset), 0); return false; } });
+}
+function dropTarget(e) {
+  if (!e.target || !e.target.closest) return null;
+  const zone = e.target.closest('[data-drop]');
+  if (zone) return zone;
+  if (document.documentElement.classList.contains('can-drop') && e.target.closest('[data-screen="home"]')) return document.querySelector('[data-drop="home"]');
+  return null;
+}
+function syncDropMode() {
+  let ok = false;
+  try { ok = matchMedia('(min-width: 900px)').matches; } catch (e) {}
+  document.documentElement.classList.toggle('can-drop', ok);
+}
+document.addEventListener('dragover', e => {
+  const zone = dropTarget(e); if (!zone) return;
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+  zone.classList.add('over');
+});
+document.addEventListener('dragleave', e => { const zone = e.target.closest && e.target.closest('[data-drop]'); if (zone) zone.classList.remove('over'); });
+document.addEventListener('drop', async e => {
+  const zone = dropTarget(e); if (!zone) return;
+  e.preventDefault();
+  $$('[data-drop]').forEach(z => z.classList.remove('over'));
+  const raw = await rawFromDrop(e.dataTransfer);
+  openPreset(matchAppLink(raw));
+});
+syncDropMode();
+try { matchMedia('(min-width: 900px)').addEventListener('change', syncDropMode); } catch (e) {}
+addEventListener('resize', syncDropMode);
+async function absorbAddIntent() {
+  let intent = null;
+  try {
+    const cache = await caches.open('lifehub-share');
+    const key = new URL('./share-intent.json', document.baseURI);
+    const res = await cache.match(key);
+    if (!res) return;
+    intent = await res.json();
+    await cache.delete(key);
+  } catch (e) { return; }
+  const preset = matchAppLink([intent.title, intent.text, intent.url, intent.extra].filter(Boolean).join('\n'));
+  if (!preset) return;
+  sessionStorage.setItem('lh.addDraft', JSON.stringify(preset));
+  if (!unlocked) return;
+  if ((location.hash || '') !== '#/addnew') location.hash = '#/addnew';
+  else openPendingDraft();
+}
 function catalogInHub(spec) { return S.apps.some(a => a.catalogId === spec.id || a.url === spec.url); }
 function adoptCatalog() {
   (S.apps || []).forEach(a => {
@@ -2412,7 +2559,7 @@ function connectSync() {
     if (on && !existing) {
       let g = S.groups.find(x => x.name === spec.cat);
       if (!g) { g = { id: uid(), name: spec.cat, emoji: CAT_EMOJI[spec.cat] || '📁', onHome: false }; S.groups.push(g); }
-      S.apps.push({ id: uid(), catalogId: spec.id, name: spec.name, url: spec.url, emoji: spec.emoji, groupId: g.id, nextLabel: '', nextOn: '', nextStart: '', nextEnd: '' });
+      S.apps.push({ id: uid(), catalogId: spec.id, name: spec.name, url: spec.url, emoji: spec.emoji, groupId: g.id, android: spec.android || '', ios: spec.ios || '', nextLabel: '', nextOn: '', nextStart: '', nextEnd: '' });
       added++;
     }
     if (!on && existing && existing.catalogId === spec.id) { S.apps = S.apps.filter(a => a !== existing); removed++; }
@@ -2482,14 +2629,18 @@ function setupUpdates() {
     updateReady = true;
     if (safeToReload()) maybeApplyUpdate(); else showUpdateBanner();
   });
-  navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.type === 'lh-shared') absorbInbox(); });
+  navigator.serviceWorker.addEventListener('message', ev => {
+    if (!ev.data) return;
+    if (ev.data.type === 'lh-shared') absorbInbox();
+    if (ev.data.type === 'lh-add-app') absorbAddIntent();
+  });
   const tick = () => navigator.serviceWorker.getRegistration().then(reg => {
     if (!reg) return;
     reg.update().catch(() => {});
     if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage({ type: 'skipWaiting' });
   }).catch(() => {});
   tick();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); absorbInbox(); maybeApplyUpdate(); } });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); absorbInbox(); absorbAddIntent(); maybeApplyUpdate(); } });
   setInterval(tick, 30 * 60 * 1000);
   setInterval(maybeApplyUpdate, 3000);
   if ('launchQueue' in window) {
@@ -2584,7 +2735,7 @@ const A = {
   dismissNote: el => { S.notifications = S.notifications.filter(n => n.id !== el.dataset.id); save(); render(); }, clearNotes: () => { S.notifications = []; save(); render(); },
   addBill: () => editBill(), editBill: el => editBill(el.dataset.id), uploadBill, importBills, billSort: el => { billSort = el.dataset.s; render(); },
   payBill: el => { const b = S.bills.find(x => x.id === el.dataset.id); b.paid = true; save(); render(); toast(`${b.provider} marked as paid`); },
-  addApp: el => { if (el.dataset.g) editApp(null, el.dataset.g); else openQuickSync(); }, addOne: () => editApp(), quickSync: () => openQuickSync(),
+  addApp: el => { if (el.dataset.g) editApp(null, el.dataset.g); else openQuickSync(); }, addOne: () => editApp(), pasteLink: () => pasteLink(), quickSync: () => openQuickSync(),
   syncTick: el => syncTick(el.dataset.id), syncGo: () => connectSync(), addGroup: () => editGroup(), editGroup: el => editGroup(el.dataset.id),
   budMonth: el => { budgetMonth = shiftMonth(bMonth(), Number(el.dataset.d) || 0); render(); },
   budAdd: () => addBudgetEntry(), budSpend: el => budSpend(el.dataset.id), budGoal: el => editGoal(el.dataset.id), budBill: el => editBBill(el.dataset.id),
@@ -2660,8 +2811,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) hidde
 
 setupUpdates();
 render();
-if (unlocked) { checkReminders(); absorbInbox(); }
+if (unlocked) { checkReminders(); absorbInbox(); absorbAddIntent(); openPendingDraft(); }
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.4.0', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
+window.LifeHub = { version: '1.4.1', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
 })();
