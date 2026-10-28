@@ -1037,7 +1037,12 @@ function editApp(id, groupId, preset) {
   const base = a || { groupId: groupId || '', emoji: '🔗', name: '', url: '', ...(preset || {}) };
   const intro = !a && preset && preset.note ? preset.note : '';
   formSheet({ title: a ? 'Edit app' : 'Add app or link', intro, fields: [{ k: 'name', label: 'Name', req: true }, { k: 'url', label: 'Web address or app link', req: true, ph: 'https://… or app-name://' }, { k: 'emoji', label: 'Icon (emoji)', ph: '🔗' }, { k: 'groupId', label: 'Group', type: 'select', options: [['', 'No group'], ...S.groups.map(g => [g.id, `${g.emoji || ''} ${g.name}`])] }, { k: 'nextLabel', label: 'Calendar label (optional)', ph: 'e.g. School pickup' }, { k: 'nextOn', label: 'Next date', type: 'date' }, { k: 'nextStart', label: 'Starts', type: 'time' }, { k: 'nextEnd', label: 'Ends', type: 'time' }],
-    values: base, onSave: v => { if (!/^[a-z][\w+.-]*:/i.test(v.url)) v.url = 'https://' + v.url; v.emoji = v.emoji || '🔗'; if (a) Object.assign(a, v); else S.apps.push({ id: uid(), catalogId: (preset && preset.catalogId) || '', android: (preset && preset.android) || '', ios: (preset && preset.ios) || '', ...v }); toast('Saved'); },
+    values: base, onSave: async v => {
+      if (!/^[a-z][\w+.-]*:/i.test(v.url)) v.url = 'https://' + v.url;
+      const checked = LHSafety.scanLink(v.url, linkCheckContext());
+      if (!(await presentSafety(checked, v.url))) return false;
+      v.emoji = v.emoji || '🔗'; if (a) Object.assign(a, v); else S.apps.push({ id: uid(), catalogId: (preset && preset.catalogId) || '', android: (preset && preset.android) || '', ios: (preset && preset.ios) || '', ...v }); toast(checked.level === 'safe' ? 'Saved · safety check: Safe' : 'Saved');
+    },
     danger: a ? { label: 'Remove app', fn: () => S.apps = S.apps.filter(x => x.id !== id) } : null });
 }
 function editGroup(id) {
@@ -1073,6 +1078,11 @@ function renderSettings() {
   <div class="list"><div class="li" style="display:block">${ic('clock')} <b>Auto-refresh feeds, balances & chat</b><div class="seg" style="margin-top:8px">${REFRESH.map(([v, l, pr]) => `<button class="${refreshSetting() === v ? 'on' : ''}" data-act="setRefresh" data-v="${v}">${pr && !isPremium() ? ic('lock', 12) + ' ' : ''}${l}</button>`).join('')}</div><div class="small muted" style="margin-top:6px">Pull down on any screen to refresh now.${isPremium() ? '' : ' 1 min and Live come with Premium.'}</div></div></div>
   <div class="sec-h"><h2>Network</h2></div>
   <label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>Prefer Wi‑Fi for chat & calls</b><span>Use mobile data only when Wi‑Fi isn't available</span></span><span class="switch"><input type="checkbox" data-change="preferWifi" ${s.preferWifi ? 'checked' : ''}><i></i></span></label>
+  <div class="sec-h"><h2>Safety</h2></div>
+  <p class="small muted" style="margin:-4px 2px 8px">Safety check looks at files and links you add to LifeHub. It does not scan this device, and it does not send them anywhere. It is not an antivirus.</p>
+  <label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>Strict mode</b><span>A caution is blocked too. You cannot choose Add anyway.</span></span><span class="switch"><input type="checkbox" data-change="safetyStrict" ${S.safety && S.safety.strict ? 'checked' : ''}><i></i></span></label>
+  <div class="list">${(S.safety && S.safety.log || []).length ? S.safety.log.slice(0, 12).map(item => `<div class="li"><span class="grow"><b>${esc(item.name || 'Check')}</b><span>${esc(item.reason || '')}</span></span>${safetyTag(item.level)}</div>`).join('') : '<p class="empty">No checks yet. One runs when you add a file or save a link.</p>'}</div>
+  <p class="footnote">Checks stay on this device. A reputation list can be added later. None is used now.</p>
   <div class="sec-h"><h2>Your data</h2></div>
   <div class="list"><button class="li" data-act="exportData">${ic('download')}<span class="grow"><b>Export backup</b><span>Download everything as a JSON file</span></span></button>
   <button class="li" data-act="importData">${ic('upload')}<span class="grow"><b>Import backup or data</b><span>LifeHub backup (.json), contacts (.vcf/.csv)</span></span></button>
@@ -1084,7 +1094,7 @@ function renderSettings() {
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>Support</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
   <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>Delete your data</b><span>How account deletion works</span></span>${ic('chev')}</a></div>
   <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample placeholder, not a tracking network. Banking, chat, social feeds and other people's map pins are demos. Export a backup before you delete your data.</div>
-  <p class="footnote">LifeHub prototype v1.4.1 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
+  <p class="footnote">LifeHub prototype v1.4.2 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
   return screen({ title: 'Settings', body });
 }
 function editProfile() {
@@ -1292,9 +1302,10 @@ function ensureHub() {
   const bannersChanged = ensureBanners();
   const budgetChanged = ensureBudget();
   const docsChanged = ensureDocs();
+  const safetyChanged = ensureSafety();
   const before = eventSig(S.events);
   syncAutoEvents();
-  if (bannersChanged || budgetChanged || docsChanged || eventSig(S.events) !== before || tidyLoc()) save();
+  if (bannersChanged || budgetChanged || docsChanged || safetyChanged || eventSig(S.events) !== before || tidyLoc()) save();
 }
 function announceConflicts() {
   if (!unlocked || !S || !S.cal) return;
@@ -2204,17 +2215,85 @@ function docKind(name, type) {
   return 'file';
 }
 function fmtBytes(n) { n = Number(n) || 0; if (n < 1024) return n + ' B'; if (n < 1048576) return Math.round(n / 1024) + ' KB'; return (n / 1048576).toFixed(1) + ' MB'; }
+function safetyTag(level) {
+  if (level === 'safe') return '<span class="tag green">Safe</span>';
+  if (level === 'caution') return '<span class="tag amber">Caution</span>';
+  if (level === 'blocked') return '<span class="tag red">Blocked</span>';
+  return '';
+}
+function safetyStrict() { return !!(S && S.safety && S.safety.strict); }
+function ensureSafety() {
+  let changed = false;
+  if (!S.safety || typeof S.safety !== 'object') { S.safety = { strict: false, log: [] }; changed = true; }
+  if (typeof S.safety.strict !== 'boolean') { S.safety.strict = false; changed = true; }
+  if (!Array.isArray(S.safety.log)) { S.safety.log = []; changed = true; }
+  return changed;
+}
+function linkCheckContext() {
+  const brands = [];
+  const official = ['google.com', 'microsoft.com', 'apple.com', 'spotify.com', 'whatsapp.com', 'facebook.com', 'instagram.com', 'netflix.com', 'paypal.com', 'zoom.us', 'signal.org', 'youtube.com', 'uber.com', 'tiktok.com', 'x.com', 'twitter.com', 'live.com', 'office.com', 'icloud.com', 'commbank.com.au', 'westpac.com.au', 'nab.com.au', 'anz.com.au', 'my.gov.au', 'auspost.com.au', 'hotdoc.com.au', 'telegram.org', 'gmail.com'];
+  APP_CATALOG.forEach(a => {
+    normName(a.name).split(' ').forEach(w => { if (w.length >= 5 && !['calendar', 'messenger', 'australia'].includes(w)) brands.push(w); });
+    const host = hostOf(a.url);
+    if (!host) return;
+    official.push(host);
+    const parts = host.split('.');
+    for (let i = 1; i < parts.length - 1; i++) {
+      const parent = parts.slice(i).join('.');
+      if (!SHARED_HOSTS.has(parent)) official.push(parent);
+    }
+  });
+  return { brands: [...new Set(brands)], official: [...new Set(official)] };
+}
+function logSafety(result, name) {
+  ensureSafety();
+  S.safety.log.unshift({ t: Date.now(), name: String(name || 'Check').slice(0, 80), level: result.level, reason: (result.reasons || []).filter(r => r && r !== 'Nothing in this check stood out.').join(' ') });
+  if (S.safety.log.length > 30) S.safety.log.length = 30;
+  save();
+}
+function presentSafety(result, name) {
+  logSafety(result, name);
+  if (result.level === 'safe') return Promise.resolve(true);
+  const strict = safetyStrict();
+  const blocked = result.level === 'blocked' || (result.level === 'caution' && strict);
+  const label = blocked ? 'Blocked' : 'Caution';
+  const why = strict && result.level === 'caution' ? '<p class="small muted">Strict mode is on, so a caution cannot be added.</p>' : '';
+  return new Promise(res => {
+    let done = false;
+    const fin = v => { if (done) return; done = true; closeSheet(true); res(!!v); };
+    const buttons = blocked ? '<button class="btn full" id="sNo">Don\'t add</button>' : '<div class="row gap"><button class="btn" id="sNo">Don\'t add</button><button class="btn primary" id="sYes">Add anyway</button></div>';
+    openSheet(`<p class="safebadge ${blocked ? 'blocked' : 'caution'}">${label}</p><h2>Safety check</h2><p class="muted">This looks at what you are adding to LifeHub. It does not scan your device, and nothing is uploaded.</p><ul class="safer">${(result.reasons || []).map(r => '<li>' + esc(r) + '</li>').join('')}</ul>${why}${buttons}`, el => {
+      const no = $('#sNo', el); if (no) no.onclick = () => fin(false);
+      const yes = $('#sYes', el); if (yes) yes.onclick = () => fin(true);
+    }, () => fin(false));
+  });
+}
+async function scanFile(file) {
+  const size = file.size || 0;
+  const cap = Math.min(size, 8 * 1024 * 1024);
+  const bytes = new Uint8Array(await file.slice(0, cap).arrayBuffer());
+  const result = LHSafety.scanBytes(file.name || 'file', bytes, size);
+  if (size > cap && result.level === 'safe') return { level: 'caution', reasons: ['Only the first 8 MB of this large file were checked.'] };
+  return result;
+}
 async function addDocFiles(list) {
   ensureDocs();
-  let n = 0;
-  for (const f of list) {
-    if (!f) continue;
+  const kept = [];
+  for (const f of [...list].filter(Boolean)) {
+    const result = await scanFile(f);
+    const ok = result.level === 'safe' || await presentSafety(result, f.name);
+    if (result.level === 'safe') logSafety(result, f.name);
+    if (!ok) continue;
     const id = uid();
     try { await putFile(id, f); } catch (e) { toast('Could not store ' + (f.name || 'a file')); continue; }
-    S.docs.items.unshift({ id, name: f.name || 'Untitled', type: f.type || '', size: f.size || 0, added: Date.now(), folderId: docFolder || '', tags: [] });
-    n++;
+    kept.push(result.level);
+    S.docs.items.unshift({ id, name: f.name || 'Untitled', type: f.type || '', size: f.size || 0, added: Date.now(), folderId: docFolder || '', tags: [], safety: result.level, safetyReason: (result.reasons || []).join(' ') });
   }
-  if (n) { save(); toast('Saved ' + n + ' file' + (n === 1 ? '' : 's') + ' on this device'); render(); }
+  if (!kept.length) return;
+  save();
+  const n = kept.length;
+  toast(kept.every(level => level === 'safe') ? `Safety check: Safe · saved ${n} file${n === 1 ? '' : 's'} on this device` : `Saved ${n} file${n === 1 ? '' : 's'} on this device`);
+  render();
 }
 let inboxBusy = false;
 async function absorbInbox() {
@@ -2223,12 +2302,14 @@ async function absorbInbox() {
   try {
     const pending = await inboxAll();
     if (pending.length) {
-      ensureDocs();
-      pending.forEach(m => { if (m && m.id && !S.docs.items.some(x => x.id === m.id)) S.docs.items.unshift({ id: m.id, name: m.name || 'Shared file', type: m.type || '', size: m.size || 0, added: m.added || Date.now(), folderId: '', tags: [] }); });
+      const files = [];
+      for (const m of pending) {
+        const blob = m && m.id ? await getFile(m.id) : null;
+        if (blob) files.push(new File([blob], m.name || 'Shared file', { type: m.type || blob.type || '' }));
+        if (m && m.id) await delFile(m.id);
+      }
       await inboxClear();
-      save();
-      toast('Added ' + pending.length + ' shared file' + (pending.length === 1 ? '' : 's'));
-      if ((location.hash || '').startsWith('#/doc')) render();
+      if (files.length) await addDocFiles(files);
     }
   } catch (e) {}
   inboxBusy = false;
@@ -2242,7 +2323,7 @@ function renderDocuments() {
   const recent = !q && !docFolder ? items.slice(0, 5) : [];
   const row = d => {
     const folder = S.docs.folders.find(f => f.id === d.folderId);
-    return `<a class="li" href="#/doc/${d.id}">${ic('file')}<span class="grow"><b>${esc(d.name)}</b><span>${esc(docKind(d.name, d.type))} · ${fmtBytes(d.size)}${folder ? ' · ' + esc(folder.name) : ''}${(d.tags || []).length ? ' · ' + esc(d.tags.join(', ')) : ''}</span></span></a>`;
+    return `<a class="li" href="#/doc/${d.id}">${ic('file')}<span class="grow"><b>${esc(d.name)}</b><span>${esc(docKind(d.name, d.type))} · ${fmtBytes(d.size)}${folder ? ' · ' + esc(folder.name) : ''}${(d.tags || []).length ? ' · ' + esc(d.tags.join(', ')) : ''}</span></span>${safetyTag(d.safety)}</a>`;
   };
   const chips = `<div class="chips"><button class="btn sm ${docFolder ? '' : 'primary'}" data-act="docFolder" data-id="">All</button>${S.docs.folders.map(f => `<button class="btn sm ${docFolder === f.id ? 'primary' : ''}" data-act="docFolder" data-id="${f.id}">${esc(f.name)}</button>`).join('')}<button class="btn sm" data-act="docNewFolder">${ic('plus', 16)} Folder</button></div>`;
   const body = `<div class="searchbox">${ic('search', 20)}<input class="input" id="docQ" type="search" placeholder="Search files or tags" value="${esc(docQ)}" aria-label="Search documents"></div>
@@ -2251,7 +2332,7 @@ function renderDocuments() {
     ${recent.length ? `<div class="sec-h"><h2>Recent</h2></div><div class="list">${recent.map(row).join('')}</div>` : ''}
     <div class="sec-h"><h2>${q ? 'Results' : docFolder ? 'In this folder' : 'All files'}</h2></div>
     <div class="list">${items.length ? items.map(row).join('') : '<p class="empty">Nothing here yet. Add a PDF, photo, spreadsheet or text file from this device.</p>'}</div>
-    <p class="footnote">Files stay in this browser's database. You can also share a file into LifeHub, or open LifeHub from a PDF or Office file where the device allows it.</p>`;
+    <p class="footnote">Files stay in this browser's database. A safety check runs on this device when you add one. It is not an antivirus scan of your phone or computer.</p>`;
   return { html: screen({ title: 'Documents', body, right: `<button class="iconbtn" data-act="docAdd" aria-label="Add files">${ic('plus')}</button>` }), after: () => {
     const i = $('#docQ'); if (!i) return;
     i.oninput = () => { docQ = i.value; const p = i.selectionStart; render(); const j = $('#docQ'); if (j) { j.focus(); j.setSelectionRange(p, p); } };
@@ -2476,6 +2557,8 @@ document.addEventListener('drop', async e => {
   const zone = dropTarget(e); if (!zone) return;
   e.preventDefault();
   $$('[data-drop]').forEach(z => z.classList.remove('over'));
+  const files = [...(e.dataTransfer.files || [])];
+  for (const f of files) { if (!(await presentSafety(await scanFile(f), f.name))) return; }
   const raw = await rawFromDrop(e.dataTransfer);
   openPreset(matchAppLink(raw));
 });
@@ -2790,6 +2873,7 @@ document.addEventListener('change', e => {
   if (el.dataset.change === 'glass') { if (!isPremium()) { el.checked = false; location.hash = '#/plan'; toast('That\'s a Premium perk'); return; } S.settings.iconStyle = el.checked ? 'glass' : 'standard'; save(); render(); return; }
   if (el.dataset.change === 'setRegion') { S.profile.region = el.value; save(); render(); toast(`Showing ${region().name} emergency numbers`); }
   if (el.dataset.change === 'preferWifi') { S.settings.preferWifi = el.checked; save(); render(); toast(el.checked ? 'Wi‑Fi preferred, mobile data as backup' : 'Using any available network'); }
+  if (el.dataset.change === 'safetyStrict') { ensureSafety(); S.safety.strict = el.checked; save(); render(); toast(el.checked ? 'Strict mode on. A caution is blocked.' : 'Strict mode off. You can still add a caution.'); }
   if (el.dataset.change === 'budCur') { ensureBudget(); S.budget.currency = el.value; save(); render(); }
   if (el.dataset.change === 'budRoll') { if (!isPremium()) { el.checked = false; premGo(); return; } ensureBudget(); S.budget.rollover = !!el.checked; save(); render(); toast(el.checked ? 'Leftover budget rolls into next month' : 'Rollover is off'); }
 });
@@ -2814,5 +2898,5 @@ render();
 if (unlocked) { checkReminders(); absorbInbox(); absorbAddIntent(); openPendingDraft(); }
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.4.1', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
+window.LifeHub = { version: '1.4.2', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
 })();

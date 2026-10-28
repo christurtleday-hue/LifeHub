@@ -1,6 +1,6 @@
-const CACHE = 'lifehub-v6';
+const CACHE = 'lifehub-v7';
 const SHARE_CACHE = 'lifehub-share';
-const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './privacy.html', './terms.html', './support.html', './delete-account.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
+const ASSETS = ['./', './index.html', './styles.css', './app.js', './safety.js', './manifest.webmanifest', './privacy.html', './terms.html', './support.html', './delete-account.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
 
 function openDb() {
   return new Promise((res, rej) => {

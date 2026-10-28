@@ -18,6 +18,7 @@
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="fileIn" hidden>
 <noscript>LifeHub needs JavaScript enabled.</noscript>
+<script src="safety.js"></script>
 <script src="app.js"></script>
 <script>
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', function () { navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function () {}); });

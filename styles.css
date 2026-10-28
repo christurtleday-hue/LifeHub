@@ -356,3 +356,9 @@ html.fast img{image-rendering:high-quality}
 .dropzone.over{border-color:var(--primary);background:var(--primary-soft);color:var(--text)}
 .home-drop{display:none;margin:0 16px 12px}
 html.can-drop .home-drop{display:block}
+.safebadge{display:inline-block;font-weight:800;letter-spacing:.03em;padding:4px 12px;border-radius:999px;margin:0 0 8px}
+.safebadge.safe{background:var(--green-soft);color:var(--green)}
+.safebadge.caution{background:var(--amber-soft);color:var(--amber)}
+.safebadge.blocked{background:var(--red-soft);color:var(--red)}
+.safer{margin:0 0 14px;padding-left:1.2rem}
+.safer li{margin:6px 0}
