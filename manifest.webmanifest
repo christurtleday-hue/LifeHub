@@ -2,7 +2,7 @@
   "id": "./",
   "name": "LifeHub",
   "short_name": "LifeHub",
-  "description": "LifeHub keeps emergency details, health notes, a calendar and everyday tasks on your device. Banking, chat, social and shared map pins in this version are demos. No account server and no analytics.",
+  "description": "LifeHub keeps emergency details, health notes, a calendar, a budget and your documents on your device. Banking, chat, social and shared map pins in this version are demos. No account server and no analytics.",
   "lang": "en-AU",
   "dir": "ltr",
   "start_url": "./",
@@ -22,5 +22,35 @@
   "screenshots": [
     {"src": "screenshots/home-narrow.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "LifeHub home on a phone"},
     {"src": "screenshots/home-wide.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide", "label": "LifeHub home on a wide screen"}
-  ]
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [{
+        "name": "files",
+        "accept": ["application/pdf", "text/plain", "text/csv", "text/markdown", "image/*", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/rtf"]
+      }]
+    }
+  },
+  "file_handlers": [{
+    "action": "./",
+    "accept": {
+      "application/pdf": [".pdf"],
+      "text/plain": [".txt", ".md"],
+      "text/csv": [".csv"],
+      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/vnd.ms-excel": [".xls"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/vnd.ms-powerpoint": [".ppt"],
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"]
+    }
+  }],
+  "launch_handler": { "client_mode": "navigate-existing" }
 }

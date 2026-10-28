@@ -152,6 +152,7 @@ const BANNERS = {
   contacts: { title: 'Contacts', icon: 'users', color: '#7c3aed', href: '#/contacts' },
   social: { title: 'Social', icon: 'share', color: '#db2777', href: '#/social' },
   utilities: { title: 'Utilities', icon: 'zap', color: '#d97706', href: '#/utilities' },
+  documents: { title: 'Documents', icon: 'file', color: '#0e7490', href: '#/documents' },
   addnew: { title: 'Add New', icon: 'plus', color: '#475569', href: '#/addnew' },
 };
 const PLATFORMS = {
@@ -200,7 +201,7 @@ function seed(name, regionCode, sample) {
     v: 1, created: Date.now(),
     profile: { name: name || 'Me', region: regionCode || 'AU', location: '' },
     auth: { method: null },
-    settings: { theme: 'system', textSize: 'normal', lockMinutes: 5, preferWifi: true, banners: ['emergency', 'calendar', 'medical', 'banking', 'chat', 'contacts', 'social', 'utilities', 'addnew'].map(id => ({ id, hidden: false })) },
+    settings: { theme: 'system', textSize: 'normal', lockMinutes: 5, preferWifi: true, banners: ['emergency', 'calendar', 'medical', 'banking', 'chat', 'contacts', 'social', 'utilities', 'documents', 'addnew'].map(id => ({ id, hidden: false })) },
     medical: { bloodType: '', organDonor: false, allergies: [], conditions: [], medications: [], appointments: [], family: [], doctor: { name: '', clinic: '', phone: '' }, medicare: { number: '', irn: '', expiry: '' }, notes: '', showOnLock: true },
     accounts: [], transactions: [], contacts: [], chats: [], platforms: [], notifications: [], posts: [], bills: [], apps: [], groups: [], reports: [], scheduled: [], events: [], jobs: [],
     cal: { dismissed: [], alerted: [], notices: [], skip: {}, linked: {}, fired: [] },
@@ -307,7 +308,10 @@ function formSheet(cfg) {
   });
 }
 function pickFile(accept, capture) {
-  return new Promise(res => { const i = $('#fileIn'); i.value = ''; i.accept = accept || ''; if (capture) i.setAttribute('capture', capture); else i.removeAttribute('capture'); i.onchange = () => res(i.files[0] || null); i.click(); });
+  return new Promise(res => { const i = $('#fileIn'); i.value = ''; i.multiple = false; i.accept = accept || ''; if (capture) i.setAttribute('capture', capture); else i.removeAttribute('capture'); i.onchange = () => res(i.files[0] || null); i.click(); });
+}
+function pickFiles(accept) {
+  return new Promise(res => { const i = $('#fileIn'); i.value = ''; i.multiple = true; i.accept = accept || ''; i.removeAttribute('capture'); i.onchange = () => { const files = [...(i.files || [])]; i.multiple = false; res(files); }; i.click(); });
 }
 const readText = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = rej; r.readAsText(f); });
 function download(name, text, type = 'application/json') { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
@@ -449,6 +453,7 @@ function bannerInfo(id) {
     case 'contacts': return { sub: `${S.contacts.filter(c => !c.blocked).length} contacts` };
     case 'social': { const n = S.platforms.reduce((a, p) => a + p.friendReq + p.dms, 0); return { sub: S.platforms.length ? `${S.platforms.length} platforms · ${n} new` : 'Add your social accounts', badge: n }; }
     case 'utilities': { const { owed, overdue } = billTotals(); return { sub: owed ? `<em class="owe">${money(owed)} owed</em>${overdue ? ` · ${overdue} overdue` : ''}` : 'All bills paid', badge: overdue, raw: true }; }
+    case 'documents': { const n = (S.docs && S.docs.items || []).length; return { sub: n ? `${n} file${n === 1 ? '' : 's'} on this device` : 'PDFs, Office files, text and images' }; }
     case 'addnew': return { sub: `${S.apps.length} apps · ${S.groups.length} groups` };
   }
   return { sub: '' };
@@ -458,7 +463,7 @@ function renderHome() {
   const items = S.settings.banners.filter(b => !b.hidden && BANNERS[b.id]);
   const html = items.map(b => { const B = BANNERS[b.id]; const i = bannerInfo(b.id);
     return `<a class="banner ${b.id === 'emergency' ? 'emergency' : ''}" href="${B.href}"><span class="chip" style="${b.id === 'emergency' ? '' : `background:${B.color}`}">${ic(B.icon, b.id === 'emergency' ? 30 : 26, 2.2)}</span><span class="txt"><b>${B.title}</b><span>${i.raw ? i.sub : esc(i.sub)}</span></span>${i.badge ? `<span class="badge">${i.badge}</span>` : ''}<span class="chev">${ic('chev')}</span></a>`; }).join('');
-  const groups = S.groups.filter(g => g.onHome).map(g => `<a class="banner" href="#/group/${g.id}"><span class="chip" style="background:var(--card2);border:1px solid var(--line)">${esc(g.emoji || '📁')}</span><span class="txt"><b>${esc(g.name)}</b><span>${S.apps.filter(a => a.groupId === g.id).length} apps</span></span><span class="chev">${ic('chev')}</span></a>`).join('');
+  const groups = S.groups.filter(g => g.onHome).map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="banner" href="#/group/${g.id}"><span class="chip" style="background:var(--card2);border:1px solid var(--line)">${esc(g.emoji || '📁')}</span><span class="txt"><b>${esc(g.name)}</b><span>${n} app${n === 1 ? '' : 's'}</span></span><span class="chev">${ic('chev')}</span></a>`; }).join('');
   return `<header class="home-head"><div class="hello"><small>${greet}</small><b>${esc(S.profile.name.split(' ')[0])}</b>${isPremium() ? ' ' + premBadge() : ''}</div><a class="iconbtn" href="#/search" aria-label="Search">${ic('search')}</a><a class="iconbtn" href="#/settings" aria-label="Settings">${ic('settings')}</a></header>
   <nav class="banners" data-screen="home" aria-label="Main sections">${html}${groups}</nav>${AdSlot('home-bottom')}`;
 }
@@ -477,6 +482,7 @@ function searchResults(q) {
   ['allergies', 'conditions', 'medications'].forEach(k => S.medical[k].forEach(x => { if (x.name.toLowerCase().includes(q)) R.push(['#/medical', ic('cross'), x.name, k[0].toUpperCase() + k.slice(1)]); }));
   (S.medical.appointments || []).forEach(a => { if ((a.title + (a.place || '')).toLowerCase().includes(q)) R.push(['#/calendar', ic('cross'), a.title, 'Appointment']); });
   (S.events || []).forEach(e => { if (!e.hidden && (e.title + (e.loc || '') + (e.notes || '')).toLowerCase().includes(q)) R.push(['#/calendar', ic(SRC_ICON[e.source] || 'cal'), e.title, fmtWhen(e)]); });
+  (S.docs && S.docs.items || []).forEach(d => { if ((d.name + ' ' + (d.tags || []).join(' ')).toLowerCase().includes(q)) R.push(['#/doc/' + d.id, ic('file'), d.name, 'Document']); });
   if (!R.length) return '<p class="empty">No results</p>';
   return `<div class="list">${R.slice(0, 40).map(([h, i, t, s]) => `<a class="li" href="${esc(h)}" ${/^https?:/.test(h) ? 'target="_blank" rel="noopener"' : ''}>${i}<span class="grow"><b>${esc(t)}</b><span>${esc(s)}</span></span></a>`).join('')}</div>`;
 }
@@ -573,6 +579,7 @@ function renderBanking() {
   const body = `<div class="total"><span class="muted">Net balance</span><b>${money(net)}</b></div>
   <div class="bcards">${S.accounts.map(a => `<button class="bcard" style="background:${a.color}" data-act="acctMenu" data-id="${a.id}"><div class="row between"><small>${esc(a.bank)}</small><small>${esc(a.type)}</small></div><div><small>${esc(a.name)}</small><div class="bal">${money(a.balance)}</div><small>${esc(a.number)}</small></div></button>`).join('') || '<p class="empty">No accounts yet</p>'}</div>
   <div class="actions"><button class="act" data-act="transfer">${ic('swap', 26)}Transfer</button><a class="act" href="#/banking/pay">${ic('nfc', 26)}Tap to pay</a><a class="act" href="#/banking/link">${ic('link', 26)}Link a bank</a></div>
+  <a class="card" href="#/banking/budget" style="display:flex;align-items:center;gap:12px"><span style="flex:1"><b>Budget planner</b><span class="small muted" style="display:block">Categories, goals and what you have left this month</span></span>${ic('chev')}</a>
   ${updatedLine()}<div class="sec-h"><h2>Recent transactions</h2><button class="btn sm" data-act="importTx">${ic('upload', 16)} Import CSV</button></div>
   <div class="list">${tx.length ? tx.map(t => { const a = acctById(t.accountId); return `<div class="li"><span class="av" style="background:var(--card2);color:var(--text);border:1px solid var(--line)">${t.amount > 0 ? '↓' : t.cat === 'App fee' ? '¢' : '↑'}</span><span class="grow"><b>${esc(t.desc)}</b><span>${fmtDate(t.date)} · ${esc(a ? a.name : 'Account')}${t.cat ? ' · ' + esc(t.cat) : ''}</span></span><span class="amt ${t.amount > 0 ? 'green' : ''}">${t.amount > 0 ? '+' : ''}${money(t.amount)}</span></div>`; }).join('') : '<p class="empty">No transactions</p>'}</div>
   ${schedSection()}
@@ -819,7 +826,7 @@ function preloadSections() {
 
 function renderPlan() {
   const p = S.plan, prem = isPremium();
-  const rows = [['All sections & imports', '✓', '✓'], ['Emergency & Medical ID', 'Always free', 'Always free'], ['Calendar, reminders & work schedule', '✓', '✓'], ['Share live location with contacts', '–', 'Only people you tick'], ['Ads', '1 small ad on Home', 'No ads'],
+  const rows = [['All sections & imports', '✓', '✓'], ['Emergency & Medical ID', 'Always free', 'Always free'], ['Calendar, reminders & work schedule', '✓', '✓'], ['Budget planner', 'Categories, month, 3 goals, chart', 'Unlimited goals, debt plan, CSV, trends'], ['Share live location with contacts', '–', 'Only people you tick'], ['Ads', '1 small ad on Home', 'No ads'],
     ['Themes', 'Light, Dark, Auto', '+ Midnight & Tassie Forest'], ['Accent colours', 'Blue', '+ 5 premium accents'], ['Icon style', 'Standard', '+ Glass icons'],
     ['Photo & image quality', 'Standard (up to 1080px)', 'Full resolution, sharper'], ['Auto-refresh (feeds, balances, chat)', 'Manual, every 15 or 5 min', '+ every 1 min & Live'], ['Pull to refresh', '✓', '✓'],
     ['Animations', 'Smooth', 'Extra snappy'], ['Opening sections', 'Fast', 'Instant (preloaded)'], ['Priority features & early access', '–', '★']];
@@ -876,7 +883,7 @@ async function processImage(file) {
   return { blob: blob || file, w, h, note: prem ? `Full quality · ${w}×${h}` : `Standard quality · ${w}×${h}` };
 }
 /* images live in IndexedDB (too big for localStorage) */
-const idb = () => new Promise((res, rej) => { const r = indexedDB.open('lifehub-media', 1); r.onupgradeneeded = () => r.result.createObjectStore('images'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const idb = () => new Promise((res, rej) => { const r = indexedDB.open('lifehub-media', 2); r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('images')) db.createObjectStore('images'); if (!db.objectStoreNames.contains('files')) db.createObjectStore('files'); if (!db.objectStoreNames.contains('inbox')) db.createObjectStore('inbox'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function putImage(id, blob) { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction('images', 'readwrite'); t.objectStore('images').put(blob, id); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
 async function getImage(id) { const db = await idb(); return new Promise(res => { const q = db.transaction('images').objectStore('images').get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
 async function delImage(id) { try { const db = await idb(); db.transaction('images', 'readwrite').objectStore('images').delete(id); } catch (e) {} }
@@ -1006,10 +1013,10 @@ function checkReminders() {
 const appTile = a => `<a class="app" href="${esc(a.url)}" target="_blank" rel="noopener" data-app="${a.id}"><span class="ai">${esc(a.emoji || '🔗')}</span>${esc(a.name)}</a>`;
 function renderAddNew() {
   const ung = S.apps.filter(a => !a.groupId || !S.groups.some(g => g.id === a.groupId));
-  const body = `<p class="muted" style="margin:0 0 12px">Add any app or website that doesn't fit elsewhere, and organise them into your own groups.</p>
-  <div class="row gap" style="margin-bottom:14px"><button class="btn primary" data-act="addApp">${ic('plus', 18)} Add app or link</button><button class="btn" data-act="addGroup">${ic('grid', 18)} New group</button></div>
+  const body = `<div class="card"><b>Quick sync</b><p class="muted" style="margin:6px 0 10px">Tick apps you might already use and add them in one step. LifeHub cannot see what is installed on this device.</p><button class="btn primary full" data-act="quickSync">${ic('grid', 18)} Apps you might use</button></div>
+  <div class="row gap" style="margin-bottom:14px"><button class="btn" data-act="addOne">${ic('plus', 18)} Add one link</button><button class="btn" data-act="addGroup">${ic('grid', 18)} New group</button></div>
   <div class="sec-h"><h2>Your groups</h2></div>
-  <div class="list">${S.groups.length ? S.groups.map(g => `<a class="li" href="#/group/${g.id}"><span class="ai" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);font-size:1.4rem">${esc(g.emoji || '📁')}</span><span class="grow"><b>${esc(g.name)}</b><span>${S.apps.filter(a => a.groupId === g.id).length} apps${g.onHome ? ' · on Home' : ''}</span></span>${ic('chev')}</a>`).join('') : '<p class="empty">No groups yet</p>'}</div>
+  <div class="list">${S.groups.length ? S.groups.map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="li" href="#/group/${g.id}"><span class="ai" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);font-size:1.4rem">${esc(g.emoji || '📁')}</span><span class="grow"><b>${esc(g.name)}</b><span>${n} app${n === 1 ? '' : 's'}${g.onHome ? ' · on Home' : ''}</span></span>${ic('chev')}</a>`; }).join('') : '<p class="empty">No groups yet</p>'}</div>
   <div class="sec-h"><h2>Other apps</h2></div><div class="appgrid">${ung.map(appTile).join('')}<button class="app add" data-act="addApp"><span class="ai">${ic('plus', 26)}</span>Add</button></div>
   <p class="footnote">Tip: long-press (or right-click) an app to edit it. Deep links like spotify: or whatsapp: also work.</p>`;
   return screen({ title: 'Add New', body });
@@ -1039,7 +1046,7 @@ function renderSettings() {
   const s = S.settings; const bs = s.banners;
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${String(s[key]) === String(v) ? 'on' : ''}" data-act="setPref" data-k="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
   const body = `<div class="list"><button class="li" data-act="editProfile">${av(S.profile.name)}<span class="grow"><b>${esc(S.profile.name)}</b><span>${region().flag} ${region().name} · ${region().currency}</span></span>${ic('edit', 18)}</button>
-  <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>Plan: ${isPremium() ? 'Premium ' + premBadge(S.plan.status === 'cancelled' ? 'Ends soon' : 'Active') : 'Free'}</b><span>${isPremium() ? 'No ads · location sharing · premium themes' : `Go ad-free for ${money(PRICE, 'AUD')}/month`}</span></span>${ic('chev')}</a>
+  <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>Plan: ${isPremium() ? 'Premium ' + premBadge(S.plan.status === 'cancelled' ? 'Ends soon' : 'Active') : 'Free'}</b><span>${isPremium() ? 'No ads · location · budget tools · themes' : `Go ad-free for ${money(PRICE, 'AUD')}/month`}</span></span>${ic('chev')}</a>
   <a class="li" href="#/location">${ic('pin')}<span class="grow"><b>Location ${isPremium() ? premBadge() : '<span class="tag">Premium</span>'}</b><span>${S.loc && S.loc.on ? 'Sharing is on' : 'Off until you pick people'}</span></span>${ic('chev')}</a></div>
   <div class="sec-h"><h2>Security</h2></div>
   <div class="list"><button class="li" data-act="changeLogin">${ic('lock')}<span class="grow"><b>Sign-in method</b><span>${METHODS[S.auth.method].label}</span></span>${ic('chev')}</button>
@@ -1071,7 +1078,7 @@ function renderSettings() {
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>Support</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
   <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>Delete your data</b><span>How account deletion works</span></span>${ic('chev')}</a></div>
   <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample placeholder, not a tracking network. Banking, chat, social feeds and other people's map pins are demos. Export a backup before you delete your data.</div>
-  <p class="footnote">LifeHub prototype v1.3 · ${navigator.onLine ? 'Online' : 'Offline'} · Installable as an app from your browser menu ("Add to Home Screen"). Dates use Australia/Hobart time.</p>`;
+  <p class="footnote">LifeHub prototype v1.4 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
   return screen({ title: 'Settings', body });
 }
 function editProfile() {
@@ -1096,7 +1103,7 @@ async function importData() {
 }
 
 /* ---------- calendar, work schedule, location ---------- */
-const SRC_ICON = { bill: 'zap', medical: 'cross', banking: 'bank', birthday: 'star', social: 'share', app: 'grid', shift: 'clock', manual: 'cal', import: 'download' };
+const SRC_ICON = { bill: 'zap', medical: 'cross', banking: 'bank', budget: 'bank', birthday: 'star', social: 'share', app: 'grid', shift: 'clock', manual: 'cal', import: 'download' };
 const REMIND = [['', 'No reminder'], ['0', 'At the time'], ['15', '15 minutes before'], ['30', '30 minutes before'], ['60', '1 hour before'], ['1440', '1 day before']];
 const JOB_COLORS = ['#1d4ed8', '#0f766e', '#d97706', '#7c3aed', '#be123c', '#0891b2'];
 const WDAYS = [['Mon', 1], ['Tue', 2], ['Wed', 3], ['Thu', 4], ['Fri', 5], ['Sat', 6], ['Sun', 0]];
@@ -1113,6 +1120,7 @@ let calCursor = '';
 let work = null;
 let locMap = null;
 let leafletP = null;
+let locMe = null;
 
 function fmtWhen(ev) {
   const day = fmtDay(ev.start.slice(0, 10));
@@ -1218,6 +1226,17 @@ function syncAutoEvents() {
     const sp = span(a.nextOn, a.nextStart || '09:00', a.nextEnd || '10:00');
     pushAuto(out, 'app_' + a.id, { title: a.nextLabel || a.name, start: sp.start, end: sp.end, source: 'app', sourceLabel: a.name || 'App', color: '#475569', reminderMin: 30 });
   });
+  if (S.budget && Array.isArray(S.budget.bills)) S.budget.bills.forEach(b => {
+    if (!b || !b.name) return;
+    let ym = today.slice(0, 7);
+    const day = String(Math.min(28, Math.max(1, Number(b.day) || 1))).padStart(2, '0');
+    if (today.slice(8) > day) ym = shiftMonth(ym, 1);
+    for (let i = 0; i < 4; i++) {
+      const date = ym + '-' + day;
+      pushAuto(out, 'bbill_' + b.id + '_' + ym, { title: 'Budget bill: ' + b.name, start: date + 'T00:00', end: addDays(date, 1) + 'T00:00', allDay: true, source: 'budget', sourceLabel: 'Budget', color: '#0f766e', reminderMin: 1440, notes: money(b.amount, S.budget.currency) });
+      ym = shiftMonth(ym, 1);
+    }
+  });
   const prev = new Map((S.events || []).filter(e => e.auto).map(e => [e.id, e]));
   out.forEach(e => { const old = prev.get(e.id); if (old) { e.hidden = !!old.hidden; if (old.reminderTouched) e.reminderMin = old.reminderMin; } });
   S.events = (S.events || []).filter(e => !e.auto).concat(out);
@@ -1230,6 +1249,11 @@ function ensureBanners() {
   if (!S.settings.banners.some(b => b.id === 'calendar')) {
     const i = S.settings.banners.findIndex(b => b.id === 'emergency');
     S.settings.banners.splice(i < 0 ? 0 : i + 1, 0, { id: 'calendar', hidden: false });
+    changed = true;
+  }
+  if (!S.settings.banners.some(b => b.id === 'documents')) {
+    const i = S.settings.banners.findIndex(b => b.id === 'addnew');
+    S.settings.banners.splice(i < 0 ? S.settings.banners.length : i, 0, { id: 'documents', hidden: false });
     changed = true;
   }
   const filtered = S.settings.banners.filter(b => BANNERS[b.id]);
@@ -1260,9 +1284,11 @@ function ensureHub() {
   (S.contacts || []).forEach(c => { if (c.birthday == null) c.birthday = ''; if (typeof c.premium !== 'boolean') c.premium = false; });
   (S.apps || []).forEach(a => { if (a.nextOn == null) a.nextOn = ''; });
   const bannersChanged = ensureBanners();
+  const budgetChanged = ensureBudget();
+  const docsChanged = ensureDocs();
   const before = eventSig(S.events);
   syncAutoEvents();
-  if (bannersChanged || eventSig(S.events) !== before || tidyLoc()) save();
+  if (bannersChanged || budgetChanged || docsChanged || eventSig(S.events) !== before || tidyLoc()) save();
 }
 function announceConflicts() {
   if (!unlocked || !S || !S.cal) return;
@@ -1427,7 +1453,7 @@ function importBlock() {
   const linked = S.cal.linked || {};
   return `<div class="row gap wrap" style="margin:4px 0 12px"><a class="btn" href="#/calendar/work">${ic('clock', 18)} Work schedule</a><a class="btn" href="#/location">${ic('pin', 18)} Location</a><button class="btn" data-act="importIcs">${ic('upload', 16)} Import .ics</button></div>
     <div class="sec-h"><h2>Link a calendar</h2></div><p class="demoline"><span class="tag amber">Demo</span> Nothing is read from Google, Outlook or Apple.</p><div class="list">${['Google', 'Outlook', 'Apple'].map(n => `<button class="li" data-act="linkCal" data-name="${n}">${ic('link')}<span class="grow"><b>${n} Calendar</b><span>${linked[n] ? 'Sample event added on this device' : 'Nothing is read from ' + n}</span></span><span class="tag amber">Demo</span></button>`).join('')}</div>
-    <p class="footnote">Bills, appointments, medication times, scheduled payments, birthdays, social events and dated apps appear here automatically. Hide one, or turn it into a normal event.</p>`;
+    <p class="footnote">Bills, budget bills, appointments, medication times, scheduled payments, birthdays, social events and dated apps appear here automatically. Hide one, or turn it into a normal event.</p>`;
 }
 function renderCalendar() {
   const day = cursor();
@@ -1538,12 +1564,16 @@ async function importIcs() {
   evs.forEach(e => S.events.push({ ...e, id: uid(), source: 'import', sourceLabel: 'Imported', auto: false, hidden: false, color: '#475569', reminderMin: 30, notes: '', loc: e.loc || '' }));
   save(); announceConflicts(); render(); toast(`Imported ${evs.length} event${evs.length === 1 ? '' : 's'}`);
 }
-function linkExternal(name) {
+function linkCalendarSilent(name) {
   if (!S.cal.linked) S.cal.linked = {};
-  if (S.cal.linked[name]) return toast(name + ' is already linked (demo)');
+  if (S.cal.linked[name]) return false;
   S.cal.linked[name] = true;
   const day = addDays(hobartToday(), 3);
   S.events.push({ id: uid(), title: name + ' sample: Team catch-up', start: day + 'T14:00', end: day + 'T14:45', allDay: false, source: 'import', sourceLabel: name, auto: false, hidden: false, color: '#64748b', reminderMin: 15, loc: '', notes: 'Demo event. Nothing was read from ' + name + '.' });
+  return true;
+}
+function linkExternal(name) {
+  if (!linkCalendarSilent(name)) return toast(name + ' is already linked (demo)');
   save(); announceConflicts(); render(); toast(name + ' linked (demo)');
 }
 function apptSection() {
@@ -1745,7 +1775,8 @@ async function fillAddress(me) {
   } catch (e) {}
 }
 function mountLocation() {
-  loadLeaflet().then(async () => { const me = await getPos(); if (!$('#locMap')) return; drawMap(me); fillAddress(me); }).catch(() => { const m = $('#locAddr'); if (m) m.textContent = 'The map could not be loaded. Check your connection and try again.'; });
+  getPos().then(me => { locMe = me; if (!$('#gmapsYou')) return; fillMapsYou(); fillAddress(me); });
+  loadLeaflet().then(async () => { const me = locMe || await getPos(); locMe = me; if (!$('#locMap')) return; drawMap(me); fillMapsYou(); }).catch(() => { const m = $('#locAddr'); if (m) m.textContent = 'The map could not be loaded. The Google Maps buttons still open the app.'; });
 }
 function renderLocation() {
   if (!isPremium()) {
@@ -1768,6 +1799,9 @@ function renderLocation() {
     <div id="locMap" role="region" aria-label="Map"></div><p id="locAddr" class="small" style="margin:0 0 4px">Finding your position…</p>
     <p class="demoline"><span class="tag amber">Demo</span> Other people's pins are simulated on this device, not their real location.</p>
     <p class="small muted">Map data © OpenStreetMap contributors, tiles © OpenStreetMap France.</p>
+    <div class="card"><h3>Google Maps</h3><p class="small muted">Opens the Google Maps app on a phone. There is no paid maps key. Coordinates go to Google only when you tap a button.</p><div id="gmapsYou"><p class="small muted">Finding your position…</p></div>
+      ${selected.map(c => { const p = demoPlace(c); return `<div class="gmap-who"><b>${esc(c.name)}</b> <span class="tag amber">Demo</span><div class="small muted">${esc(p.label)} · sample pin, not their real location</div>${mapActions(p.lat, p.lng)}</div>`; }).join('')}
+      <div id="gmapsFrame"></div></div>
     <div class="card"><h3>Sharing with</h3><div class="picks" id="sharePicks" data-role="share-picks">${picks}</div>
       <div class="seg" style="margin:12px 0" role="group" aria-label="How long to share">${modeBtn('1h', '1 hour')}${modeBtn('until', 'Until I stop')}${modeBtn('always', 'Always')}</div>
       <div class="list">${list}</div>
@@ -1778,10 +1812,696 @@ function renderLocation() {
   return { html: screen({ title: 'Location', body }), after: mountLocation };
 }
 
+/* ---------- budget planner ---------- */
+const BUDGET_CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'NZD', 'CAD', 'SGD', 'INR', 'JPY'];
+const FREE_GOALS = 3;
+let budgetMonth = '';
+function bMonth() { return budgetMonth || hobartToday().slice(0, 7); }
+function shiftMonth(ym, n) {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + n, 1));
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0');
+}
+function daysInMonth(ym) { const [y, m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+function ymLabel(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-AU', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+function ensureBudget() {
+  let changed = false;
+  if (!S.budget || typeof S.budget !== 'object') {
+    S.budget = { currency: 'AUD', alertAt: 80, rollover: false, extra: 0, strategy: 'snowball', categories: [], entries: [], goals: [], debts: [], bills: [], seen: {} };
+    changed = true;
+  }
+  ['categories', 'entries', 'goals', 'debts', 'bills'].forEach(k => { if (!Array.isArray(S.budget[k])) { S.budget[k] = []; changed = true; } });
+  if (!S.budget.seen || typeof S.budget.seen !== 'object') { S.budget.seen = {}; changed = true; }
+  if (!S.budget.currency) { S.budget.currency = 'AUD'; changed = true; }
+  if (!S.budget.categories.length) {
+    const defs = [['Pay', 'income', ''], ['Other income', 'income', ''], ['Housing', 'expense', 'needs'], ['Groceries', 'expense', 'needs'], ['Transport', 'expense', 'needs'], ['Bills & utilities', 'expense', 'needs'], ['Health', 'expense', 'needs'], ['Eating out', 'expense', 'wants'], ['Fun', 'expense', 'wants'], ['Shopping', 'expense', 'wants'], ['Savings', 'expense', 'save']];
+    S.budget.categories = defs.map(([name, kind, group]) => ({ id: uid(), name, kind, group, limit: 0 }));
+    changed = true;
+  }
+  return changed;
+}
+const catById = id => (S.budget.categories || []).find(c => c.id === id);
+function bm(n) { return money(n, (S.budget && S.budget.currency) || 'AUD'); }
+function alertLevel() { return isPremium() ? Math.min(100, Math.max(50, Number(S.budget.alertAt) || 80)) : 80; }
+function entriesIn(ym) { return (S.budget.entries || []).filter(e => String(e.date || '').slice(0, 7) === ym); }
+function billsIn(ym) { const dim = daysInMonth(ym); return (S.budget.bills || []).filter(b => (Number(b.day) || 1) <= dim); }
+function catAmount(cat, ym) {
+  const fromE = entriesIn(ym).filter(e => e.catId === cat.id).reduce((a, e) => a + (Number(e.amount) || 0), 0);
+  const fromB = cat.kind === 'expense' ? billsIn(ym).filter(b => b.catId === cat.id).reduce((a, b) => a + (Number(b.amount) || 0), 0) : 0;
+  return fromE + fromB;
+}
+function limitFor(cat, ym) {
+  const base = Number(cat.limit) || 0;
+  if (cat.kind !== 'expense' || !isPremium() || !S.budget.rollover || !(base > 0)) return base;
+  const prev = shiftMonth(ym, -1);
+  const spent = catAmount(cat, prev);
+  return spent < base ? base + (base - spent) : base;
+}
+function spendDate(ym) { const t = hobartToday(); return t.slice(0, 7) === ym ? t : ym + '-01'; }
+function budgetBar(pct, kind) {
+  const p = Math.max(0, Math.min(pct, 100));
+  const cls = kind === 'blue' ? 'blue' : pct >= 100 ? 'red' : pct >= alertLevel() ? 'amber' : 'green';
+  return `<div class="bbar ${cls}" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${p}%"></i></div>`;
+}
+function noteBudgetAlerts(ym) {
+  const msgs = [];
+  S.budget.categories.filter(c => c.kind === 'expense' && Number(c.limit) > 0).forEach(c => {
+    const lim = limitFor(c, ym); if (!(lim > 0)) return;
+    const pct = catAmount(c, ym) / lim * 100;
+    if (pct < alertLevel()) return;
+    const over = pct >= 100;
+    const key = ym + ':' + c.id + ':' + (over ? 'over' : 'near');
+    if (S.budget.seen[key]) return;
+    S.budget.seen[key] = 1;
+    msgs.push(c.name + (over ? ' is over its limit' : ' is near its limit'));
+  });
+  if (msgs.length) { save(); setTimeout(() => toast(msgs.slice(0, 2).join('. ')), 300); }
+}
+function premRow(title, sub) {
+  return `<button class="li" data-act="premGo"><span class="grow"><b>${esc(title)} ${premBadge()}</b><span>${esc(sub)}</span></span>${ic('lock', 18)}</button>`;
+}
+function renderBudget() {
+  ensureBudget();
+  const ym = bMonth();
+  noteBudgetAlerts(ym);
+  const exp = S.budget.categories.filter(c => c.kind === 'expense');
+  const inc = S.budget.categories.filter(c => c.kind === 'income');
+  const spent = exp.reduce((a, c) => a + catAmount(c, ym), 0);
+  const income = inc.reduce((a, c) => a + catAmount(c, ym), 0);
+  const cap = exp.reduce((a, c) => a + limitFor(c, ym), 0);
+  const left = cap > 0 ? cap - spent : income - spent;
+  const goals = S.budget.goals;
+  const shown = isPremium() ? goals : goals.slice(0, FREE_GOALS);
+  const curOpts = BUDGET_CURRENCIES.map(c => `<option value="${c}" ${c === S.budget.currency ? 'selected' : ''}>${c}</option>`).join('');
+  const alerts = exp.filter(c => { const lim = limitFor(c, ym); return lim > 0 && catAmount(c, ym) / lim * 100 >= alertLevel(); });
+  const body = `<div class="monthnav"><button class="iconbtn" data-act="budMonth" data-d="-1" aria-label="Previous month">${ic('back')}</button><b>${esc(ymLabel(ym))}</b><button class="iconbtn" data-act="budMonth" data-d="1" aria-label="Next month">${ic('chev')}</button></div>
+    <label class="fld"><span>Currency</span><select data-change="budCur" aria-label="Budget currency">${curOpts}</select></label>
+    <div class="bsum"><div><span>Income</span><b class="green">${bm(income)}</b></div><div><span>Spent</span><b>${bm(spent)}</b></div><div><span>${cap > 0 ? 'Left in budget' : 'Left after income'}</span><b class="${left < 0 ? 'red' : ''}">${bm(left)}</b></div></div>
+    ${alerts.length ? `<div class="notice">${ic('alert', 18)}<div>${alerts.map(c => esc(c.name)).join(', ')} ${alerts.length === 1 ? 'is' : 'are'} near or over the limit.</div></div>` : ''}
+    <button class="btn primary full" data-act="budAdd">${ic('plus', 18)} Add income or expense</button>
+    <div class="sec-h"><h2>Spending</h2></div>
+    <div class="list">${exp.map(c => catSpendRow(c, ym)).join('')}</div>
+    <div class="sec-h"><h2>Income</h2></div>
+    <div class="list">${inc.map(c => catSpendRow(c, ym)).join('')}</div>
+    <div class="sec-h"><h2>Savings goals</h2><button class="btn sm" data-act="budGoal">${ic('plus', 16)} Add</button></div>
+    <div class="list">${shown.length ? shown.map(goalRow).join('') : '<p class="empty">No goals yet. A holiday fund or an emergency buffer both fit here.</p>'}</div>
+    ${!isPremium() && goals.length > FREE_GOALS ? `<p class="small muted">${goals.length - FREE_GOALS} more goal${goals.length - FREE_GOALS === 1 ? '' : 's'} saved. Premium shows the full list.</p>` : ''}
+    ${!isPremium() && goals.length >= FREE_GOALS ? premRow('Unlimited goals', 'Free includes ' + FREE_GOALS + ' goals. Premium removes the cap.') : ''}
+    <a class="btn full" href="#/banking/budget/tools" style="margin-top:8px">More tools</a>
+    <p class="footnote">Your budget stays on this device. Recurring bills also show on the calendar. Alerts start at ${alertLevel()}% of a limit.</p>`;
+  return screen({ title: 'Budget', back: '#/banking', body });
+}
+function catSpendRow(c, ym) {
+  const spent = catAmount(c, ym);
+  const lim = c.kind === 'expense' ? limitFor(c, ym) : 0;
+  const pct = lim > 0 ? spent / lim * 100 : 0;
+  const sub = c.kind === 'income' ? 'Income this month' : lim > 0 ? Math.round(pct) + '% of the monthly budget' + (isPremium() && S.budget.rollover && lim > Number(c.limit) ? ' · includes rollover' : '') : 'Tap to set a monthly limit';
+  const right = c.kind === 'income' ? bm(spent) : lim > 0 ? bm(spent) : bm(spent);
+  return `<button class="li" data-act="budSpend" data-id="${c.id}"><span class="grow"><b>${esc(c.name)}</b><span>${sub}</span>${c.kind === 'expense' && lim > 0 ? budgetBar(pct) : ''}</span><span class="amt ${c.kind === 'income' ? 'green' : pct >= 100 ? 'red' : ''}">${right}</span></button>`;
+}
+function goalRow(g) {
+  const pct = g.target > 0 ? g.saved / g.target * 100 : 0;
+  return `<button class="li" data-act="budGoal" data-id="${g.id}"><span class="grow"><b>${esc(g.name)}</b><span>${bm(g.saved || 0)} saved of ${bm(g.target || 0)}${g.due ? ' · by ' + esc(fmtDay(g.due)) : ''}</span>${budgetBar(pct, 'blue')}</span></button>`;
+}
+function renderBudgetTools() {
+  ensureBudget();
+  const ym = bMonth();
+  const exp = S.budget.categories.filter(c => c.kind === 'expense');
+  const max = Math.max(1, ...exp.map(c => catAmount(c, ym)));
+  const chart = exp.filter(c => catAmount(c, ym) > 0).map(c => {
+    const n = catAmount(c, ym);
+    return `<div class="li" style="display:block"><b>${esc(c.name)}</b><span class="small muted">${bm(n)}</span>${budgetBar(n / max * 100, 'blue')}</div>`;
+  }).join('') || '<p class="empty">Add spending and a simple chart shows up here.</p>';
+  let trend = premRow('Multi-month trends and forecast', 'See the last 6 months and whether this month is on pace.');
+  if (isPremium()) {
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const m = shiftMonth(ym, -i);
+      const spent = exp.reduce((a, c) => a + catAmount(c, m), 0);
+      months.push({ m, spent });
+    }
+    const peak = Math.max(1, ...months.map(x => x.spent));
+    const today = hobartToday();
+    const day = today.slice(0, 7) === ym ? Math.max(1, Number(today.slice(8))) : daysInMonth(ym);
+    const spentNow = exp.reduce((a, c) => a + catAmount(c, ym), 0);
+    const pace = spentNow / day * daysInMonth(ym);
+    trend = `<div class="card"><h3>Forecast</h3><p style="margin:0">On this pace you will spend about <b>${bm(pace)}</b> in ${esc(ymLabel(ym))}.</p><p class="small muted" style="margin:6px 0 0">Based on ${bm(spentNow)} over ${day} day${day === 1 ? '' : 's'}. A guide only.</p></div>
+      <div class="sec-h"><h2>Last 6 months</h2></div><div class="list">${months.map(x => `<div class="li" style="display:block"><b>${esc(ymLabel(x.m))}</b><span class="small muted">${bm(x.spent)}</span>${budgetBar(x.spent / peak * 100, 'blue')}</div>`).join('')}</div>`;
+  }
+  const bills = S.budget.bills.map(b => `<button class="li" data-act="budBill" data-id="${b.id}"><span class="grow"><b>${esc(b.name)}</b><span>Day ${b.day} · ${esc((catById(b.catId) || {}).name || 'Category')}</span></span><span class="amt">${bm(b.amount)}</span></button>`).join('');
+  const cats = S.budget.categories.map(c => `<button class="li" data-act="budCat" data-id="${c.id}">${ic('edit', 18)}<span class="grow"><b>${esc(c.name)}</b><span>${c.kind === 'income' ? 'Income' : 'Expense'}${c.kind === 'expense' && c.limit ? ' · ' + bm(c.limit) + ' / month' : ''}</span></span></button>`).join('');
+  const roll = isPremium()
+    ? `<label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>Rollover leftover</b><span>Add what you didn't spend last month onto this month's limit</span></span><span class="switch"><input type="checkbox" data-change="budRoll" ${S.budget.rollover ? 'checked' : ''}><i></i></span></label>`
+    : `<div class="list">${premRow('Rollover', 'Carry unspent budget into next month')}</div>`;
+  const alerts = isPremium()
+    ? `<label class="fld"><span>Warn me when a category reaches (%)</span><input id="alertAt" type="number" min="50" max="100" inputmode="numeric" value="${alertLevel()}"></label><p class="small muted">Free always uses 80%. Premium can choose from 50 to 100. Going over the limit always warns you.</p>`
+    : `<div class="list">${premRow('Custom alerts', 'Free warns you at 80% and when you go over')}</div>`;
+  const csv = isPremium()
+    ? `<div class="row gap"><button class="btn" data-act="budExport">${ic('download', 18)} Export CSV</button><button class="btn" data-act="budImport">${ic('upload', 18)} Import CSV</button></div>`
+    : `<div class="list">${premRow('CSV import and export', 'Move a spreadsheet in or out of LifeHub')}</div>`;
+  const debt = isPremium()
+    ? `<a class="btn full" href="#/banking/budget/debt">Debt payoff planner</a>`
+    : `<div class="list">${premRow('Debt payoff planner', 'See which debt to pay first, and how long it may take')}</div>`;
+  const body = `<a class="linkbtn" href="#/banking/budget">← This month</a>
+    <div class="sec-h"><h2>Templates</h2></div>
+    <div class="row gap"><button class="btn" data-act="bud5030">50/30/20</button><button class="btn" data-act="budZero">Zero-based</button></div>
+    <p class="small muted">50/30/20 splits income into needs, wants and savings. Zero-based gives every dollar a job.</p>
+    <div class="sec-h"><h2>Spending chart</h2></div><div class="list">${chart}</div>
+    ${trend}
+    <div class="sec-h"><h2>Recurring bills</h2><button class="btn sm" data-act="budBill">${ic('plus', 16)} Add</button></div>
+    <div class="list">${bills || '<p class="empty">Add rent or a subscription. It is counted in the month and added to your calendar.</p>'}</div>
+    <div class="sec-h"><h2>Categories</h2><button class="btn sm" data-act="budNewCat">${ic('plus', 16)} Add</button></div>
+    <div class="list">${cats}</div>
+    <div class="sec-h"><h2>Advanced</h2></div>
+    ${roll}
+    ${alerts}
+    ${csv}
+    <div style="height:8px"></div>${debt}
+    <p class="footnote">Templates, categories, the monthly chart and recurring bills are included on Free. The items with a Premium badge stay visible so you know they exist.</p>`;
+  return { html: screen({ title: 'Budget tools', back: '#/banking/budget', body }), after: () => {
+    const inp = $('#alertAt'); if (!inp) return;
+    inp.onchange = () => { const n = Math.min(100, Math.max(50, parseInt(inp.value, 10) || 80)); S.budget.alertAt = n; save(); toast('Alert set to ' + n + '%'); };
+  } };
+}
+function renderDebt() {
+  if (!isPremium()) {
+    const body = `<div class="card lockcard"><h2>Debt payoff planner ${premBadge()}</h2><p class="muted">Line up what you owe, then see which balance to tackle first. This stays on your device and does not contact a lender.</p><a class="btn primary full" href="#/plan">See Premium</a></div>`;
+    return screen({ title: 'Debt planner', back: '#/banking/budget/tools', body });
+  }
+  ensureBudget();
+  const extra = Number(S.budget.extra) || 0;
+  const list = S.budget.debts.map(d => ({ ...d, months: monthsToPay(d.balance, d.rate, (Number(d.minPay) || 0) + (d.id === focusDebtId() ? extra : 0)) }));
+  const ordered = list.slice().sort((a, b) => S.budget.strategy === 'avalanche' ? (b.rate || 0) - (a.rate || 0) : (a.balance || 0) - (b.balance || 0));
+  const rows = ordered.map(d => `<button class="li" data-act="budDebt" data-id="${d.id}"><span class="grow"><b>${esc(d.name)}</b><span>${bm(d.balance)} · ${d.rate || 0}% · min ${bm(d.minPay || 0)}</span></span><span class="small">${d.months === Infinity ? 'Too small' : d.months + ' mo'}</span></button>`).join('');
+  const seg = (v, label) => `<button type="button" class="${S.budget.strategy === v ? 'on' : ''}" data-act="budStrategy" data-v="${v}">${label}</button>`;
+  const body = `<p class="muted" style="margin-top:0">A guide only. LifeHub does not contact a bank or move any money.</p>
+    <div class="seg" style="margin-bottom:12px">${seg('snowball', 'Smallest first')}${seg('avalanche', 'Highest rate')}</div>
+    <label class="fld"><span>Extra paid to the first debt each month (${S.budget.currency})</span><input id="debtExtra" type="number" min="0" step="0.01" inputmode="decimal" value="${extra || ''}"></label>
+    <div class="list">${rows || '<p class="empty">Add a card, loan or buy-now-pay-later balance.</p>'}</div>
+    <button class="btn primary full" data-act="budDebt">${ic('plus', 18)} Add a debt</button>
+    <p class="footnote">"Too small" means the payment does not cover the monthly interest, so the balance would not fall.</p>`;
+  return { html: screen({ title: 'Debt planner', back: '#/banking/budget/tools', body }), after: () => {
+    const inp = $('#debtExtra'); if (!inp) return;
+    inp.onchange = () => { S.budget.extra = Math.abs(parseFloat(inp.value) || 0); save(); render(); };
+  } };
+}
+function focusDebtId() {
+  const rows = S.budget.debts.slice();
+  if (!rows.length) return '';
+  rows.sort((a, b) => S.budget.strategy === 'avalanche' ? (b.rate || 0) - (a.rate || 0) : (a.balance || 0) - (b.balance || 0));
+  return rows[0].id;
+}
+function monthsToPay(balance, annual, payment) {
+  balance = Number(balance) || 0; payment = Number(payment) || 0; const r = (Number(annual) || 0) / 100 / 12;
+  if (!(balance > 0)) return 0;
+  if (!(payment > 0)) return Infinity;
+  if (r === 0) return Math.ceil(balance / payment);
+  if (payment <= balance * r + 0.005) return Infinity;
+  return Math.ceil(Math.log(payment / (payment - balance * r)) / Math.log(1 + r));
+}
+function budAdd() { addBudgetEntry(); }
+function addBudgetEntry() {
+  ensureBudget();
+  const cats = S.budget.categories.map(c => [c.id, c.name + (c.kind === 'income' ? ' (income)' : '')]);
+  formSheet({ title: 'Add to ' + ymLabel(bMonth()), fields: [
+    { k: 'catId', label: 'Category', type: 'select', options: cats },
+    { k: 'amount', label: 'Amount', type: 'number', step: '0.01', req: true, im: 'decimal' },
+    { k: 'note', label: 'Note', ph: 'Optional' },
+    { k: 'date', label: 'Date', type: 'date', req: true },
+  ], values: { date: spendDate(bMonth()), catId: cats[0] && cats[0][0] }, onSave: v => {
+    if (!(v.amount > 0) || !v.date) { toast('Enter an amount and a date'); return false; }
+    S.budget.entries.push({ id: uid(), catId: v.catId, amount: Math.abs(v.amount), date: v.date, note: v.note || '' });
+    toast('Saved on this device');
+  } });
+}
+function budSpend(id) {
+  const c = catById(id); if (!c) return;
+  formSheet({ title: c.name, fields: [
+    { k: 'amount', label: 'Amount this time', type: 'number', step: '0.01', im: 'decimal' },
+    { k: 'note', label: 'Note' },
+    { k: 'date', label: 'Date', type: 'date' },
+    { k: 'limit', label: c.kind === 'expense' ? 'Monthly budget (optional)' : 'Ignore for income', type: 'number', step: '0.01', im: 'decimal' },
+  ], values: { date: spendDate(bMonth()), limit: c.limit || '' }, onSave: v => {
+    if (c.kind === 'expense') c.limit = v.limit > 0 ? v.limit : 0;
+    if (v.amount > 0) S.budget.entries.push({ id: uid(), catId: c.id, amount: Math.abs(v.amount), date: v.date || spendDate(bMonth()), note: v.note || '' });
+    else if (!(v.amount > 0) && c.kind !== 'expense') { toast('Enter an amount'); return false; }
+    toast('Saved');
+  } });
+}
+function editCategory(id) {
+  const c = catById(id); if (!c) return;
+  formSheet({ title: 'Edit category', fields: [{ k: 'name', label: 'Name', req: true }, { k: 'limit', label: 'Monthly budget', type: 'number', step: '0.01', im: 'decimal' }], values: { name: c.name, limit: c.limit || '' },
+    onSave: v => { c.name = v.name; if (c.kind === 'expense') c.limit = v.limit > 0 ? v.limit : 0; },
+    danger: { label: 'Delete category', fn: () => { S.budget.categories = S.budget.categories.filter(x => x.id !== id); S.budget.entries = S.budget.entries.filter(e => e.catId !== id); } } });
+}
+function newCategory() {
+  formSheet({ title: 'New category', fields: [
+    { k: 'name', label: 'Name', req: true },
+    { k: 'kind', label: 'Type', type: 'select', options: [['expense', 'Expense'], ['income', 'Income']] },
+    { k: 'group', label: '50/30/20 group', type: 'select', options: [['needs', 'Needs'], ['wants', 'Wants'], ['save', 'Savings'], ['', 'Other']] },
+    { k: 'limit', label: 'Monthly budget', type: 'number', step: '0.01', im: 'decimal' },
+  ], onSave: v => { S.budget.categories.push({ id: uid(), name: v.name, kind: v.kind || 'expense', group: v.group || '', limit: v.limit > 0 ? v.limit : 0 }); toast('Category added'); } });
+}
+function editGoal(id) {
+  ensureBudget();
+  const g = id && S.budget.goals.find(x => x.id === id);
+  if (!g && !isPremium() && S.budget.goals.length >= FREE_GOALS) return premGo();
+  formSheet({ title: g ? 'Edit goal' : 'New goal', fields: [
+    { k: 'name', label: 'What are you saving for?', req: true },
+    { k: 'target', label: 'Target amount', type: 'number', step: '0.01', req: true, im: 'decimal' },
+    { k: 'saved', label: 'Already saved', type: 'number', step: '0.01', im: 'decimal' },
+    { k: 'due', label: 'Target date', type: 'date' },
+  ], values: g || { saved: 0 }, onSave: v => {
+    if (!(v.target > 0)) { toast('Enter a target'); return false; }
+    v.saved = v.saved > 0 ? v.saved : 0;
+    if (g) Object.assign(g, v); else S.budget.goals.push({ id: uid(), ...v });
+    toast('Goal saved');
+  }, danger: g ? { label: 'Delete goal', fn: () => { S.budget.goals = S.budget.goals.filter(x => x.id !== id); } } : null });
+}
+function editBBill(id) {
+  ensureBudget();
+  const b = id && S.budget.bills.find(x => x.id === id);
+  const cats = S.budget.categories.filter(c => c.kind === 'expense').map(c => [c.id, c.name]);
+  if (!cats.length) return toast('Add a spending category first');
+  formSheet({ title: b ? 'Edit recurring bill' : 'Recurring bill', intro: 'Counted in that category every month, and added to your calendar. Nothing is paid automatically.', fields: [
+    { k: 'name', label: 'Name', req: true, ph: 'e.g. Rent' },
+    { k: 'amount', label: 'Amount', type: 'number', step: '0.01', req: true, im: 'decimal' },
+    { k: 'catId', label: 'Category', type: 'select', options: cats },
+    { k: 'day', label: 'Day of the month', type: 'number', min: 1, im: 'numeric' },
+  ], values: b || { day: 1, catId: cats[0][0] }, onSave: v => {
+    if (!(v.amount > 0)) { toast('Enter an amount'); return false; }
+    v.amount = Math.abs(v.amount); v.day = Math.min(28, Math.max(1, parseInt(v.day, 10) || 1));
+    if (b) Object.assign(b, v); else S.budget.bills.push({ id: uid(), ...v });
+    toast('It will show on your calendar');
+  }, danger: b ? { label: 'Delete bill', fn: () => { S.budget.bills = S.budget.bills.filter(x => x.id !== id); } } : null });
+}
+function editDebt(id) {
+  if (!isPremium()) return premGo();
+  const d = id && S.budget.debts.find(x => x.id === id);
+  formSheet({ title: d ? 'Edit debt' : 'Add a debt', intro: 'A planner only. No payment is sent.', fields: [
+    { k: 'name', label: 'Name', req: true, ph: 'e.g. Credit card' },
+    { k: 'balance', label: 'Balance owing', type: 'number', step: '0.01', req: true, im: 'decimal' },
+    { k: 'rate', label: 'Interest rate per year (%)', type: 'number', step: '0.01', im: 'decimal' },
+    { k: 'minPay', label: 'Minimum payment each month', type: 'number', step: '0.01', req: true, im: 'decimal' },
+  ], values: d || { rate: 0 }, onSave: v => {
+    if (!(v.balance > 0) || !(v.minPay > 0)) { toast('Enter the balance and a payment'); return false; }
+    v.balance = Math.abs(v.balance); v.minPay = Math.abs(v.minPay); v.rate = v.rate > 0 ? v.rate : 0;
+    if (d) Object.assign(d, v); else S.budget.debts.push({ id: uid(), ...v });
+    toast('Debt saved');
+  }, danger: d ? { label: 'Delete debt', fn: () => { S.budget.debts = S.budget.debts.filter(x => x.id !== id); } } : null });
+}
+function apply5030() {
+  formSheet({ title: '50/30/20', intro: 'Enter monthly income. Needs get 50%, wants 30% and savings 20%, split across those categories.', fields: [{ k: 'income', label: 'Monthly income', type: 'number', step: '0.01', req: true, im: 'decimal' }],
+    onSave: v => {
+      if (!(v.income > 0)) { toast('Enter income'); return false; }
+      const share = { needs: 0.5, wants: 0.3, save: 0.2 };
+      Object.entries(share).forEach(([g, pct]) => {
+        const cats = S.budget.categories.filter(c => c.kind === 'expense' && c.group === g);
+        const each = Math.round(v.income * pct / (cats.length || 1) * 100) / 100;
+        cats.forEach(c => { c.limit = each; });
+      });
+      toast('Monthly limits updated');
+    } });
+}
+function applyZero() {
+  ensureBudget();
+  const exp = S.budget.categories.filter(c => c.kind === 'expense');
+  openSheet(`<h2>Zero-based budget</h2><p class="muted small">Put your income into the categories until nothing is left over.</p>
+    <label class="fld"><span>Monthly income</span><input id="zInc" type="number" inputmode="decimal" step="0.01"></label>
+    ${exp.map(c => `<label class="fld"><span>${esc(c.name)}</span><input data-z="${c.id}" type="number" inputmode="decimal" step="0.01" value="${c.limit || ''}"></label>`).join('')}
+    <p id="zLeft" class="small" style="margin-top:0"></p>
+    <button class="btn primary full" id="zSave" type="button">Save limits</button>`, el => {
+    const calc = () => {
+      const inc = parseFloat($('#zInc', el).value) || 0; let sum = 0;
+      $$('[data-z]', el).forEach(i => { sum += parseFloat(i.value) || 0; });
+      const left = Math.round((inc - sum) * 100) / 100;
+      $('#zLeft', el).textContent = (left === 0 ? 'Every dollar has a job.' : bm(left) + ' still to assign');
+    };
+    el.addEventListener('input', calc); calc();
+    $('#zSave', el).onclick = () => { $$('[data-z]', el).forEach(i => { const c = catById(i.dataset.z); if (c) c.limit = parseFloat(i.value) || 0; }); closeSheet(true); save(); render(); toast('Limits saved'); };
+  });
+}
+function csvCell(v) { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function exportBudget() {
+  if (!isPremium()) return premGo();
+  const lines = ['date,category,kind,amount,note'];
+  S.budget.entries.forEach(e => { const c = catById(e.catId); lines.push([e.date, csvCell(c ? c.name : ''), c ? c.kind : '', e.amount, csvCell(e.note || '')].join(',')); });
+  download('lifehub-budget-' + bMonth() + '.csv', lines.join('\n'), 'text/csv');
+  toast('Budget CSV downloaded');
+}
+async function importBudget() {
+  if (!isPremium()) return premGo();
+  const f = await pickFile('.csv,text/csv'); if (!f) return;
+  const rows = parseCSV(await readText(f)); let n = 0;
+  rows.forEach(r => {
+    const amount = parseFloat(String(pick(r, 'amount', 'value')).replace(/[^\d.-]/g, ''));
+    const name = pick(r, 'category', 'cat', 'name');
+    if (!name || !(amount > 0)) return;
+    const kind = /income/i.test(pick(r, 'kind', 'type')) ? 'income' : 'expense';
+    let c = S.budget.categories.find(x => x.name.toLowerCase() === name.toLowerCase());
+    if (!c) { c = { id: uid(), name, kind, group: '', limit: 0 }; S.budget.categories.push(c); }
+    const dt = new Date(pick(r, 'date'));
+    S.budget.entries.push({ id: uid(), catId: c.id, amount: Math.abs(amount), date: isNaN(dt) ? todayISO() : dt.toISOString().slice(0, 10), note: pick(r, 'note', 'desc', 'description') || '' });
+    n++;
+  });
+  save(); render(); toast('Imported ' + n + ' row' + (n === 1 ? '' : 's'));
+}
+function premGo() { location.hash = '#/plan'; toast('That\'s part of Premium'); }
+
+/* ---------- documents ---------- */
+const DOC_ACCEPT = '.pdf,.txt,.csv,.md,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.rtf,.png,.jpg,.jpeg,.gif,.webp,application/pdf,text/plain,text/csv,image/*';
+let docQ = '', docFolder = '';
+function ensureDocs() {
+  let changed = false;
+  if (!S.docs || typeof S.docs !== 'object') { S.docs = { folders: [], items: [] }; changed = true; }
+  if (!Array.isArray(S.docs.folders)) { S.docs.folders = []; changed = true; }
+  if (!Array.isArray(S.docs.items)) { S.docs.items = []; changed = true; }
+  return changed;
+}
+async function putFile(id, blob) { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction('files', 'readwrite'); t.objectStore('files').put(blob, id); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+async function getFile(id) { const db = await idb(); return new Promise(res => { const q = db.transaction('files').objectStore('files').get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
+async function delFile(id) { try { const db = await idb(); db.transaction('files', 'readwrite').objectStore('files').delete(id); } catch (e) {} }
+async function inboxAll() { try { const db = await idb(); return await new Promise(res => { const q = db.transaction('inbox').objectStore('inbox').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }); } catch (e) { return []; } }
+async function inboxClear() { try { const db = await idb(); await new Promise(res => { const t = db.transaction('inbox', 'readwrite'); t.objectStore('inbox').clear(); t.oncomplete = res; t.onerror = res; }); } catch (e) {} }
+function docKind(name, type) {
+  const n = String(name || '').toLowerCase(); const t = type || '';
+  if (t.startsWith('image/') || /\.(png|jpe?g|gif|webp|heic)$/.test(n)) return 'image';
+  if (t === 'application/pdf' || n.endsWith('.pdf')) return 'pdf';
+  if (n.endsWith('.csv') || t.includes('csv')) return 'csv';
+  if (t.startsWith('text/') || /\.(txt|md|json)$/.test(n)) return 'text';
+  if (/\.(docx?|rtf)$/.test(n) || t.includes('word')) return 'word';
+  if (/\.xlsx?$/.test(n) || t.includes('sheet') || t.includes('excel')) return 'excel';
+  if (/\.pptx?$/.test(n) || t.includes('presentation')) return 'ppt';
+  return 'file';
+}
+function fmtBytes(n) { n = Number(n) || 0; if (n < 1024) return n + ' B'; if (n < 1048576) return Math.round(n / 1024) + ' KB'; return (n / 1048576).toFixed(1) + ' MB'; }
+async function addDocFiles(list) {
+  ensureDocs();
+  let n = 0;
+  for (const f of list) {
+    if (!f) continue;
+    const id = uid();
+    try { await putFile(id, f); } catch (e) { toast('Could not store ' + (f.name || 'a file')); continue; }
+    S.docs.items.unshift({ id, name: f.name || 'Untitled', type: f.type || '', size: f.size || 0, added: Date.now(), folderId: docFolder || '', tags: [] });
+    n++;
+  }
+  if (n) { save(); toast('Saved ' + n + ' file' + (n === 1 ? '' : 's') + ' on this device'); render(); }
+}
+let inboxBusy = false;
+async function absorbInbox() {
+  if (inboxBusy || !S) return;
+  inboxBusy = true;
+  try {
+    const pending = await inboxAll();
+    if (pending.length) {
+      ensureDocs();
+      pending.forEach(m => { if (m && m.id && !S.docs.items.some(x => x.id === m.id)) S.docs.items.unshift({ id: m.id, name: m.name || 'Shared file', type: m.type || '', size: m.size || 0, added: m.added || Date.now(), folderId: '', tags: [] }); });
+      await inboxClear();
+      save();
+      toast('Added ' + pending.length + ' shared file' + (pending.length === 1 ? '' : 's'));
+      if ((location.hash || '').startsWith('#/doc')) render();
+    }
+  } catch (e) {}
+  inboxBusy = false;
+}
+function renderDocuments() {
+  ensureDocs();
+  const q = docQ.trim().toLowerCase();
+  let items = S.docs.items.slice().sort((a, b) => (b.added || 0) - (a.added || 0));
+  if (docFolder) items = items.filter(d => d.folderId === docFolder);
+  if (q) items = items.filter(d => (d.name + ' ' + (d.tags || []).join(' ')).toLowerCase().includes(q));
+  const recent = !q && !docFolder ? items.slice(0, 5) : [];
+  const row = d => {
+    const folder = S.docs.folders.find(f => f.id === d.folderId);
+    return `<a class="li" href="#/doc/${d.id}">${ic('file')}<span class="grow"><b>${esc(d.name)}</b><span>${esc(docKind(d.name, d.type))} · ${fmtBytes(d.size)}${folder ? ' · ' + esc(folder.name) : ''}${(d.tags || []).length ? ' · ' + esc(d.tags.join(', ')) : ''}</span></span></a>`;
+  };
+  const chips = `<div class="chips"><button class="btn sm ${docFolder ? '' : 'primary'}" data-act="docFolder" data-id="">All</button>${S.docs.folders.map(f => `<button class="btn sm ${docFolder === f.id ? 'primary' : ''}" data-act="docFolder" data-id="${f.id}">${esc(f.name)}</button>`).join('')}<button class="btn sm" data-act="docNewFolder">${ic('plus', 16)} Folder</button></div>`;
+  const body = `<div class="searchbox">${ic('search', 20)}<input class="input" id="docQ" type="search" placeholder="Search files or tags" value="${esc(docQ)}" aria-label="Search documents"></div>
+    ${chips}
+    <div class="row gap" style="margin-bottom:12px"><button class="btn primary" data-act="docAdd">${ic('plus', 18)} Add files</button></div>
+    ${recent.length ? `<div class="sec-h"><h2>Recent</h2></div><div class="list">${recent.map(row).join('')}</div>` : ''}
+    <div class="sec-h"><h2>${q ? 'Results' : docFolder ? 'In this folder' : 'All files'}</h2></div>
+    <div class="list">${items.length ? items.map(row).join('') : '<p class="empty">Nothing here yet. Add a PDF, photo, spreadsheet or text file from this device.</p>'}</div>
+    <p class="footnote">Files stay in this browser's database. You can also share a file into LifeHub, or open LifeHub from a PDF or Office file where the device allows it.</p>`;
+  return { html: screen({ title: 'Documents', body, right: `<button class="iconbtn" data-act="docAdd" aria-label="Add files">${ic('plus')}</button>` }), after: () => {
+    const i = $('#docQ'); if (!i) return;
+    i.oninput = () => { docQ = i.value; const p = i.selectionStart; render(); const j = $('#docQ'); if (j) { j.focus(); j.setSelectionRange(p, p); } };
+  } };
+}
+function officeLinks(kind) {
+  const map = {
+    word: ['Microsoft 365', 'https://www.office.com/launch/word', 'Google Docs', 'https://docs.google.com/document/create'],
+    excel: ['Microsoft 365', 'https://www.office.com/launch/excel', 'Google Sheets', 'https://docs.google.com/spreadsheets/create'],
+    ppt: ['Microsoft 365', 'https://www.office.com/launch/powerpoint', 'Google Slides', 'https://docs.google.com/presentation/create'],
+  };
+  return map[kind] || null;
+}
+function renderDoc(id) {
+  ensureDocs();
+  const item = S.docs.items.find(x => x.id === id);
+  if (!item) { location.hash = '#/documents'; return ''; }
+  const kind = docKind(item.name, item.type);
+  const L = officeLinks(kind);
+  const body = `<p class="muted" style="margin-top:0">${esc(kind)} · ${fmtBytes(item.size)}${(item.tags || []).length ? ' · ' + esc(item.tags.join(', ')) : ''}</p>
+    <div id="docHost"><p class="empty">Opening…</p></div>
+    ${L ? `<div class="card"><h3>Open elsewhere</h3><p class="muted">This browser does not preview ${esc(kind)} files. Download the file, then upload it on the website. LifeHub does not send it for you.</p><div class="row gap wrap"><button class="btn primary" data-act="docDl" data-id="${id}">Download</button><a class="btn" href="${L[1]}" target="_blank" rel="noopener">${L[0]}</a><a class="btn" href="${L[3]}" target="_blank" rel="noopener">${L[2]}</a></div></div>` : `<button class="btn full" data-act="docDl" data-id="${id}">${ic('download', 18)} Download</button>`}
+    <div class="list" style="margin-top:12px"><button class="li" data-act="docTags" data-id="${id}">${ic('edit')}<span class="grow"><b>Tags</b><span>${(item.tags || []).length ? esc(item.tags.join(', ')) : 'Add words so you can search'}</span></span></button>
+    <button class="li" data-act="docMove" data-id="${id}">${ic('grid')}<span class="grow"><b>Folder</b><span>${esc((S.docs.folders.find(f => f.id === item.folderId) || {}).name || 'None')}</span></span></button>
+    <button class="li" data-act="docDel" data-id="${id}" style="color:var(--red)">${ic('trash')}<span class="grow"><b>Remove from this device</b></span></button></div>`;
+  return { html: screen({ title: item.name, back: '#/documents', body }), after: () => mountDoc(item) };
+}
+async function mountDoc(item) {
+  const host = $('#docHost'); if (!host) return;
+  const blob = await getFile(item.id);
+  if (!blob || !$('#docHost')) { if ($('#docHost')) $('#docHost').innerHTML = '<p class="empty">This file is not in the on-device database any more.</p>'; return; }
+  const kind = docKind(item.name, item.type || blob.type);
+  if (kind === 'csv' || kind === 'text') {
+    const text = await blob.text();
+    host.innerHTML = kind === 'csv' ? csvPreview(text) : `<pre class="docpre">${esc(text.slice(0, 200000))}</pre>${text.length > 200000 ? '<p class="small muted">Showing the first part. Download the file for the rest.</p>' : ''}`;
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const prev = cleanupFn; cleanupFn = () => { URL.revokeObjectURL(url); if (prev) prev(); };
+  if (kind === 'image') host.innerHTML = `<img class="docpic" alt="${esc(item.name)}" src="${url}">`;
+  else if (kind === 'pdf') host.innerHTML = `<iframe class="docframe" title="${esc(item.name)}" src="${url}"></iframe>`;
+  else host.innerHTML = '<p class="empty">Use Download, or the Microsoft 365 and Google links below.</p>';
+}
+function csvPreview(text) {
+  const rows = parseCSV(text).slice(0, 200);
+  if (!rows.length) return '<p class="empty">No rows in this CSV.</p>';
+  const keys = Object.keys(rows[0]);
+  return `<div style="overflow:auto"><table class="doctable"><thead><tr>${keys.map(k => `<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${keys.map(k => `<td>${esc(r[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="small muted">Showing up to 200 rows.</p>`;
+}
+async function downloadDoc(id) {
+  const item = (S.docs.items || []).find(x => x.id === id); const blob = await getFile(id);
+  if (!item || !blob) return toast('That file is not on this device');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = item.name || 'file'; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+}
+function editDocTags(id) {
+  const item = S.docs.items.find(x => x.id === id); if (!item) return;
+  formSheet({ title: 'Tags', fields: [{ k: 'tags', label: 'Words, separated by commas', ph: 'tax, 2026' }], values: { tags: (item.tags || []).join(', ') }, onSave: v => { item.tags = v.tags.split(',').map(s => s.trim()).filter(Boolean).slice(0, 12); } });
+}
+function moveDoc(id) {
+  const item = S.docs.items.find(x => x.id === id); if (!item) return;
+  const opts = [['', 'No folder'], ...S.docs.folders.map(f => [f.id, f.name])];
+  formSheet({ title: 'Folder', fields: [{ k: 'folderId', label: 'Keep it in', type: 'select', options: opts }], values: { folderId: item.folderId || '' }, onSave: v => { item.folderId = v.folderId || ''; } });
+}
+async function deleteDoc(id) {
+  const item = S.docs.items.find(x => x.id === id); if (!item) return;
+  if (!(await confirmSheet('Remove this file?', esc(item.name) + ' will be deleted from this device.', 'Remove', true))) return;
+  await delFile(id); S.docs.items = S.docs.items.filter(x => x.id !== id); save(); location.hash = '#/documents'; toast('Removed');
+}
+function newFolder() {
+  formSheet({ title: 'New folder', fields: [{ k: 'name', label: 'Name', req: true }], onSave: v => { const id = uid(); S.docs.folders.push({ id, name: v.name }); docFolder = id; toast('Folder added'); } });
+}
+
+/* ---------- quick sync ---------- */
+const APP_CATALOG = [
+  { id: 'gcal', name: 'Google Calendar', emoji: '📅', cat: 'Calendar', url: 'https://calendar.google.com/', cal: 'Google' },
+  { id: 'outlook', name: 'Outlook', emoji: '📧', cat: 'Calendar', url: 'https://outlook.live.com/calendar/', cal: 'Outlook' },
+  { id: 'applecal', name: 'Apple Calendar', emoji: '🗓️', cat: 'Calendar', url: 'https://www.icloud.com/calendar/', cal: 'Apple' },
+  { id: 'teams', name: 'Microsoft Teams', emoji: '👥', cat: 'Work', url: 'https://teams.microsoft.com/' },
+  { id: 'zoom', name: 'Zoom', emoji: '🎥', cat: 'Work', url: 'https://zoom.us/' },
+  { id: 'gmail', name: 'Gmail', emoji: '✉️', cat: 'Messages', url: 'https://mail.google.com/' },
+  { id: 'whatsapp', name: 'WhatsApp', emoji: '💬', cat: 'Messages', url: 'https://web.whatsapp.com/' },
+  { id: 'messenger', name: 'Messenger', emoji: '💬', cat: 'Messages', url: 'https://www.messenger.com/' },
+  { id: 'telegram', name: 'Telegram', emoji: '✈️', cat: 'Messages', url: 'https://web.telegram.org/' },
+  { id: 'signal', name: 'Signal', emoji: '🔒', cat: 'Messages', url: 'https://signal.org/' },
+  { id: 'facebook', name: 'Facebook', emoji: '📘', cat: 'Social', url: 'https://www.facebook.com/' },
+  { id: 'instagram', name: 'Instagram', emoji: '📷', cat: 'Social', url: 'https://www.instagram.com/' },
+  { id: 'tiktok', name: 'TikTok', emoji: '🎵', cat: 'Social', url: 'https://www.tiktok.com/' },
+  { id: 'youtube', name: 'YouTube', emoji: '▶️', cat: 'Social', url: 'https://www.youtube.com/' },
+  { id: 'x', name: 'X', emoji: '𝕏', cat: 'Social', url: 'https://x.com/' },
+  { id: 'commbank', name: 'CommBank', emoji: '🏦', cat: 'Money', url: 'https://www.commbank.com.au/' },
+  { id: 'westpac', name: 'Westpac', emoji: '🏦', cat: 'Money', url: 'https://www.westpac.com.au/' },
+  { id: 'nab', name: 'NAB', emoji: '🏦', cat: 'Money', url: 'https://www.nab.com.au/' },
+  { id: 'anz', name: 'ANZ', emoji: '🏦', cat: 'Money', url: 'https://www.anz.com.au/' },
+  { id: 'paypal', name: 'PayPal', emoji: '💳', cat: 'Money', url: 'https://www.paypal.com/' },
+  { id: 'gmaps', name: 'Google Maps', emoji: '📍', cat: 'Travel', url: 'https://maps.google.com/' },
+  { id: 'uber', name: 'Uber', emoji: '🚗', cat: 'Travel', url: 'https://m.uber.com/' },
+  { id: 'medicare', name: 'Medicare', emoji: '🩺', cat: 'Health', url: 'https://www.servicesaustralia.gov.au/medicare' },
+  { id: 'hotdoc', name: 'HotDoc', emoji: '🩺', cat: 'Health', url: 'https://www.hotdoc.com.au/' },
+  { id: 'mygov', name: 'myGov', emoji: '🇦🇺', cat: 'Health', url: 'https://my.gov.au/' },
+  { id: 'spotify', name: 'Spotify', emoji: '🎧', cat: 'Everyday', url: 'https://open.spotify.com/' },
+  { id: 'netflix', name: 'Netflix', emoji: '🎬', cat: 'Everyday', url: 'https://www.netflix.com/' },
+  { id: 'auspost', name: 'Australia Post', emoji: '📦', cat: 'Everyday', url: 'https://auspost.com.au/' },
+];
+const CAT_EMOJI = { Calendar: '📅', Work: '💼', Messages: '💬', Social: '📣', Money: '🏦', Travel: '✈️', Health: '🩺', Everyday: '⭐' };
+let syncQ = '', syncPick = null, syncRelated = '';
+function catalogInHub(spec) { return S.apps.some(a => a.catalogId === spec.id || a.url === spec.url); }
+function adoptCatalog() {
+  (S.apps || []).forEach(a => {
+    if (a.catalogId) return;
+    const spec = APP_CATALOG.find(s => s.url && s.url === a.url);
+    if (spec) a.catalogId = spec.id;
+  });
+}
+function openQuickSync() {
+  syncPick = new Set(APP_CATALOG.filter(catalogInHub).map(a => a.id));
+  syncQ = ''; syncRelated = '';
+  location.hash = '#/addnew/sync';
+  if (navigator.getInstalledRelatedApps) navigator.getInstalledRelatedApps().then(list => {
+    if (!list || !list.length || (location.hash || '') !== '#/addnew/sync') return;
+    syncRelated = 'This browser reported ' + list.length + ' related app' + (list.length === 1 ? '' : 's') + ' for LifeHub. It still cannot list everything installed on the device.';
+    const el = $('#syncRelated'); if (el) el.textContent = syncRelated;
+  }).catch(() => {});
+}
+function renderQuickSync() {
+  adoptCatalog();
+  if (!syncPick) syncPick = new Set(APP_CATALOG.filter(catalogInHub).map(a => a.id));
+  const q = syncQ.trim().toLowerCase();
+  const match = APP_CATALOG.filter(a => !q || (a.name + ' ' + a.cat).toLowerCase().includes(q));
+  const mine = match.filter(a => catalogInHub(a)).sort((a, b) => a.name.localeCompare(b.name));
+  const rest = match.filter(a => !catalogInHub(a));
+  const row = a => {
+    const on = syncPick.has(a.id);
+    return `<button class="li" data-act="syncTick" data-id="${a.id}" aria-pressed="${on}">${on ? ic('check') : ic('plus')}<span class="ai" style="font-size:1.3rem">${a.emoji}</span><span class="grow"><b>${esc(a.name)}</b><span>${esc(a.cat)}${catalogInHub(a) ? ' · already in LifeHub' : ''}</span></span>${a.cal ? '<span class="tag amber">Demo</span>' : ''}</button>`;
+  };
+  let groups = '';
+  const cats = [...new Set(rest.map(a => a.cat))];
+  cats.forEach(cat => { groups += `<div class="sec-h"><h2>${esc(cat)}</h2></div><div class="list">${rest.filter(a => a.cat === cat).map(row).join('')}</div>`; });
+  const body = `<div class="notice blue">${ic('shield', 18)}<div><b>Apps you might use.</b> A website cannot see the apps installed on your phone or computer. This is a popular list, not a scan of your device. Tick several, then connect them in one step.</div></div>
+    <p id="syncRelated" class="small muted">${esc(syncRelated)}</p>
+    <div class="searchbox">${ic('search', 20)}<input class="input" id="syncQ" type="search" placeholder="Search popular apps" value="${esc(syncQ)}" aria-label="Search popular apps"></div>
+    ${mine.length ? `<div class="sec-h"><h2>Already in LifeHub</h2></div><div class="list">${mine.map(row).join('')}</div>` : ''}
+    ${groups || '<p class="empty">No matches.</p>'}
+    <p class="small">Calendar apps are marked <span class="tag amber">Demo</span>. Connecting one adds a sample event on this device. Nothing is read from Google, Outlook or Apple.</p>
+    <button class="btn primary full" data-act="syncGo">Connect ${syncPick.size} app${syncPick.size === 1 ? '' : 's'}</button>
+    <button class="btn ghost full" data-act="addOne" style="margin-top:8px">Add one link instead</button>`;
+  return { html: screen({ title: 'Quick sync', back: '#/addnew', body }), after: () => {
+    const i = $('#syncQ'); if (!i) return;
+    i.oninput = () => { syncQ = i.value; const p = i.selectionStart; render(); const j = $('#syncQ'); if (j) { j.focus(); j.setSelectionRange(p, p); } };
+  } };
+}
+function syncTick(id) {
+  if (!syncPick) syncPick = new Set();
+  if (syncPick.has(id)) syncPick.delete(id); else syncPick.add(id);
+  render();
+}
+function connectSync() {
+  adoptCatalog();
+  if (!syncPick) syncPick = new Set();
+  let added = 0, removed = 0, calendars = 0;
+  APP_CATALOG.forEach(spec => {
+    const on = syncPick.has(spec.id);
+    const existing = S.apps.find(a => a.catalogId === spec.id || a.url === spec.url);
+    if (on && !existing) {
+      let g = S.groups.find(x => x.name === spec.cat);
+      if (!g) { g = { id: uid(), name: spec.cat, emoji: CAT_EMOJI[spec.cat] || '📁', onHome: false }; S.groups.push(g); }
+      S.apps.push({ id: uid(), catalogId: spec.id, name: spec.name, url: spec.url, emoji: spec.emoji, groupId: g.id, nextLabel: '', nextOn: '', nextStart: '', nextEnd: '' });
+      added++;
+    }
+    if (!on && existing && existing.catalogId === spec.id) { S.apps = S.apps.filter(a => a !== existing); removed++; }
+    if (on && spec.cal && linkCalendarSilent(spec.cal)) calendars++;
+  });
+  save(); announceConflicts();
+  location.hash = '#/addnew';
+  const bits = [];
+  if (added) bits.push('Added ' + added);
+  if (removed) bits.push('removed ' + removed);
+  if (calendars) bits.push(calendars + ' sample calendar event' + (calendars === 1 ? '' : 's'));
+  toast(bits.length ? bits.join(', ') : 'Nothing changed');
+}
+
+/* ---------- maps links ---------- */
+function mapsUrl(kind, lat, lng) {
+  const q = Number(lat).toFixed(6) + ',' + Number(lng).toFixed(6);
+  if (kind === 'search') return 'https://www.google.com/maps/search/?api=1&query=' + q;
+  if (kind === 'dir') return 'https://www.google.com/maps/dir/?api=1&destination=' + q + '&travelmode=driving';
+  return 'https://www.google.com/maps/dir/?api=1&destination=' + q + '&travelmode=driving&dir_action=navigate';
+}
+function mapActions(lat, lng) {
+  return `<div class="row gap wrap mapacts"><a class="btn sm" href="${mapsUrl('search', lat, lng)}" target="_blank" rel="noopener">Open</a><a class="btn sm" href="${mapsUrl('dir', lat, lng)}" target="_blank" rel="noopener">Directions</a><a class="btn sm primary" href="${mapsUrl('nav', lat, lng)}" target="_blank" rel="noopener">Start driving</a><button type="button" class="btn sm" data-act="gmapsHere" data-lat="${lat}" data-lng="${lng}">View here</button></div>`;
+}
+function gmapsHere(el) {
+  const box = $('#gmapsFrame'); if (!box) return;
+  const lat = el.dataset.lat, lng = el.dataset.lng;
+  box.innerHTML = `<p class="small muted" style="margin:8px 0 0">Google's map. If it stays blank, use Open. No API key is used.</p><iframe class="gframe" title="Google Maps" src="https://maps.google.com/maps?q=${encodeURIComponent(lat + ',' + lng)}&z=14&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+}
+function fillMapsYou() {
+  const box = $('#gmapsYou'); if (!box || !locMe) return;
+  const me = locMe;
+  box.innerHTML = `<b>${me.demo ? 'Sample position' : 'You'}</b> ${me.demo ? '<span class="tag amber">Demo</span>' : ''}<div class="small muted">${me.demo ? 'Launceston sample, because location was not available.' : me.lat.toFixed(5) + ', ' + me.lng.toFixed(5)}</div>${mapActions(me.lat, me.lng)}`;
+}
+
+/* ---------- installed-copy updates ---------- */
+let updateReady = false, updateReloading = false;
+function safeToReload() {
+  if (document.querySelector('.sheet-wrap')) return false;
+  const ae = document.activeElement;
+  if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return false;
+  if (document.querySelector('#payAmt,#setF,#obF,#lockPw')) return false;
+  const hash = location.hash || '';
+  if (/^#\/call/.test(hash) || /^#\/addnew\/sync/.test(hash)) return false;
+  if (Date.now() - lastAct < 1500) return false;
+  return true;
+}
+function showUpdateBanner() {
+  if (document.getElementById('updBanner')) return;
+  const b = document.createElement('div');
+  b.id = 'updBanner'; b.className = 'update-banner'; b.setAttribute('role', 'status');
+  b.innerHTML = '<span>A new version of LifeHub is ready.</span><button type="button" id="updNow">Update now</button>';
+  document.body.appendChild(b);
+  $('#updNow', b).onclick = () => { sessionStorage.setItem('lh.updated', '1'); location.reload(); };
+}
+function maybeApplyUpdate() {
+  if (!updateReady || updateReloading || !safeToReload()) return;
+  updateReloading = true;
+  sessionStorage.setItem('lh.updated', '1');
+  location.reload();
+}
+function setupUpdates() {
+  if (!('serviceWorker' in navigator)) return;
+  let had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!had) { had = true; return; }
+    updateReady = true;
+    if (safeToReload()) maybeApplyUpdate(); else showUpdateBanner();
+  });
+  navigator.serviceWorker.addEventListener('message', ev => { if (ev.data && ev.data.type === 'lh-shared') absorbInbox(); });
+  const tick = () => navigator.serviceWorker.getRegistration().then(reg => {
+    if (!reg) return;
+    reg.update().catch(() => {});
+    if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage({ type: 'skipWaiting' });
+  }).catch(() => {});
+  tick();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); absorbInbox(); maybeApplyUpdate(); } });
+  setInterval(tick, 30 * 60 * 1000);
+  setInterval(maybeApplyUpdate, 3000);
+  if ('launchQueue' in window) {
+    try { launchQueue.setConsumer(async params => { const files = []; for (const h of params.files || []) { try { files.push(await h.getFile()); } catch (e) {} } if (files.length) { await addDocFiles(files); if (!(location.hash || '').startsWith('#/doc')) location.hash = '#/documents'; } }); } catch (e) {}
+  }
+  if (sessionStorage.getItem('lh.updated')) { sessionStorage.removeItem('lh.updated'); setTimeout(() => { try { toast('Updated'); } catch (e) {} }, 400); }
+}
+
 /* ---------- router & prefs ---------- */
 const ROUTES = [[/^\/home$/, renderHome], [/^\/search$/, renderSearch], [/^\/emergency$/, renderEmergency], [/^\/medical$/, renderMedical], [/^\/medical-id$/, renderMedicalID],
-  [/^\/banking$/, renderBanking], [/^\/banking\/pay$/, renderPay], [/^\/banking\/link$/, renderLink], [/^\/chat$/, renderChats], [/^\/chat\/(\w+)$/, renderThread], [/^\/call\/(\w+)(?:\/(video))?$/, renderCall],
-  [/^\/contacts$/, renderContacts], [/^\/contacts\/(\w+)$/, renderContact], [/^\/social$/, renderSocial], [/^\/utilities$/, renderUtilities], [/^\/addnew$/, renderAddNew], [/^\/group\/(\w+)$/, renderGroup], [/^\/calendar$/, renderCalendar], [/^\/calendar\/work$/, renderWork], [/^\/location$/, renderLocation], [/^\/settings$/, renderSettings], [/^\/plan$/, renderPlan]];
+  [/^\/banking$/, renderBanking], [/^\/banking\/budget\/tools$/, renderBudgetTools], [/^\/banking\/budget\/debt$/, renderDebt], [/^\/banking\/budget$/, renderBudget], [/^\/banking\/pay$/, renderPay], [/^\/banking\/link$/, renderLink], [/^\/chat$/, renderChats], [/^\/chat\/(\w+)$/, renderThread], [/^\/call\/(\w+)(?:\/(video))?$/, renderCall],
+  [/^\/contacts$/, renderContacts], [/^\/contacts\/(\w+)$/, renderContact], [/^\/social$/, renderSocial], [/^\/utilities$/, renderUtilities], [/^\/documents$/, renderDocuments], [/^\/doc\/(\w+)$/, renderDoc], [/^\/addnew$/, renderAddNew], [/^\/addnew\/sync$/, renderQuickSync], [/^\/group\/(\w+)$/, renderGroup], [/^\/calendar$/, renderCalendar], [/^\/calendar\/work$/, renderWork], [/^\/location$/, renderLocation], [/^\/settings$/, renderSettings], [/^\/plan$/, renderPlan]];
 const PUBLIC = ['/emergency', '/medical-id'];
 let lastPath = '';
 function applyPrefs() {
@@ -1864,7 +2584,16 @@ const A = {
   dismissNote: el => { S.notifications = S.notifications.filter(n => n.id !== el.dataset.id); save(); render(); }, clearNotes: () => { S.notifications = []; save(); render(); },
   addBill: () => editBill(), editBill: el => editBill(el.dataset.id), uploadBill, importBills, billSort: el => { billSort = el.dataset.s; render(); },
   payBill: el => { const b = S.bills.find(x => x.id === el.dataset.id); b.paid = true; save(); render(); toast(`${b.provider} marked as paid`); },
-  addApp: el => editApp(null, el.dataset.g), addGroup: () => editGroup(), editGroup: el => editGroup(el.dataset.id),
+  addApp: el => { if (el.dataset.g) editApp(null, el.dataset.g); else openQuickSync(); }, addOne: () => editApp(), quickSync: () => openQuickSync(),
+  syncTick: el => syncTick(el.dataset.id), syncGo: () => connectSync(), addGroup: () => editGroup(), editGroup: el => editGroup(el.dataset.id),
+  budMonth: el => { budgetMonth = shiftMonth(bMonth(), Number(el.dataset.d) || 0); render(); },
+  budAdd: () => addBudgetEntry(), budSpend: el => budSpend(el.dataset.id), budGoal: el => editGoal(el.dataset.id), budBill: el => editBBill(el.dataset.id),
+  budCat: el => editCategory(el.dataset.id), budNewCat: () => newCategory(), bud5030: () => apply5030(), budZero: () => applyZero(),
+  budExport: () => exportBudget(), budImport: () => importBudget(), budDebt: el => editDebt(el.dataset.id),
+  budStrategy: el => { if (!isPremium()) return premGo(); S.budget.strategy = el.dataset.v; save(); render(); }, premGo: () => premGo(),
+  docAdd: async () => addDocFiles(await pickFiles(DOC_ACCEPT)), docFolder: el => { docFolder = el.dataset.id || ''; render(); }, docNewFolder: () => newFolder(),
+  docDl: el => downloadDoc(el.dataset.id), docTags: el => editDocTags(el.dataset.id), docMove: el => moveDoc(el.dataset.id), docDel: el => deleteDoc(el.dataset.id),
+  gmapsHere: el => gmapsHere(el),
   editProfile, changeLogin, lockNow: lock,
   refreshNow: () => refreshAll(true),
   setRefresh: el => { const o = REFRESH.find(r => r[0] === el.dataset.v); if (o[2] && !isPremium()) { location.hash = '#/plan'; toast('That\'s a Premium perk'); return; } S.settings.refresh = o[0]; save(); scheduleRefresh(); render(); toast(o[0] === 'manual' ? 'Manual refresh only' : `Refreshing ${o[0] === 'live' ? 'live' : 'every ' + o[1]}`); },
@@ -1910,6 +2639,8 @@ document.addEventListener('change', e => {
   if (el.dataset.change === 'glass') { if (!isPremium()) { el.checked = false; location.hash = '#/plan'; toast('That\'s a Premium perk'); return; } S.settings.iconStyle = el.checked ? 'glass' : 'standard'; save(); render(); return; }
   if (el.dataset.change === 'setRegion') { S.profile.region = el.value; save(); render(); toast(`Showing ${region().name} emergency numbers`); }
   if (el.dataset.change === 'preferWifi') { S.settings.preferWifi = el.checked; save(); render(); toast(el.checked ? 'Wi‑Fi preferred, mobile data as backup' : 'Using any available network'); }
+  if (el.dataset.change === 'budCur') { ensureBudget(); S.budget.currency = el.value; save(); render(); }
+  if (el.dataset.change === 'budRoll') { if (!isPremium()) { el.checked = false; premGo(); return; } ensureBudget(); S.budget.rollover = !!el.checked; save(); render(); toast(el.checked ? 'Leftover budget rolls into next month' : 'Rollover is off'); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 window.addEventListener('hashchange', () => { closeSheet(true); render(); });
@@ -1927,9 +2658,10 @@ setInterval(() => {
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (unlocked && S && S.settings.lockMinutes > 0 && hiddenAt && Date.now() - hiddenAt > S.settings.lockMinutes * 60000) lock(); });
 
+setupUpdates();
 render();
-if (unlocked) checkReminders();
+if (unlocked) { checkReminders(); absorbInbox(); }
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.3.0', isPremium: () => isPremium(), cal: { parseRoster, parseICS, rangesOverlap, onDay } };
+window.LifeHub = { version: '1.4.0', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
 })();
