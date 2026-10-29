@@ -1,4 +1,4 @@
-const CACHE = 'lifehub-v7';
+const CACHE = 'lifehub-v8';
 const SHARE_CACHE = 'lifehub-share';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './safety.js', './manifest.webmanifest', './privacy.html', './terms.html', './support.html', './delete-account.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
 

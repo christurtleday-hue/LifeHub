@@ -1039,6 +1039,7 @@ function editApp(id, groupId, preset) {
   formSheet({ title: a ? 'Edit app' : 'Add app or link', intro, fields: [{ k: 'name', label: 'Name', req: true }, { k: 'url', label: 'Web address or app link', req: true, ph: 'https://… or app-name://' }, { k: 'emoji', label: 'Icon (emoji)', ph: '🔗' }, { k: 'groupId', label: 'Group', type: 'select', options: [['', 'No group'], ...S.groups.map(g => [g.id, `${g.emoji || ''} ${g.name}`])] }, { k: 'nextLabel', label: 'Calendar label (optional)', ph: 'e.g. School pickup' }, { k: 'nextOn', label: 'Next date', type: 'date' }, { k: 'nextStart', label: 'Starts', type: 'time' }, { k: 'nextEnd', label: 'Ends', type: 'time' }],
     values: base, onSave: async v => {
       if (!/^[a-z][\w+.-]*:/i.test(v.url)) v.url = 'https://' + v.url;
+      try { await ensureCatalog(); } catch (e) {}
       const checked = LHSafety.scanLink(v.url, linkCheckContext());
       if (!(await presentSafety(checked, v.url))) return false;
       v.emoji = v.emoji || '🔗'; if (a) Object.assign(a, v); else S.apps.push({ id: uid(), catalogId: (preset && preset.catalogId) || '', android: (preset && preset.android) || '', ios: (preset && preset.ios) || '', ...v }); toast(checked.level === 'safe' ? 'Saved · safety check: Safe' : 'Saved');
@@ -1094,7 +1095,7 @@ function renderSettings() {
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>Support</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
   <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>Delete your data</b><span>How account deletion works</span></span>${ic('chev')}</a></div>
   <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample placeholder, not a tracking network. Banking, chat, social feeds and other people's map pins are demos. Export a backup before you delete your data.</div>
-  <p class="footnote">LifeHub prototype v1.4.2 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
+  <p class="footnote">LifeHub prototype v1.4.3 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
   return screen({ title: 'Settings', body });
 }
 function editProfile() {
@@ -2407,41 +2408,28 @@ function newFolder() {
 }
 
 /* ---------- quick sync ---------- */
-/* android = Play package name. ios = URL scheme without ://. appleId = App Store id.
-   These are for a future Capacitor build that may check installed apps with a
-   <queries> list. This website does not use them to detect what is installed. */
-const APP_CATALOG = [
-  { id: 'gcal', name: 'Google Calendar', emoji: '📅', cat: 'Calendar', url: 'https://calendar.google.com/', cal: 'Google', android: 'com.google.android.calendar', ios: 'googlecalendar', appleId: '909319292' },
-  { id: 'outlook', name: 'Outlook', emoji: '📧', cat: 'Calendar', url: 'https://outlook.live.com/calendar/', cal: 'Outlook', android: 'com.microsoft.office.outlook', ios: 'ms-outlook', appleId: '951937596' },
-  { id: 'applecal', name: 'Apple Calendar', emoji: '🗓️', cat: 'Calendar', url: 'https://www.icloud.com/calendar/', cal: 'Apple' },
-  { id: 'teams', name: 'Microsoft Teams', emoji: '👥', cat: 'Work', url: 'https://teams.microsoft.com/', android: 'com.microsoft.teams', ios: 'msteams', appleId: '1113153706' },
-  { id: 'zoom', name: 'Zoom', emoji: '🎥', cat: 'Work', url: 'https://zoom.us/', android: 'us.zoom.videomeetings', ios: 'zoomus', appleId: '546505307' },
-  { id: 'gmail', name: 'Gmail', emoji: '✉️', cat: 'Messages', url: 'https://mail.google.com/', android: 'com.google.android.gm', ios: 'googlegmail', appleId: '422689480' },
-  { id: 'whatsapp', name: 'WhatsApp', emoji: '💬', cat: 'Messages', url: 'https://web.whatsapp.com/', android: 'com.whatsapp', ios: 'whatsapp', appleId: '310633997' },
-  { id: 'messenger', name: 'Messenger', emoji: '💬', cat: 'Messages', url: 'https://www.messenger.com/', android: 'com.facebook.orca', ios: 'fb-messenger', appleId: '454638411' },
-  { id: 'telegram', name: 'Telegram', emoji: '✈️', cat: 'Messages', url: 'https://web.telegram.org/', android: 'org.telegram.messenger', ios: 'tg', appleId: '686449807' },
-  { id: 'signal', name: 'Signal', emoji: '🔒', cat: 'Messages', url: 'https://signal.org/', android: 'org.thoughtcrime.securesms', ios: 'sgnl', appleId: '874139669' },
-  { id: 'facebook', name: 'Facebook', emoji: '📘', cat: 'Social', url: 'https://www.facebook.com/', android: 'com.facebook.katana', ios: 'fb', appleId: '284882215' },
-  { id: 'instagram', name: 'Instagram', emoji: '📷', cat: 'Social', url: 'https://www.instagram.com/', android: 'com.instagram.android', ios: 'instagram', appleId: '389801252' },
-  { id: 'tiktok', name: 'TikTok', emoji: '🎵', cat: 'Social', url: 'https://www.tiktok.com/', android: 'com.zhiliaoapp.musically', ios: 'tiktok', appleId: '835599320' },
-  { id: 'youtube', name: 'YouTube', emoji: '▶️', cat: 'Social', url: 'https://www.youtube.com/', android: 'com.google.android.youtube', ios: 'youtube', appleId: '544007664' },
-  { id: 'x', name: 'X', emoji: '𝕏', cat: 'Social', url: 'https://x.com/', android: 'com.twitter.android', ios: 'twitter', appleId: '333903271' },
-  { id: 'commbank', name: 'CommBank', emoji: '🏦', cat: 'Money', url: 'https://www.commbank.com.au/', android: 'com.commbank.netbank', ios: 'commbank' },
-  { id: 'westpac', name: 'Westpac', emoji: '🏦', cat: 'Money', url: 'https://www.westpac.com.au/', android: 'org.westpac.bank' },
-  { id: 'nab', name: 'NAB', emoji: '🏦', cat: 'Money', url: 'https://www.nab.com.au/', android: 'au.com.nab.mobile' },
-  { id: 'anz', name: 'ANZ', emoji: '🏦', cat: 'Money', url: 'https://www.anz.com.au/', android: 'com.anz.android.gomoney' },
-  { id: 'paypal', name: 'PayPal', emoji: '💳', cat: 'Money', url: 'https://www.paypal.com/', android: 'com.paypal.android.p2pmobile', ios: 'paypal', appleId: '283646709' },
-  { id: 'gmaps', name: 'Google Maps', emoji: '📍', cat: 'Travel', url: 'https://maps.google.com/', android: 'com.google.android.apps.maps', ios: 'comgooglemaps', appleId: '585027354' },
-  { id: 'uber', name: 'Uber', emoji: '🚗', cat: 'Travel', url: 'https://m.uber.com/', android: 'com.ubercab', ios: 'uber', appleId: '368677368' },
-  { id: 'medicare', name: 'Medicare', emoji: '🩺', cat: 'Health', url: 'https://www.servicesaustralia.gov.au/medicare' },
-  { id: 'hotdoc', name: 'HotDoc', emoji: '🩺', cat: 'Health', url: 'https://www.hotdoc.com.au/' },
-  { id: 'mygov', name: 'myGov', emoji: '🇦🇺', cat: 'Health', url: 'https://my.gov.au/' },
-  { id: 'spotify', name: 'Spotify', emoji: '🎧', cat: 'Everyday', url: 'https://open.spotify.com/', android: 'com.spotify.music', ios: 'spotify', appleId: '324684580' },
-  { id: 'netflix', name: 'Netflix', emoji: '🎬', cat: 'Everyday', url: 'https://www.netflix.com/', android: 'com.netflix.mediaclient', ios: 'nflx', appleId: '363590051' },
-  { id: 'auspost', name: 'Australia Post', emoji: '📦', cat: 'Everyday', url: 'https://auspost.com.au/' },
-];
-const CAT_EMOJI = { Calendar: '📅', Work: '💼', Messages: '💬', Social: '📣', Money: '🏦', Travel: '✈️', Health: '🩺', Everyday: '⭐' };
-let syncQ = '', syncPick = null, syncRelated = '';
+/* The popular-app list lives in data/apps.json and is fetched only when needed.
+   android = Play package name. ios = URL scheme without ://. Unknown fields are left blank.
+   This website does not use them to see what is installed. */
+let APP_CATALOG = [];
+let catalogReady = false;
+let catalogP = null;
+let catalogError = '';
+function ensureCatalog() {
+  if (catalogReady) return Promise.resolve(APP_CATALOG);
+  if (!catalogP) {
+    catalogError = '';
+    catalogP = fetch('data/apps.json').then(r => { if (!r.ok) throw new Error('list'); return r.json(); }).then(list => {
+      APP_CATALOG = (Array.isArray(list) ? list : []).map(a => ({ ...a, url: a.url || (a.domain ? 'https://' + a.domain + '/' : '') }));
+      catalogReady = true;
+      return APP_CATALOG;
+    }).catch(err => { catalogP = null; catalogError = 'The app list could not be loaded. Check your connection and try again.'; throw err; });
+  }
+  return catalogP;
+}
+const CAT_ORDER = ['Banking', 'Finance', 'Utilities', 'Phone', 'Health', 'Government', 'Messages', 'Social', 'Transport', 'Shopping', 'Food', 'Streaming', 'Productivity', 'Travel', 'Fitness', 'Education'];
+const CAT_EMOJI = { Banking: '🏦', Finance: '💳', Utilities: '💡', Phone: '📱', Health: '🩺', Government: '🏛️', Messages: '💬', Social: '📣', Transport: '🚌', Shopping: '🛍️', Food: '🍽️', Streaming: '🎬', Productivity: '📎', Travel: '✈️', Fitness: '🏃', Education: '🎓' };
+let syncQ = '', syncPick = null, syncRelated = '', syncCat = '';
 
 function bytesToText(buf) {
   const u8 = new Uint8Array(buf);
@@ -2489,10 +2477,11 @@ function matchAppLink(raw) {
   try { if (url) scheme = new URL(url).protocol.replace(':', '').toLowerCase(); } catch (e) {}
   if (scheme === 'http' || scheme === 'https') scheme = '';
   const fileLabel = text.split(/[\n\r]+/).map(s => s.trim().split(/[/\\]/).pop()).find(s => /\.(lnk|url|desktop|webloc|png|jpe?g|svg|ico)$/i.test(s || '')) || '';
+  const byHost = url ? APP_CATALOG.filter(s => hostsRelated(hostOf(url), hostOf(s.url || s.domain))) : [];
   const spec = APP_CATALOG.find(s => play && s.android && s.android === play)
     || APP_CATALOG.find(s => apple && s.appleId && String(s.appleId) === apple)
     || APP_CATALOG.find(s => scheme && s.ios && s.ios.toLowerCase() === scheme)
-    || APP_CATALOG.find(s => url && hostsRelated(hostOf(url), hostOf(s.url)))
+    || (byHost.length === 1 ? byHost[0] : null)
     || APP_CATALOG.find(s => nameHits(s, fileLabel) || nameHits(s, text));
   if (spec) {
     const store = /play\.google\.com|apps\.apple\.com|itunes\.apple\.com/i.test(url);
@@ -2532,7 +2521,7 @@ function openPendingDraft() {
 }
 function pasteLink() {
   formSheet({ title: 'Paste a link', intro: 'Paste a website, Play Store or App Store link. LifeHub cannot see which apps are installed.', submit: 'Continue', fields: [{ k: 'link', label: 'Link', req: true, ph: 'https://…' }],
-    onSave: v => { const preset = matchAppLink(v.link); setTimeout(() => openPreset(preset), 0); return false; } });
+    onSave: async v => { try { await ensureCatalog(); } catch (e) {} const preset = matchAppLink(v.link); setTimeout(() => openPreset(preset), 0); return false; } });
 }
 function dropTarget(e) {
   if (!e.target || !e.target.closest) return null;
@@ -2560,6 +2549,7 @@ document.addEventListener('drop', async e => {
   const files = [...(e.dataTransfer.files || [])];
   for (const f of files) { if (!(await presentSafety(await scanFile(f), f.name))) return; }
   const raw = await rawFromDrop(e.dataTransfer);
+  try { await ensureCatalog(); } catch (e) {}
   openPreset(matchAppLink(raw));
 });
 syncDropMode();
@@ -2575,6 +2565,7 @@ async function absorbAddIntent() {
     intent = await res.json();
     await cache.delete(key);
   } catch (e) { return; }
+  try { await ensureCatalog(); } catch (e) {}
   const preset = matchAppLink([intent.title, intent.text, intent.url, intent.extra].filter(Boolean).join('\n'));
   if (!preset) return;
   sessionStorage.setItem('lh.addDraft', JSON.stringify(preset));
@@ -2591,8 +2582,8 @@ function adoptCatalog() {
   });
 }
 function openQuickSync() {
-  syncPick = new Set(APP_CATALOG.filter(catalogInHub).map(a => a.id));
-  syncQ = ''; syncRelated = '';
+  syncPick = null;
+  syncQ = ''; syncRelated = ''; syncCat = '';
   location.hash = '#/addnew/sync';
   if (navigator.getInstalledRelatedApps) navigator.getInstalledRelatedApps().then(list => {
     if (!list || !list.length || (location.hash || '') !== '#/addnew/sync') return;
@@ -2600,25 +2591,72 @@ function openQuickSync() {
     const el = $('#syncRelated'); if (el) el.textContent = syncRelated;
   }).catch(() => {});
 }
+function catalogIcon(a) {
+  if (a.emoji) return `<span class="ai" style="font-size:1.3rem">${a.emoji}</span>`;
+  return av(a.name);
+}
+function searchCatalog(q, cat) {
+  const query = normName(q);
+  const tokens = query.split(' ').filter(Boolean);
+  let list = APP_CATALOG;
+  if (cat) list = list.filter(a => a.cat === cat);
+  if (!tokens.length) return list.slice();
+  const scored = [];
+  list.forEach(a => {
+    const name = normName(a.name);
+    const domain = String(a.domain || hostOf(a.url) || '').toLowerCase();
+    const hay = name + ' ' + domain + ' ' + normName(a.cat);
+    if (!tokens.every(t => hay.includes(t))) return;
+    let score = 0;
+    if (name === query) score += 100;
+    else if (name.startsWith(query)) score += 60;
+    else if (domain.startsWith(query) || domain.includes(query)) score += 40;
+    else score += 10;
+    scored.push([score, a]);
+  });
+  scored.sort((x, y) => y[0] - x[0] || x[1].name.localeCompare(y[1].name));
+  return scored.map(x => x[1]);
+}
 function renderQuickSync() {
+  if (!catalogReady) {
+    if (!catalogP && !catalogError) ensureCatalog().then(() => { if ((location.hash || '') === '#/addnew/sync') render(); }).catch(() => { if ((location.hash || '') === '#/addnew/sync') render(); });
+    const body = catalogError ? `<p class="empty">${esc(catalogError)}</p><button class="btn primary full" data-act="syncRetry">Try again</button>` : '<p class="empty">Loading popular apps…</p>';
+    return screen({ title: 'Quick sync', back: '#/addnew', body });
+  }
   adoptCatalog();
   if (!syncPick) syncPick = new Set(APP_CATALOG.filter(catalogInHub).map(a => a.id));
-  const q = syncQ.trim().toLowerCase();
-  const match = APP_CATALOG.filter(a => !q || (a.name + ' ' + a.cat).toLowerCase().includes(q));
-  const mine = match.filter(a => catalogInHub(a)).sort((a, b) => a.name.localeCompare(b.name));
+  const cats = CAT_ORDER.filter(c => APP_CATALOG.some(a => a.cat === c));
+  const match = searchCatalog(syncQ, syncCat);
+  const mine = !syncQ && !syncCat ? APP_CATALOG.filter(catalogInHub).sort((a, b) => a.name.localeCompare(b.name)) : match.filter(catalogInHub);
   const rest = match.filter(a => !catalogInHub(a));
+  const limit = syncQ || syncCat ? 80 : 0;
+  const shown = limit ? rest.slice(0, limit) : [];
   const row = a => {
     const on = syncPick.has(a.id);
-    return `<button class="li" data-act="syncTick" data-id="${a.id}" aria-pressed="${on}">${on ? ic('check') : ic('plus')}<span class="ai" style="font-size:1.3rem">${a.emoji}</span><span class="grow"><b>${esc(a.name)}</b><span>${esc(a.cat)}${catalogInHub(a) ? ' · already in LifeHub' : ''}</span></span>${a.cal ? '<span class="tag amber">Demo</span>' : ''}</button>`;
+    const domain = a.domain || hostOf(a.url);
+    return `<button class="li" data-act="syncTick" data-id="${a.id}" aria-pressed="${on}">${on ? ic('check') : ic('plus')}${catalogIcon(a)}<span class="grow"><b>${esc(a.name)}</b><span>${esc(a.cat)}${domain ? ' · ' + esc(domain) : ''}${catalogInHub(a) ? ' · already in LifeHub' : ''}</span></span>${a.cal ? '<span class="tag amber">Demo</span>' : ''}</button>`;
   };
+  const chips = `<div class="chips" role="tablist">${['', ...cats].map(c => `<button type="button" class="btn sm ${syncCat === c ? 'primary' : ''}" data-act="syncCat" data-c="${esc(c)}">${c ? esc(c) : 'All'}</button>`).join('')}</div>`;
   let groups = '';
-  const cats = [...new Set(rest.map(a => a.cat))];
-  cats.forEach(cat => { groups += `<div class="sec-h"><h2>${esc(cat)}</h2></div><div class="list">${rest.filter(a => a.cat === cat).map(row).join('')}</div>`; });
-  const body = `<div class="notice blue">${ic('shield', 18)}<div><b>Apps you might use.</b> A website cannot see the apps installed on your phone or computer. This is a popular list, not a scan of your device. Tick several, then connect them in one step.</div></div>
+  if (!syncQ && !syncCat) groups = '<p class="empty">Search by name or website, or pick a category. This is a popular list, not a scan of your device.</p>';
+  else if (!shown.length && !mine.length) groups = '<p class="empty">No matches. Try a shorter name or the website.</p>';
+  else {
+    const blocks = [];
+    if (!syncQ) {
+      const ordered = syncCat ? [syncCat] : cats;
+      ordered.forEach(cat => {
+        const rows = rest.filter(a => a.cat === cat).slice(0, 80);
+        if (rows.length) blocks.push(`<div class="sec-h"><h2>${esc(cat)}</h2></div><div class="list">${rows.map(row).join('')}</div>`);
+      });
+    } else blocks.push(`<div class="sec-h"><h2>${shown.length} match${shown.length === 1 ? '' : 'es'}${match.length > shown.length ? ' · showing ' + shown.length : ''}</h2></div><div class="list">${shown.map(row).join('')}</div>`);
+    groups = blocks.join('');
+  }
+  const body = `<div class="notice blue">${ic('shield', 18)}<div><b>Apps you might use.</b> A website cannot see the apps installed on your phone or computer. This is a popular list of ${APP_CATALOG.length} apps, not a scan of your device. Tick several, then connect them in one step.</div></div>
     <p id="syncRelated" class="small muted">${esc(syncRelated)}</p>
-    <div class="searchbox">${ic('search', 20)}<input class="input" id="syncQ" type="search" placeholder="Search popular apps" value="${esc(syncQ)}" aria-label="Search popular apps"></div>
+    <div class="searchbox">${ic('search', 20)}<input class="input" id="syncQ" type="search" placeholder="Search name or website" value="${esc(syncQ)}" aria-label="Search popular apps"></div>
+    ${chips}
     ${mine.length ? `<div class="sec-h"><h2>Already in LifeHub</h2></div><div class="list">${mine.map(row).join('')}</div>` : ''}
-    ${groups || '<p class="empty">No matches.</p>'}
+    ${groups}
     <p class="small">Calendar apps are marked <span class="tag amber">Demo</span>. Connecting one adds a sample event on this device. Nothing is read from Google, Outlook or Apple.</p>
     <button class="btn primary full" data-act="syncGo">Connect ${syncPick.size} app${syncPick.size === 1 ? '' : 's'}</button>
     <button class="btn ghost full" data-act="addOne" style="margin-top:8px">Add one link instead</button>`;
@@ -2642,7 +2680,7 @@ function connectSync() {
     if (on && !existing) {
       let g = S.groups.find(x => x.name === spec.cat);
       if (!g) { g = { id: uid(), name: spec.cat, emoji: CAT_EMOJI[spec.cat] || '📁', onHome: false }; S.groups.push(g); }
-      S.apps.push({ id: uid(), catalogId: spec.id, name: spec.name, url: spec.url, emoji: spec.emoji, groupId: g.id, android: spec.android || '', ios: spec.ios || '', nextLabel: '', nextOn: '', nextStart: '', nextEnd: '' });
+      S.apps.push({ id: uid(), catalogId: spec.id, name: spec.name, url: spec.url, emoji: spec.emoji || String(spec.name || '?').trim().charAt(0).toUpperCase() || '🔗', groupId: g.id, android: spec.android || '', ios: spec.ios || '', nextLabel: '', nextOn: '', nextStart: '', nextEnd: '' });
       added++;
     }
     if (!on && existing && existing.catalogId === spec.id) { S.apps = S.apps.filter(a => a !== existing); removed++; }
@@ -2819,6 +2857,8 @@ const A = {
   addBill: () => editBill(), editBill: el => editBill(el.dataset.id), uploadBill, importBills, billSort: el => { billSort = el.dataset.s; render(); },
   payBill: el => { const b = S.bills.find(x => x.id === el.dataset.id); b.paid = true; save(); render(); toast(`${b.provider} marked as paid`); },
   addApp: el => { if (el.dataset.g) editApp(null, el.dataset.g); else openQuickSync(); }, addOne: () => editApp(), pasteLink: () => pasteLink(), quickSync: () => openQuickSync(),
+  syncRetry: () => { catalogP = null; catalogError = ''; catalogReady = false; render(); },
+  syncCat: el => { syncCat = el.dataset.c || ''; render(); },
   syncTick: el => syncTick(el.dataset.id), syncGo: () => connectSync(), addGroup: () => editGroup(), editGroup: el => editGroup(el.dataset.id),
   budMonth: el => { budgetMonth = shiftMonth(bMonth(), Number(el.dataset.d) || 0); render(); },
   budAdd: () => addBudgetEntry(), budSpend: el => budSpend(el.dataset.id), budGoal: el => editGoal(el.dataset.id), budBill: el => editBBill(el.dataset.id),
@@ -2898,5 +2938,5 @@ render();
 if (unlocked) { checkReminders(); absorbInbox(); absorbAddIntent(); openPendingDraft(); }
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.4.2', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
+window.LifeHub = { version: '1.4.3', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
 })();

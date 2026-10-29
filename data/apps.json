@@ -1,0 +1,4683 @@
+[
+  {
+    "id": "commbank",
+    "name": "CommBank",
+    "cat": "Banking",
+    "domain": "commbank.com.au",
+    "url": "https://commbank.com.au/",
+    "emoji": "🏦",
+    "android": "com.commbank.netbank",
+    "ios": "commbank"
+  },
+  {
+    "id": "westpac",
+    "name": "Westpac",
+    "cat": "Banking",
+    "domain": "westpac.com.au",
+    "url": "https://westpac.com.au/",
+    "emoji": "🏦",
+    "android": "org.westpac.bank"
+  },
+  {
+    "id": "nab",
+    "name": "NAB",
+    "cat": "Banking",
+    "domain": "nab.com.au",
+    "url": "https://nab.com.au/",
+    "emoji": "🏦",
+    "android": "au.com.nab.mobile"
+  },
+  {
+    "id": "anz",
+    "name": "ANZ",
+    "cat": "Banking",
+    "domain": "anz.com.au",
+    "url": "https://anz.com.au/",
+    "emoji": "🏦",
+    "android": "com.anz.android.gomoney"
+  },
+  {
+    "id": "bankwest",
+    "name": "Bankwest",
+    "cat": "Banking",
+    "domain": "bankwest.com.au",
+    "url": "https://bankwest.com.au/"
+  },
+  {
+    "id": "stgeorge",
+    "name": "St.George",
+    "cat": "Banking",
+    "domain": "stgeorge.com.au",
+    "url": "https://stgeorge.com.au/"
+  },
+  {
+    "id": "bankofmelbourne",
+    "name": "Bank of Melbourne",
+    "cat": "Banking",
+    "domain": "bankofmelbourne.com.au",
+    "url": "https://bankofmelbourne.com.au/"
+  },
+  {
+    "id": "banksa",
+    "name": "BankSA",
+    "cat": "Banking",
+    "domain": "banksa.com.au",
+    "url": "https://banksa.com.au/"
+  },
+  {
+    "id": "bendigo",
+    "name": "Bendigo Bank",
+    "cat": "Banking",
+    "domain": "bendigobank.com.au",
+    "url": "https://bendigobank.com.au/"
+  },
+  {
+    "id": "suncorp",
+    "name": "Suncorp Bank",
+    "cat": "Banking",
+    "domain": "suncorp.com.au",
+    "url": "https://suncorp.com.au/"
+  },
+  {
+    "id": "boq",
+    "name": "Bank of Queensland",
+    "cat": "Banking",
+    "domain": "boq.com.au",
+    "url": "https://boq.com.au/"
+  },
+  {
+    "id": "ingau",
+    "name": "ING Australia",
+    "cat": "Banking",
+    "domain": "ing.com.au",
+    "url": "https://ing.com.au/"
+  },
+  {
+    "id": "macquarie",
+    "name": "Macquarie Bank",
+    "cat": "Banking",
+    "domain": "macquarie.com.au",
+    "url": "https://macquarie.com.au/"
+  },
+  {
+    "id": "ubank",
+    "name": "ubank",
+    "cat": "Banking",
+    "domain": "ubank.com.au",
+    "url": "https://ubank.com.au/"
+  },
+  {
+    "id": "upbank",
+    "name": "Up",
+    "cat": "Banking",
+    "domain": "up.com.au",
+    "url": "https://up.com.au/"
+  },
+  {
+    "id": "greatsouthern",
+    "name": "Great Southern Bank",
+    "cat": "Banking",
+    "domain": "greatsouthernbank.com.au",
+    "url": "https://greatsouthernbank.com.au/"
+  },
+  {
+    "id": "ampbank",
+    "name": "AMP Bank",
+    "cat": "Banking",
+    "domain": "amp.com.au",
+    "url": "https://amp.com.au/"
+  },
+  {
+    "id": "hsbcau",
+    "name": "HSBC Australia",
+    "cat": "Banking",
+    "domain": "hsbc.com.au",
+    "url": "https://hsbc.com.au/"
+  },
+  {
+    "id": "judo",
+    "name": "Judo Bank",
+    "cat": "Banking",
+    "domain": "judo.bank",
+    "url": "https://judo.bank/"
+  },
+  {
+    "id": "mystate",
+    "name": "MyState Bank",
+    "cat": "Banking",
+    "domain": "mystate.com.au",
+    "url": "https://mystate.com.au/"
+  },
+  {
+    "id": "heritage",
+    "name": "Heritage Bank",
+    "cat": "Banking",
+    "domain": "heritage.com.au",
+    "url": "https://heritage.com.au/"
+  },
+  {
+    "id": "greater",
+    "name": "Greater Bank",
+    "cat": "Banking",
+    "domain": "greater.com.au",
+    "url": "https://greater.com.au/"
+  },
+  {
+    "id": "imb",
+    "name": "IMB Bank",
+    "cat": "Banking",
+    "domain": "imb.com.au",
+    "url": "https://imb.com.au/"
+  },
+  {
+    "id": "defencebank",
+    "name": "Defence Bank",
+    "cat": "Banking",
+    "domain": "defencebank.com.au",
+    "url": "https://defencebank.com.au/"
+  },
+  {
+    "id": "teachersmutual",
+    "name": "Teachers Mutual Bank",
+    "cat": "Banking",
+    "domain": "tmbank.com.au",
+    "url": "https://tmbank.com.au/"
+  },
+  {
+    "id": "newcastle",
+    "name": "Newcastle Permanent",
+    "cat": "Banking",
+    "domain": "newcastlepermanent.com.au",
+    "url": "https://newcastlepermanent.com.au/"
+  },
+  {
+    "id": "peopleschoice",
+    "name": "People's Choice",
+    "cat": "Banking",
+    "domain": "peopleschoice.com.au",
+    "url": "https://peopleschoice.com.au/"
+  },
+  {
+    "id": "beyondbank",
+    "name": "Beyond Bank",
+    "cat": "Banking",
+    "domain": "beyondbank.com.au",
+    "url": "https://beyondbank.com.au/"
+  },
+  {
+    "id": "bankaustralia",
+    "name": "Bank Australia",
+    "cat": "Banking",
+    "domain": "bankaust.com.au",
+    "url": "https://bankaust.com.au/"
+  },
+  {
+    "id": "chase",
+    "name": "Chase",
+    "cat": "Banking",
+    "domain": "chase.com",
+    "url": "https://chase.com/",
+    "android": "com.chase.sig.android"
+  },
+  {
+    "id": "bofa",
+    "name": "Bank of America",
+    "cat": "Banking",
+    "domain": "bankofamerica.com",
+    "url": "https://bankofamerica.com/",
+    "android": "com.infonow.bofa"
+  },
+  {
+    "id": "wellsfargo",
+    "name": "Wells Fargo",
+    "cat": "Banking",
+    "domain": "wellsfargo.com",
+    "url": "https://wellsfargo.com/",
+    "android": "com.wf.wellsfargomobile"
+  },
+  {
+    "id": "citi",
+    "name": "Citi",
+    "cat": "Banking",
+    "domain": "citi.com",
+    "url": "https://citi.com/",
+    "android": "com.citi.citimobile"
+  },
+  {
+    "id": "capitalone",
+    "name": "Capital One",
+    "cat": "Banking",
+    "domain": "capitalone.com",
+    "url": "https://capitalone.com/",
+    "android": "com.konylabs.capitalone"
+  },
+  {
+    "id": "usbank",
+    "name": "U.S. Bank",
+    "cat": "Banking",
+    "domain": "usbank.com",
+    "url": "https://usbank.com/"
+  },
+  {
+    "id": "pnc",
+    "name": "PNC",
+    "cat": "Banking",
+    "domain": "pnc.com",
+    "url": "https://pnc.com/"
+  },
+  {
+    "id": "truist",
+    "name": "Truist",
+    "cat": "Banking",
+    "domain": "truist.com",
+    "url": "https://truist.com/"
+  },
+  {
+    "id": "tdbank",
+    "name": "TD Bank",
+    "cat": "Banking",
+    "domain": "td.com",
+    "url": "https://td.com/"
+  },
+  {
+    "id": "ally",
+    "name": "Ally Bank",
+    "cat": "Banking",
+    "domain": "ally.com",
+    "url": "https://ally.com/"
+  },
+  {
+    "id": "discover",
+    "name": "Discover",
+    "cat": "Banking",
+    "domain": "discover.com",
+    "url": "https://discover.com/"
+  },
+  {
+    "id": "amex",
+    "name": "American Express",
+    "cat": "Banking",
+    "domain": "americanexpress.com",
+    "url": "https://americanexpress.com/",
+    "android": "com.americanexpress.android.acctsvcs.us"
+  },
+  {
+    "id": "schwab",
+    "name": "Charles Schwab",
+    "cat": "Banking",
+    "domain": "schwab.com",
+    "url": "https://schwab.com/"
+  },
+  {
+    "id": "fidelity",
+    "name": "Fidelity",
+    "cat": "Banking",
+    "domain": "fidelity.com",
+    "url": "https://fidelity.com/"
+  },
+  {
+    "id": "vanguard",
+    "name": "Vanguard",
+    "cat": "Banking",
+    "domain": "vanguard.com",
+    "url": "https://vanguard.com/"
+  },
+  {
+    "id": "sofi",
+    "name": "SoFi",
+    "cat": "Banking",
+    "domain": "sofi.com",
+    "url": "https://sofi.com/"
+  },
+  {
+    "id": "chime",
+    "name": "Chime",
+    "cat": "Banking",
+    "domain": "chime.com",
+    "url": "https://chime.com/"
+  },
+  {
+    "id": "usaa",
+    "name": "USAA",
+    "cat": "Banking",
+    "domain": "usaa.com",
+    "url": "https://usaa.com/"
+  },
+  {
+    "id": "navyfederal",
+    "name": "Navy Federal",
+    "cat": "Banking",
+    "domain": "navyfederal.org",
+    "url": "https://navyfederal.org/"
+  },
+  {
+    "id": "regions",
+    "name": "Regions Bank",
+    "cat": "Banking",
+    "domain": "regions.com",
+    "url": "https://regions.com/"
+  },
+  {
+    "id": "fifththird",
+    "name": "Fifth Third",
+    "cat": "Banking",
+    "domain": "53.com",
+    "url": "https://53.com/"
+  },
+  {
+    "id": "citizens",
+    "name": "Citizens Bank",
+    "cat": "Banking",
+    "domain": "citizensbank.com",
+    "url": "https://citizensbank.com/"
+  },
+  {
+    "id": "huntington",
+    "name": "Huntington",
+    "cat": "Banking",
+    "domain": "huntington.com",
+    "url": "https://huntington.com/"
+  },
+  {
+    "id": "keybank",
+    "name": "KeyBank",
+    "cat": "Banking",
+    "domain": "key.com",
+    "url": "https://key.com/"
+  },
+  {
+    "id": "bmo",
+    "name": "BMO",
+    "cat": "Banking",
+    "domain": "bmo.com",
+    "url": "https://bmo.com/"
+  },
+  {
+    "id": "marcus",
+    "name": "Marcus by Goldman Sachs",
+    "cat": "Banking",
+    "domain": "marcus.com",
+    "url": "https://marcus.com/"
+  },
+  {
+    "id": "barclays",
+    "name": "Barclays",
+    "cat": "Banking",
+    "domain": "barclays.co.uk",
+    "url": "https://barclays.co.uk/"
+  },
+  {
+    "id": "hsbcuk",
+    "name": "HSBC UK",
+    "cat": "Banking",
+    "domain": "hsbc.co.uk",
+    "url": "https://hsbc.co.uk/"
+  },
+  {
+    "id": "lloyds",
+    "name": "Lloyds Bank",
+    "cat": "Banking",
+    "domain": "lloydsbank.com",
+    "url": "https://lloydsbank.com/"
+  },
+  {
+    "id": "halifax",
+    "name": "Halifax",
+    "cat": "Banking",
+    "domain": "halifax.co.uk",
+    "url": "https://halifax.co.uk/"
+  },
+  {
+    "id": "bos",
+    "name": "Bank of Scotland",
+    "cat": "Banking",
+    "domain": "bankofscotland.co.uk",
+    "url": "https://bankofscotland.co.uk/"
+  },
+  {
+    "id": "natwest",
+    "name": "NatWest",
+    "cat": "Banking",
+    "domain": "natwest.com",
+    "url": "https://natwest.com/"
+  },
+  {
+    "id": "rbs",
+    "name": "Royal Bank of Scotland",
+    "cat": "Banking",
+    "domain": "rbs.co.uk",
+    "url": "https://rbs.co.uk/"
+  },
+  {
+    "id": "santanderuk",
+    "name": "Santander UK",
+    "cat": "Banking",
+    "domain": "santander.co.uk",
+    "url": "https://santander.co.uk/"
+  },
+  {
+    "id": "nationwide",
+    "name": "Nationwide",
+    "cat": "Banking",
+    "domain": "nationwide.co.uk",
+    "url": "https://nationwide.co.uk/"
+  },
+  {
+    "id": "tsb",
+    "name": "TSB",
+    "cat": "Banking",
+    "domain": "tsb.co.uk",
+    "url": "https://tsb.co.uk/"
+  },
+  {
+    "id": "metrobank",
+    "name": "Metro Bank",
+    "cat": "Banking",
+    "domain": "metrobankonline.co.uk",
+    "url": "https://metrobankonline.co.uk/"
+  },
+  {
+    "id": "monzo",
+    "name": "Monzo",
+    "cat": "Banking",
+    "domain": "monzo.com",
+    "url": "https://monzo.com/",
+    "android": "co.uk.getmondzo.android",
+    "ios": "monzo"
+  },
+  {
+    "id": "starling",
+    "name": "Starling Bank",
+    "cat": "Banking",
+    "domain": "starlingbank.com",
+    "url": "https://starlingbank.com/",
+    "android": "com.starlingbank.android"
+  },
+  {
+    "id": "firstdirect",
+    "name": "first direct",
+    "cat": "Banking",
+    "domain": "firstdirect.com",
+    "url": "https://firstdirect.com/"
+  },
+  {
+    "id": "virginmoney",
+    "name": "Virgin Money",
+    "cat": "Banking",
+    "domain": "virginmoney.com",
+    "url": "https://virginmoney.com/"
+  },
+  {
+    "id": "coopbank",
+    "name": "Co-operative Bank",
+    "cat": "Banking",
+    "domain": "co-operativebank.co.uk",
+    "url": "https://co-operativebank.co.uk/"
+  },
+  {
+    "id": "tescobank",
+    "name": "Tesco Bank",
+    "cat": "Banking",
+    "domain": "tescobank.com",
+    "url": "https://tescobank.com/"
+  },
+  {
+    "id": "deutsche",
+    "name": "Deutsche Bank",
+    "cat": "Banking",
+    "domain": "deutsche-bank.de",
+    "url": "https://deutsche-bank.de/"
+  },
+  {
+    "id": "commerzbank",
+    "name": "Commerzbank",
+    "cat": "Banking",
+    "domain": "commerzbank.de",
+    "url": "https://commerzbank.de/"
+  },
+  {
+    "id": "n26",
+    "name": "N26",
+    "cat": "Banking",
+    "domain": "n26.com",
+    "url": "https://n26.com/",
+    "android": "de.number26.android"
+  },
+  {
+    "id": "ing",
+    "name": "ING",
+    "cat": "Banking",
+    "domain": "ing.com",
+    "url": "https://ing.com/"
+  },
+  {
+    "id": "abnamro",
+    "name": "ABN AMRO",
+    "cat": "Banking",
+    "domain": "abnamro.nl",
+    "url": "https://abnamro.nl/"
+  },
+  {
+    "id": "rabobank",
+    "name": "Rabobank",
+    "cat": "Banking",
+    "domain": "rabobank.nl",
+    "url": "https://rabobank.nl/"
+  },
+  {
+    "id": "bnp",
+    "name": "BNP Paribas",
+    "cat": "Banking",
+    "domain": "mabanque.bnpparibas.fr",
+    "url": "https://mabanque.bnpparibas.fr/"
+  },
+  {
+    "id": "socgen",
+    "name": "Société Générale",
+    "cat": "Banking",
+    "domain": "particuliers.sg.fr",
+    "url": "https://particuliers.sg.fr/"
+  },
+  {
+    "id": "creditagricole",
+    "name": "Crédit Agricole",
+    "cat": "Banking",
+    "domain": "credit-agricole.fr",
+    "url": "https://credit-agricole.fr/"
+  },
+  {
+    "id": "lcl",
+    "name": "LCL",
+    "cat": "Banking",
+    "domain": "lcl.fr",
+    "url": "https://lcl.fr/"
+  },
+  {
+    "id": "boursorama",
+    "name": "BoursoBank",
+    "cat": "Banking",
+    "domain": "boursobank.com",
+    "url": "https://boursobank.com/"
+  },
+  {
+    "id": "santander",
+    "name": "Santander",
+    "cat": "Banking",
+    "domain": "santander.com",
+    "url": "https://santander.com/"
+  },
+  {
+    "id": "bbva",
+    "name": "BBVA",
+    "cat": "Banking",
+    "domain": "bbva.com",
+    "url": "https://bbva.com/"
+  },
+  {
+    "id": "caixabank",
+    "name": "CaixaBank",
+    "cat": "Banking",
+    "domain": "caixabank.es",
+    "url": "https://caixabank.es/"
+  },
+  {
+    "id": "sabadell",
+    "name": "Banco Sabadell",
+    "cat": "Banking",
+    "domain": "bancsabadell.com",
+    "url": "https://bancsabadell.com/"
+  },
+  {
+    "id": "bankinter",
+    "name": "Bankinter",
+    "cat": "Banking",
+    "domain": "bankinter.com",
+    "url": "https://bankinter.com/"
+  },
+  {
+    "id": "unicredit",
+    "name": "UniCredit",
+    "cat": "Banking",
+    "domain": "unicredit.it",
+    "url": "https://unicredit.it/"
+  },
+  {
+    "id": "intesa",
+    "name": "Intesa Sanpaolo",
+    "cat": "Banking",
+    "domain": "intesasanpaolo.com",
+    "url": "https://intesasanpaolo.com/"
+  },
+  {
+    "id": "fineco",
+    "name": "Fineco",
+    "cat": "Banking",
+    "domain": "finecobank.com",
+    "url": "https://finecobank.com/"
+  },
+  {
+    "id": "nordea",
+    "name": "Nordea",
+    "cat": "Banking",
+    "domain": "nordea.com",
+    "url": "https://nordea.com/"
+  },
+  {
+    "id": "seb",
+    "name": "SEB",
+    "cat": "Banking",
+    "domain": "seb.se",
+    "url": "https://seb.se/"
+  },
+  {
+    "id": "handelsbanken",
+    "name": "Handelsbanken",
+    "cat": "Banking",
+    "domain": "handelsbanken.com",
+    "url": "https://handelsbanken.com/"
+  },
+  {
+    "id": "swedbank",
+    "name": "Swedbank",
+    "cat": "Banking",
+    "domain": "swedbank.com",
+    "url": "https://swedbank.com/"
+  },
+  {
+    "id": "dnb",
+    "name": "DNB",
+    "cat": "Banking",
+    "domain": "dnb.no",
+    "url": "https://dnb.no/"
+  },
+  {
+    "id": "danske",
+    "name": "Danske Bank",
+    "cat": "Banking",
+    "domain": "danskebank.com",
+    "url": "https://danskebank.com/"
+  },
+  {
+    "id": "op",
+    "name": "OP Financial Group",
+    "cat": "Banking",
+    "domain": "op.fi",
+    "url": "https://op.fi/"
+  },
+  {
+    "id": "kbc",
+    "name": "KBC",
+    "cat": "Banking",
+    "domain": "kbc.be",
+    "url": "https://kbc.be/"
+  },
+  {
+    "id": "belfius",
+    "name": "Belfius",
+    "cat": "Banking",
+    "domain": "belfius.be",
+    "url": "https://belfius.be/"
+  },
+  {
+    "id": "ubs",
+    "name": "UBS",
+    "cat": "Banking",
+    "domain": "ubs.com",
+    "url": "https://ubs.com/"
+  },
+  {
+    "id": "raiffeisen",
+    "name": "Raiffeisen",
+    "cat": "Banking",
+    "domain": "raiffeisen.ch",
+    "url": "https://raiffeisen.ch/"
+  },
+  {
+    "id": "erste",
+    "name": "Erste Bank",
+    "cat": "Banking",
+    "domain": "erstegroup.com",
+    "url": "https://erstegroup.com/"
+  },
+  {
+    "id": "pkobp",
+    "name": "PKO Bank Polski",
+    "cat": "Banking",
+    "domain": "pkobp.pl",
+    "url": "https://pkobp.pl/"
+  },
+  {
+    "id": "mbank",
+    "name": "mBank",
+    "cat": "Banking",
+    "domain": "mbank.pl",
+    "url": "https://mbank.pl/"
+  },
+  {
+    "id": "pekao",
+    "name": "Bank Pekao",
+    "cat": "Banking",
+    "domain": "pekao.com.pl",
+    "url": "https://pekao.com.pl/"
+  },
+  {
+    "id": "otp",
+    "name": "OTP Bank",
+    "cat": "Banking",
+    "domain": "otpbank.com",
+    "url": "https://otpbank.com/"
+  },
+  {
+    "id": "nbg",
+    "name": "National Bank of Greece",
+    "cat": "Banking",
+    "domain": "nbg.gr",
+    "url": "https://nbg.gr/"
+  },
+  {
+    "id": "alpha",
+    "name": "Alpha Bank",
+    "cat": "Banking",
+    "domain": "alpha.gr",
+    "url": "https://alpha.gr/"
+  },
+  {
+    "id": "eurobank",
+    "name": "Eurobank",
+    "cat": "Banking",
+    "domain": "eurobank.gr",
+    "url": "https://eurobank.gr/"
+  },
+  {
+    "id": "boi",
+    "name": "Bank of Ireland",
+    "cat": "Banking",
+    "domain": "bankofireland.com",
+    "url": "https://bankofireland.com/"
+  },
+  {
+    "id": "aib",
+    "name": "AIB",
+    "cat": "Banking",
+    "domain": "aib.ie",
+    "url": "https://aib.ie/"
+  },
+  {
+    "id": "ptsb",
+    "name": "Permanent TSB",
+    "cat": "Banking",
+    "domain": "permanenttsb.ie",
+    "url": "https://permanenttsb.ie/"
+  },
+  {
+    "id": "millenniumbcp",
+    "name": "Millennium bcp",
+    "cat": "Banking",
+    "domain": "millenniumbcp.pt",
+    "url": "https://millenniumbcp.pt/"
+  },
+  {
+    "id": "cgd",
+    "name": "Caixa Geral de Depósitos",
+    "cat": "Banking",
+    "domain": "cgd.pt",
+    "url": "https://cgd.pt/"
+  },
+  {
+    "id": "dbs",
+    "name": "DBS",
+    "cat": "Banking",
+    "domain": "dbs.com.sg",
+    "url": "https://dbs.com.sg/"
+  },
+  {
+    "id": "ocbc",
+    "name": "OCBC",
+    "cat": "Banking",
+    "domain": "ocbc.com",
+    "url": "https://ocbc.com/"
+  },
+  {
+    "id": "uob",
+    "name": "UOB",
+    "cat": "Banking",
+    "domain": "uob.com.sg",
+    "url": "https://uob.com.sg/"
+  },
+  {
+    "id": "posb",
+    "name": "POSB",
+    "cat": "Banking",
+    "domain": "posb.com.sg",
+    "url": "https://posb.com.sg/"
+  },
+  {
+    "id": "maybank",
+    "name": "Maybank",
+    "cat": "Banking",
+    "domain": "maybank2u.com.my",
+    "url": "https://maybank2u.com.my/"
+  },
+  {
+    "id": "cimb",
+    "name": "CIMB",
+    "cat": "Banking",
+    "domain": "cimb.com",
+    "url": "https://cimb.com/"
+  },
+  {
+    "id": "publicbank",
+    "name": "Public Bank",
+    "cat": "Banking",
+    "domain": "pbebank.com",
+    "url": "https://pbebank.com/"
+  },
+  {
+    "id": "rhb",
+    "name": "RHB Bank",
+    "cat": "Banking",
+    "domain": "rhbgroup.com",
+    "url": "https://rhbgroup.com/"
+  },
+  {
+    "id": "hsbchk",
+    "name": "HSBC Hong Kong",
+    "cat": "Banking",
+    "domain": "hsbc.com.hk",
+    "url": "https://hsbc.com.hk/"
+  },
+  {
+    "id": "hangseng",
+    "name": "Hang Seng Bank",
+    "cat": "Banking",
+    "domain": "hangseng.com",
+    "url": "https://hangseng.com/"
+  },
+  {
+    "id": "bochk",
+    "name": "Bank of China Hong Kong",
+    "cat": "Banking",
+    "domain": "bochk.com",
+    "url": "https://bochk.com/"
+  },
+  {
+    "id": "sc",
+    "name": "Standard Chartered",
+    "cat": "Banking",
+    "domain": "sc.com",
+    "url": "https://sc.com/"
+  },
+  {
+    "id": "bea",
+    "name": "Bank of East Asia",
+    "cat": "Banking",
+    "domain": "hkbea.com",
+    "url": "https://hkbea.com/"
+  },
+  {
+    "id": "boc",
+    "name": "Bank of China",
+    "cat": "Banking",
+    "domain": "boc.cn",
+    "url": "https://boc.cn/"
+  },
+  {
+    "id": "icbc",
+    "name": "ICBC",
+    "cat": "Banking",
+    "domain": "icbc.com.cn",
+    "url": "https://icbc.com.cn/"
+  },
+  {
+    "id": "ccb",
+    "name": "China Construction Bank",
+    "cat": "Banking",
+    "domain": "ccb.com",
+    "url": "https://ccb.com/"
+  },
+  {
+    "id": "abc",
+    "name": "Agricultural Bank of China",
+    "cat": "Banking",
+    "domain": "abchina.com",
+    "url": "https://abchina.com/"
+  },
+  {
+    "id": "bocom",
+    "name": "Bank of Communications",
+    "cat": "Banking",
+    "domain": "bankcomm.com",
+    "url": "https://bankcomm.com/"
+  },
+  {
+    "id": "mufg",
+    "name": "MUFG",
+    "cat": "Banking",
+    "domain": "mufg.jp",
+    "url": "https://mufg.jp/"
+  },
+  {
+    "id": "smbc",
+    "name": "SMBC",
+    "cat": "Banking",
+    "domain": "smbc.co.jp",
+    "url": "https://smbc.co.jp/"
+  },
+  {
+    "id": "mizuho",
+    "name": "Mizuho",
+    "cat": "Banking",
+    "domain": "mizuhobank.co.jp",
+    "url": "https://mizuhobank.co.jp/"
+  },
+  {
+    "id": "japanpostbank",
+    "name": "Japan Post Bank",
+    "cat": "Banking",
+    "domain": "jp-bank.japanpost.jp",
+    "url": "https://jp-bank.japanpost.jp/"
+  },
+  {
+    "id": "rakutenbank",
+    "name": "Rakuten Bank",
+    "cat": "Banking",
+    "domain": "rakuten-bank.co.jp",
+    "url": "https://rakuten-bank.co.jp/"
+  },
+  {
+    "id": "kb",
+    "name": "KB Kookmin Bank",
+    "cat": "Banking",
+    "domain": "kbstar.com",
+    "url": "https://kbstar.com/"
+  },
+  {
+    "id": "shinhan",
+    "name": "Shinhan Bank",
+    "cat": "Banking",
+    "domain": "shinhan.com",
+    "url": "https://shinhan.com/"
+  },
+  {
+    "id": "woori",
+    "name": "Woori Bank",
+    "cat": "Banking",
+    "domain": "wooribank.com",
+    "url": "https://wooribank.com/"
+  },
+  {
+    "id": "hana",
+    "name": "Hana Bank",
+    "cat": "Banking",
+    "domain": "kebhana.com",
+    "url": "https://kebhana.com/"
+  },
+  {
+    "id": "kakaobank",
+    "name": "KakaoBank",
+    "cat": "Banking",
+    "domain": "kakaobank.com",
+    "url": "https://kakaobank.com/",
+    "android": "com.kakaobank.channel"
+  },
+  {
+    "id": "toss",
+    "name": "Toss",
+    "cat": "Banking",
+    "domain": "toss.im",
+    "url": "https://toss.im/"
+  },
+  {
+    "id": "sbi",
+    "name": "State Bank of India",
+    "cat": "Banking",
+    "domain": "onlinesbi.sbi",
+    "url": "https://onlinesbi.sbi/"
+  },
+  {
+    "id": "hdfc",
+    "name": "HDFC Bank",
+    "cat": "Banking",
+    "domain": "hdfcbank.com",
+    "url": "https://hdfcbank.com/"
+  },
+  {
+    "id": "icici",
+    "name": "ICICI Bank",
+    "cat": "Banking",
+    "domain": "icicibank.com",
+    "url": "https://icicibank.com/"
+  },
+  {
+    "id": "axis",
+    "name": "Axis Bank",
+    "cat": "Banking",
+    "domain": "axisbank.com",
+    "url": "https://axisbank.com/"
+  },
+  {
+    "id": "kotak",
+    "name": "Kotak Mahindra Bank",
+    "cat": "Banking",
+    "domain": "kotak.com",
+    "url": "https://kotak.com/"
+  },
+  {
+    "id": "pnb",
+    "name": "Punjab National Bank",
+    "cat": "Banking",
+    "domain": "pnbindia.in",
+    "url": "https://pnbindia.in/"
+  },
+  {
+    "id": "bob",
+    "name": "Bank of Baroda",
+    "cat": "Banking",
+    "domain": "bankofbaroda.in",
+    "url": "https://bankofbaroda.in/"
+  },
+  {
+    "id": "canara",
+    "name": "Canara Bank",
+    "cat": "Banking",
+    "domain": "canarabank.com",
+    "url": "https://canarabank.com/"
+  },
+  {
+    "id": "idfc",
+    "name": "IDFC FIRST Bank",
+    "cat": "Banking",
+    "domain": "idfcfirstbank.com",
+    "url": "https://idfcfirstbank.com/"
+  },
+  {
+    "id": "bca",
+    "name": "BCA",
+    "cat": "Banking",
+    "domain": "bca.co.id",
+    "url": "https://bca.co.id/"
+  },
+  {
+    "id": "mandiri",
+    "name": "Bank Mandiri",
+    "cat": "Banking",
+    "domain": "bankmandiri.co.id",
+    "url": "https://bankmandiri.co.id/"
+  },
+  {
+    "id": "bri",
+    "name": "Bank Rakyat Indonesia",
+    "cat": "Banking",
+    "domain": "bri.co.id",
+    "url": "https://bri.co.id/"
+  },
+  {
+    "id": "bni",
+    "name": "BNI",
+    "cat": "Banking",
+    "domain": "bni.co.id",
+    "url": "https://bni.co.id/"
+  },
+  {
+    "id": "bangkokbank",
+    "name": "Bangkok Bank",
+    "cat": "Banking",
+    "domain": "bangkokbank.com",
+    "url": "https://bangkokbank.com/"
+  },
+  {
+    "id": "kbank",
+    "name": "Kasikornbank",
+    "cat": "Banking",
+    "domain": "kasikornbank.com",
+    "url": "https://kasikornbank.com/"
+  },
+  {
+    "id": "scbth",
+    "name": "SCB",
+    "cat": "Banking",
+    "domain": "scb.co.th",
+    "url": "https://scb.co.th/"
+  },
+  {
+    "id": "ktb",
+    "name": "Krungthai Bank",
+    "cat": "Banking",
+    "domain": "krungthai.com",
+    "url": "https://krungthai.com/"
+  },
+  {
+    "id": "vietcombank",
+    "name": "Vietcombank",
+    "cat": "Banking",
+    "domain": "vietcombank.com.vn",
+    "url": "https://vietcombank.com.vn/"
+  },
+  {
+    "id": "techcombank",
+    "name": "Techcombank",
+    "cat": "Banking",
+    "domain": "techcombank.com",
+    "url": "https://techcombank.com/"
+  },
+  {
+    "id": "bpi",
+    "name": "BPI",
+    "cat": "Banking",
+    "domain": "bpi.com.ph",
+    "url": "https://bpi.com.ph/"
+  },
+  {
+    "id": "bdo",
+    "name": "BDO",
+    "cat": "Banking",
+    "domain": "bdo.com.ph",
+    "url": "https://bdo.com.ph/"
+  },
+  {
+    "id": "metrobankph",
+    "name": "Metrobank",
+    "cat": "Banking",
+    "domain": "metrobank.com.ph",
+    "url": "https://metrobank.com.ph/"
+  },
+  {
+    "id": "asb",
+    "name": "ASB",
+    "cat": "Banking",
+    "domain": "asb.co.nz",
+    "url": "https://asb.co.nz/"
+  },
+  {
+    "id": "bnz",
+    "name": "BNZ",
+    "cat": "Banking",
+    "domain": "bnz.co.nz",
+    "url": "https://bnz.co.nz/"
+  },
+  {
+    "id": "kiwibank",
+    "name": "Kiwibank",
+    "cat": "Banking",
+    "domain": "kiwibank.co.nz",
+    "url": "https://kiwibank.co.nz/"
+  },
+  {
+    "id": "anznz",
+    "name": "ANZ New Zealand",
+    "cat": "Banking",
+    "domain": "anz.co.nz",
+    "url": "https://anz.co.nz/"
+  },
+  {
+    "id": "westpacnz",
+    "name": "Westpac New Zealand",
+    "cat": "Banking",
+    "domain": "westpac.co.nz",
+    "url": "https://westpac.co.nz/"
+  },
+  {
+    "id": "paypal",
+    "name": "PayPal",
+    "cat": "Finance",
+    "domain": "paypal.com",
+    "url": "https://paypal.com/",
+    "emoji": "💳",
+    "android": "com.paypal.android.p2pmobile",
+    "ios": "paypal",
+    "appleId": "283646709"
+  },
+  {
+    "id": "venmo",
+    "name": "Venmo",
+    "cat": "Finance",
+    "domain": "venmo.com",
+    "url": "https://venmo.com/",
+    "android": "com.venmo",
+    "ios": "venmo"
+  },
+  {
+    "id": "cashapp",
+    "name": "Cash App",
+    "cat": "Finance",
+    "domain": "cash.app",
+    "url": "https://cash.app/",
+    "android": "com.squareup.cash"
+  },
+  {
+    "id": "wise",
+    "name": "Wise",
+    "cat": "Finance",
+    "domain": "wise.com",
+    "url": "https://wise.com/"
+  },
+  {
+    "id": "revolut",
+    "name": "Revolut",
+    "cat": "Finance",
+    "domain": "revolut.com",
+    "url": "https://revolut.com/",
+    "android": "com.revolut.revolut",
+    "ios": "revolut"
+  },
+  {
+    "id": "afterpay",
+    "name": "Afterpay",
+    "cat": "Finance",
+    "domain": "afterpay.com",
+    "url": "https://afterpay.com/"
+  },
+  {
+    "id": "zippay",
+    "name": "Zip",
+    "cat": "Finance",
+    "domain": "zip.co",
+    "url": "https://zip.co/"
+  },
+  {
+    "id": "klarna",
+    "name": "Klarna",
+    "cat": "Finance",
+    "domain": "klarna.com",
+    "url": "https://klarna.com/"
+  },
+  {
+    "id": "affirm",
+    "name": "Affirm",
+    "cat": "Finance",
+    "domain": "affirm.com",
+    "url": "https://affirm.com/"
+  },
+  {
+    "id": "alipay",
+    "name": "Alipay",
+    "cat": "Finance",
+    "domain": "alipay.com",
+    "url": "https://alipay.com/",
+    "android": "com.eg.android.AlipayGphone"
+  },
+  {
+    "id": "paytm",
+    "name": "Paytm",
+    "cat": "Finance",
+    "domain": "paytm.com",
+    "url": "https://paytm.com/",
+    "android": "net.one97.paytm"
+  },
+  {
+    "id": "phonepe",
+    "name": "PhonePe",
+    "cat": "Finance",
+    "domain": "phonepe.com",
+    "url": "https://phonepe.com/",
+    "android": "com.phonepe.app"
+  },
+  {
+    "id": "grabpay",
+    "name": "GrabPay",
+    "cat": "Finance",
+    "domain": "grab.com",
+    "url": "https://grab.com/"
+  },
+  {
+    "id": "square",
+    "name": "Square",
+    "cat": "Finance",
+    "domain": "squareup.com",
+    "url": "https://squareup.com/"
+  },
+  {
+    "id": "stripe",
+    "name": "Stripe",
+    "cat": "Finance",
+    "domain": "stripe.com",
+    "url": "https://stripe.com/"
+  },
+  {
+    "id": "robinhood",
+    "name": "Robinhood",
+    "cat": "Finance",
+    "domain": "robinhood.com",
+    "url": "https://robinhood.com/",
+    "android": "com.robinhood.android"
+  },
+  {
+    "id": "etoro",
+    "name": "eToro",
+    "cat": "Finance",
+    "domain": "etoro.com",
+    "url": "https://etoro.com/"
+  },
+  {
+    "id": "coinbase",
+    "name": "Coinbase",
+    "cat": "Finance",
+    "domain": "coinbase.com",
+    "url": "https://coinbase.com/"
+  },
+  {
+    "id": "binance",
+    "name": "Binance",
+    "cat": "Finance",
+    "domain": "binance.com",
+    "url": "https://binance.com/"
+  },
+  {
+    "id": "kraken",
+    "name": "Kraken",
+    "cat": "Finance",
+    "domain": "kraken.com",
+    "url": "https://kraken.com/"
+  },
+  {
+    "id": "commsec",
+    "name": "CommSec",
+    "cat": "Finance",
+    "domain": "commsec.com.au",
+    "url": "https://commsec.com.au/"
+  },
+  {
+    "id": "nabtrade",
+    "name": "nabtrade",
+    "cat": "Finance",
+    "domain": "nabtrade.com.au",
+    "url": "https://nabtrade.com.au/"
+  },
+  {
+    "id": "stake",
+    "name": "Stake",
+    "cat": "Finance",
+    "domain": "hellostake.com",
+    "url": "https://hellostake.com/"
+  },
+  {
+    "id": "superhero",
+    "name": "Superhero",
+    "cat": "Finance",
+    "domain": "superhero.com.au",
+    "url": "https://superhero.com.au/"
+  },
+  {
+    "id": "spaceship",
+    "name": "Spaceship",
+    "cat": "Finance",
+    "domain": "spaceship.com.au",
+    "url": "https://spaceship.com.au/"
+  },
+  {
+    "id": "raiz",
+    "name": "Raiz",
+    "cat": "Finance",
+    "domain": "raizinvest.com.au",
+    "url": "https://raizinvest.com.au/"
+  },
+  {
+    "id": "xero",
+    "name": "Xero",
+    "cat": "Finance",
+    "domain": "xero.com",
+    "url": "https://xero.com/"
+  },
+  {
+    "id": "myob",
+    "name": "MYOB",
+    "cat": "Finance",
+    "domain": "myob.com",
+    "url": "https://myob.com/"
+  },
+  {
+    "id": "quickbooks",
+    "name": "QuickBooks",
+    "cat": "Finance",
+    "domain": "quickbooks.intuit.com",
+    "url": "https://quickbooks.intuit.com/"
+  },
+  {
+    "id": "freshbooks",
+    "name": "FreshBooks",
+    "cat": "Finance",
+    "domain": "freshbooks.com",
+    "url": "https://freshbooks.com/"
+  },
+  {
+    "id": "expensify",
+    "name": "Expensify",
+    "cat": "Finance",
+    "domain": "expensify.com",
+    "url": "https://expensify.com/"
+  },
+  {
+    "id": "hnry",
+    "name": "Hnry",
+    "cat": "Finance",
+    "domain": "hnry.com",
+    "url": "https://hnry.com/"
+  },
+  {
+    "id": "atoapp",
+    "name": "myTax",
+    "cat": "Finance",
+    "domain": "ato.gov.au",
+    "url": "https://ato.gov.au/"
+  },
+  {
+    "id": "origin",
+    "name": "Origin Energy",
+    "cat": "Utilities",
+    "domain": "originenergy.com.au",
+    "url": "https://originenergy.com.au/"
+  },
+  {
+    "id": "agl",
+    "name": "AGL",
+    "cat": "Utilities",
+    "domain": "agl.com.au",
+    "url": "https://agl.com.au/"
+  },
+  {
+    "id": "energyaust",
+    "name": "EnergyAustralia",
+    "cat": "Utilities",
+    "domain": "energyaustralia.com.au",
+    "url": "https://energyaustralia.com.au/"
+  },
+  {
+    "id": "alinta",
+    "name": "Alinta Energy",
+    "cat": "Utilities",
+    "domain": "alintaenergy.com.au",
+    "url": "https://alintaenergy.com.au/"
+  },
+  {
+    "id": "redenergy",
+    "name": "Red Energy",
+    "cat": "Utilities",
+    "domain": "redenergy.com.au",
+    "url": "https://redenergy.com.au/"
+  },
+  {
+    "id": "powershop",
+    "name": "Powershop",
+    "cat": "Utilities",
+    "domain": "powershop.com.au",
+    "url": "https://powershop.com.au/"
+  },
+  {
+    "id": "octopus",
+    "name": "Octopus Energy",
+    "cat": "Utilities",
+    "domain": "octopusenergy.com",
+    "url": "https://octopusenergy.com/"
+  },
+  {
+    "id": "britishgas",
+    "name": "British Gas",
+    "cat": "Utilities",
+    "domain": "britishgas.co.uk",
+    "url": "https://britishgas.co.uk/"
+  },
+  {
+    "id": "edf",
+    "name": "EDF Energy",
+    "cat": "Utilities",
+    "domain": "edfenergy.com",
+    "url": "https://edfenergy.com/"
+  },
+  {
+    "id": "eon",
+    "name": "E.ON",
+    "cat": "Utilities",
+    "domain": "eon.com",
+    "url": "https://eon.com/"
+  },
+  {
+    "id": "engie",
+    "name": "Engie",
+    "cat": "Utilities",
+    "domain": "engie.com",
+    "url": "https://engie.com/"
+  },
+  {
+    "id": "enel",
+    "name": "Enel",
+    "cat": "Utilities",
+    "domain": "enel.com",
+    "url": "https://enel.com/"
+  },
+  {
+    "id": "iberdrola",
+    "name": "Iberdrola",
+    "cat": "Utilities",
+    "domain": "iberdrola.com",
+    "url": "https://iberdrola.com/"
+  },
+  {
+    "id": "vattenfall",
+    "name": "Vattenfall",
+    "cat": "Utilities",
+    "domain": "vattenfall.com",
+    "url": "https://vattenfall.com/"
+  },
+  {
+    "id": "duke",
+    "name": "Duke Energy",
+    "cat": "Utilities",
+    "domain": "duke-energy.com",
+    "url": "https://duke-energy.com/"
+  },
+  {
+    "id": "pge",
+    "name": "PG&E",
+    "cat": "Utilities",
+    "domain": "pge.com",
+    "url": "https://pge.com/"
+  },
+  {
+    "id": "coned",
+    "name": "Con Edison",
+    "cat": "Utilities",
+    "domain": "coned.com",
+    "url": "https://coned.com/"
+  },
+  {
+    "id": "synergy",
+    "name": "Synergy",
+    "cat": "Utilities",
+    "domain": "synergy.net.au",
+    "url": "https://synergy.net.au/"
+  },
+  {
+    "id": "actewagl",
+    "name": "ActewAGL",
+    "cat": "Utilities",
+    "domain": "actewagl.com.au",
+    "url": "https://actewagl.com.au/"
+  },
+  {
+    "id": "sydneywater",
+    "name": "Sydney Water",
+    "cat": "Utilities",
+    "domain": "sydneywater.com.au",
+    "url": "https://sydneywater.com.au/"
+  },
+  {
+    "id": "melbournewater",
+    "name": "Greater Western Water",
+    "cat": "Utilities",
+    "domain": "gww.com.au",
+    "url": "https://gww.com.au/"
+  },
+  {
+    "id": "thameswater",
+    "name": "Thames Water",
+    "cat": "Utilities",
+    "domain": "thameswater.co.uk",
+    "url": "https://thameswater.co.uk/"
+  },
+  {
+    "id": "auspost",
+    "name": "Australia Post",
+    "cat": "Utilities",
+    "domain": "auspost.com.au",
+    "url": "https://auspost.com.au/",
+    "emoji": "📦"
+  },
+  {
+    "id": "usps",
+    "name": "USPS",
+    "cat": "Utilities",
+    "domain": "usps.com",
+    "url": "https://usps.com/"
+  },
+  {
+    "id": "royalmail",
+    "name": "Royal Mail",
+    "cat": "Utilities",
+    "domain": "royalmail.com",
+    "url": "https://royalmail.com/"
+  },
+  {
+    "id": "canadapost",
+    "name": "Canada Post",
+    "cat": "Utilities",
+    "domain": "canadapost-postescanada.ca",
+    "url": "https://canadapost-postescanada.ca/"
+  },
+  {
+    "id": "singpost",
+    "name": "SingPost",
+    "cat": "Utilities",
+    "domain": "singpost.com",
+    "url": "https://singpost.com/"
+  },
+  {
+    "id": "japanpost",
+    "name": "Japan Post",
+    "cat": "Utilities",
+    "domain": "post.japanpost.jp",
+    "url": "https://post.japanpost.jp/"
+  },
+  {
+    "id": "telstra",
+    "name": "Telstra",
+    "cat": "Phone",
+    "domain": "telstra.com.au",
+    "url": "https://telstra.com.au/"
+  },
+  {
+    "id": "optus",
+    "name": "Optus",
+    "cat": "Phone",
+    "domain": "optus.com.au",
+    "url": "https://optus.com.au/"
+  },
+  {
+    "id": "vodafoneau",
+    "name": "Vodafone Australia",
+    "cat": "Phone",
+    "domain": "vodafone.com.au",
+    "url": "https://vodafone.com.au/"
+  },
+  {
+    "id": "tpg",
+    "name": "TPG",
+    "cat": "Phone",
+    "domain": "tpg.com.au",
+    "url": "https://tpg.com.au/"
+  },
+  {
+    "id": "aussiebb",
+    "name": "Aussie Broadband",
+    "cat": "Phone",
+    "domain": "aussiebroadband.com.au",
+    "url": "https://aussiebroadband.com.au/"
+  },
+  {
+    "id": "iinet",
+    "name": "iiNet",
+    "cat": "Phone",
+    "domain": "iinet.net.au",
+    "url": "https://iinet.net.au/"
+  },
+  {
+    "id": "belong",
+    "name": "Belong",
+    "cat": "Phone",
+    "domain": "belong.com.au",
+    "url": "https://belong.com.au/"
+  },
+  {
+    "id": "boost",
+    "name": "Boost Mobile",
+    "cat": "Phone",
+    "domain": "boost.com.au",
+    "url": "https://boost.com.au/"
+  },
+  {
+    "id": "amaysim",
+    "name": "amaysim",
+    "cat": "Phone",
+    "domain": "amaysim.com.au",
+    "url": "https://amaysim.com.au/"
+  },
+  {
+    "id": "verizon",
+    "name": "Verizon",
+    "cat": "Phone",
+    "domain": "verizon.com",
+    "url": "https://verizon.com/"
+  },
+  {
+    "id": "att",
+    "name": "AT&T",
+    "cat": "Phone",
+    "domain": "att.com",
+    "url": "https://att.com/"
+  },
+  {
+    "id": "tmobile",
+    "name": "T-Mobile",
+    "cat": "Phone",
+    "domain": "t-mobile.com",
+    "url": "https://t-mobile.com/"
+  },
+  {
+    "id": "xfinity",
+    "name": "Xfinity",
+    "cat": "Phone",
+    "domain": "xfinity.com",
+    "url": "https://xfinity.com/"
+  },
+  {
+    "id": "spectrum",
+    "name": "Spectrum",
+    "cat": "Phone",
+    "domain": "spectrum.com",
+    "url": "https://spectrum.com/"
+  },
+  {
+    "id": "mint",
+    "name": "Mint Mobile",
+    "cat": "Phone",
+    "domain": "mintmobile.com",
+    "url": "https://mintmobile.com/"
+  },
+  {
+    "id": "ee",
+    "name": "EE",
+    "cat": "Phone",
+    "domain": "ee.co.uk",
+    "url": "https://ee.co.uk/"
+  },
+  {
+    "id": "o2",
+    "name": "O2",
+    "cat": "Phone",
+    "domain": "o2.co.uk",
+    "url": "https://o2.co.uk/"
+  },
+  {
+    "id": "threeuk",
+    "name": "Three",
+    "cat": "Phone",
+    "domain": "three.co.uk",
+    "url": "https://three.co.uk/"
+  },
+  {
+    "id": "bt",
+    "name": "BT",
+    "cat": "Phone",
+    "domain": "bt.com",
+    "url": "https://bt.com/"
+  },
+  {
+    "id": "virginmedia",
+    "name": "Virgin Media",
+    "cat": "Phone",
+    "domain": "virginmedia.com",
+    "url": "https://virginmedia.com/"
+  },
+  {
+    "id": "vodafoneuk",
+    "name": "Vodafone UK",
+    "cat": "Phone",
+    "domain": "vodafone.co.uk",
+    "url": "https://vodafone.co.uk/"
+  },
+  {
+    "id": "orange",
+    "name": "Orange",
+    "cat": "Phone",
+    "domain": "orange.com",
+    "url": "https://orange.com/"
+  },
+  {
+    "id": "sfr",
+    "name": "SFR",
+    "cat": "Phone",
+    "domain": "sfr.fr",
+    "url": "https://sfr.fr/"
+  },
+  {
+    "id": "bouygues",
+    "name": "Bouygues Telecom",
+    "cat": "Phone",
+    "domain": "bouyguestelecom.fr",
+    "url": "https://bouyguestelecom.fr/"
+  },
+  {
+    "id": "telekom",
+    "name": "Deutsche Telekom",
+    "cat": "Phone",
+    "domain": "telekom.de",
+    "url": "https://telekom.de/"
+  },
+  {
+    "id": "vodafonede",
+    "name": "Vodafone Germany",
+    "cat": "Phone",
+    "domain": "vodafone.de",
+    "url": "https://vodafone.de/"
+  },
+  {
+    "id": "tim",
+    "name": "TIM",
+    "cat": "Phone",
+    "domain": "tim.it",
+    "url": "https://tim.it/"
+  },
+  {
+    "id": "movistar",
+    "name": "Movistar",
+    "cat": "Phone",
+    "domain": "movistar.es",
+    "url": "https://movistar.es/"
+  },
+  {
+    "id": "kpn",
+    "name": "KPN",
+    "cat": "Phone",
+    "domain": "kpn.com",
+    "url": "https://kpn.com/"
+  },
+  {
+    "id": "swisscom",
+    "name": "Swisscom",
+    "cat": "Phone",
+    "domain": "swisscom.ch",
+    "url": "https://swisscom.ch/"
+  },
+  {
+    "id": "telia",
+    "name": "Telia",
+    "cat": "Phone",
+    "domain": "telia.com",
+    "url": "https://telia.com/"
+  },
+  {
+    "id": "telenor",
+    "name": "Telenor",
+    "cat": "Phone",
+    "domain": "telenor.com",
+    "url": "https://telenor.com/"
+  },
+  {
+    "id": "singtel",
+    "name": "Singtel",
+    "cat": "Phone",
+    "domain": "singtel.com",
+    "url": "https://singtel.com/"
+  },
+  {
+    "id": "starhub",
+    "name": "StarHub",
+    "cat": "Phone",
+    "domain": "starhub.com",
+    "url": "https://starhub.com/"
+  },
+  {
+    "id": "m1",
+    "name": "M1",
+    "cat": "Phone",
+    "domain": "m1.com.sg",
+    "url": "https://m1.com.sg/"
+  },
+  {
+    "id": "jio",
+    "name": "Jio",
+    "cat": "Phone",
+    "domain": "jio.com",
+    "url": "https://jio.com/"
+  },
+  {
+    "id": "airtel",
+    "name": "Airtel",
+    "cat": "Phone",
+    "domain": "airtel.in",
+    "url": "https://airtel.in/"
+  },
+  {
+    "id": "vi",
+    "name": "Vi",
+    "cat": "Phone",
+    "domain": "myvi.in",
+    "url": "https://myvi.in/"
+  },
+  {
+    "id": "docomo",
+    "name": "NTT Docomo",
+    "cat": "Phone",
+    "domain": "nttdocomo.co.jp",
+    "url": "https://nttdocomo.co.jp/"
+  },
+  {
+    "id": "kddi",
+    "name": "au",
+    "cat": "Phone",
+    "domain": "au.com",
+    "url": "https://au.com/"
+  },
+  {
+    "id": "softbank",
+    "name": "SoftBank",
+    "cat": "Phone",
+    "domain": "softbank.jp",
+    "url": "https://softbank.jp/"
+  },
+  {
+    "id": "rakutenmobile",
+    "name": "Rakuten Mobile",
+    "cat": "Phone",
+    "domain": "mobile.rakuten.co.jp",
+    "url": "https://mobile.rakuten.co.jp/"
+  },
+  {
+    "id": "skt",
+    "name": "SK Telecom",
+    "cat": "Phone",
+    "domain": "sktelecom.com",
+    "url": "https://sktelecom.com/"
+  },
+  {
+    "id": "kt",
+    "name": "KT",
+    "cat": "Phone",
+    "domain": "kt.com",
+    "url": "https://kt.com/"
+  },
+  {
+    "id": "lguplus",
+    "name": "LG U+",
+    "cat": "Phone",
+    "domain": "lguplus.com",
+    "url": "https://lguplus.com/"
+  },
+  {
+    "id": "chinamobile",
+    "name": "China Mobile",
+    "cat": "Phone",
+    "domain": "10086.cn",
+    "url": "https://10086.cn/"
+  },
+  {
+    "id": "chinaunicom",
+    "name": "China Unicom",
+    "cat": "Phone",
+    "domain": "chinaunicom.com",
+    "url": "https://chinaunicom.com/"
+  },
+  {
+    "id": "chinatelecom",
+    "name": "China Telecom",
+    "cat": "Phone",
+    "domain": "chinatelecom.com.cn",
+    "url": "https://chinatelecom.com.cn/"
+  },
+  {
+    "id": "spark",
+    "name": "Spark",
+    "cat": "Phone",
+    "domain": "spark.co.nz",
+    "url": "https://spark.co.nz/"
+  },
+  {
+    "id": "onenz",
+    "name": "One NZ",
+    "cat": "Phone",
+    "domain": "one.nz",
+    "url": "https://one.nz/"
+  },
+  {
+    "id": "twodegrees",
+    "name": "2degrees",
+    "cat": "Phone",
+    "domain": "2degrees.nz",
+    "url": "https://2degrees.nz/"
+  },
+  {
+    "id": "medicare",
+    "name": "Medicare",
+    "cat": "Government",
+    "domain": "servicesaustralia.gov.au",
+    "url": "https://servicesaustralia.gov.au/",
+    "emoji": "🩺"
+  },
+  {
+    "id": "mygov",
+    "name": "myGov",
+    "cat": "Government",
+    "domain": "my.gov.au",
+    "url": "https://my.gov.au/",
+    "emoji": "🇦🇺"
+  },
+  {
+    "id": "centrelink",
+    "name": "Centrelink",
+    "cat": "Government",
+    "domain": "servicesaustralia.gov.au",
+    "url": "https://servicesaustralia.gov.au/"
+  },
+  {
+    "id": "ato",
+    "name": "Australian Taxation Office",
+    "cat": "Government",
+    "domain": "ato.gov.au",
+    "url": "https://ato.gov.au/"
+  },
+  {
+    "id": "servicensw",
+    "name": "Service NSW",
+    "cat": "Government",
+    "domain": "service.nsw.gov.au",
+    "url": "https://service.nsw.gov.au/"
+  },
+  {
+    "id": "servicevic",
+    "name": "Service Victoria",
+    "cat": "Government",
+    "domain": "service.vic.gov.au",
+    "url": "https://service.vic.gov.au/"
+  },
+  {
+    "id": "accesscan",
+    "name": "Access Canberra",
+    "cat": "Government",
+    "domain": "accesscanberra.act.gov.au",
+    "url": "https://accesscanberra.act.gov.au/"
+  },
+  {
+    "id": "qldgov",
+    "name": "Queensland Government",
+    "cat": "Government",
+    "domain": "qld.gov.au",
+    "url": "https://qld.gov.au/"
+  },
+  {
+    "id": "irs",
+    "name": "IRS",
+    "cat": "Government",
+    "domain": "irs.gov",
+    "url": "https://irs.gov/"
+  },
+  {
+    "id": "ssa",
+    "name": "Social Security",
+    "cat": "Government",
+    "domain": "ssa.gov",
+    "url": "https://ssa.gov/"
+  },
+  {
+    "id": "usaid",
+    "name": "Login.gov",
+    "cat": "Government",
+    "domain": "login.gov",
+    "url": "https://login.gov/"
+  },
+  {
+    "id": "govuk",
+    "name": "GOV.UK",
+    "cat": "Government",
+    "domain": "gov.uk",
+    "url": "https://gov.uk/"
+  },
+  {
+    "id": "hmrc",
+    "name": "HMRC",
+    "cat": "Government",
+    "domain": "gov.uk",
+    "url": "https://gov.uk/"
+  },
+  {
+    "id": "servicecanada",
+    "name": "Service Canada",
+    "cat": "Government",
+    "domain": "canada.ca",
+    "url": "https://canada.ca/"
+  },
+  {
+    "id": "cra",
+    "name": "Canada Revenue Agency",
+    "cat": "Government",
+    "domain": "canada.ca",
+    "url": "https://canada.ca/"
+  },
+  {
+    "id": "singpass",
+    "name": "Singpass",
+    "cat": "Government",
+    "domain": "singpass.gov.sg",
+    "url": "https://singpass.gov.sg/"
+  },
+  {
+    "id": "myinfo",
+    "name": "Myinfo",
+    "cat": "Government",
+    "domain": "myinfo.gov.sg",
+    "url": "https://myinfo.gov.sg/"
+  },
+  {
+    "id": "umang",
+    "name": "UMANG",
+    "cat": "Government",
+    "domain": "umang.gov.in",
+    "url": "https://umang.gov.in/"
+  },
+  {
+    "id": "aadhaar",
+    "name": "Aadhaar",
+    "cat": "Government",
+    "domain": "uidai.gov.in",
+    "url": "https://uidai.gov.in/"
+  },
+  {
+    "id": "mynumber",
+    "name": "My Number",
+    "cat": "Government",
+    "domain": "myna.go.jp",
+    "url": "https://myna.go.jp/"
+  },
+  {
+    "id": "realme",
+    "name": "RealMe",
+    "cat": "Government",
+    "domain": "realme.govt.nz",
+    "url": "https://realme.govt.nz/"
+  },
+  {
+    "id": "ird",
+    "name": "Inland Revenue NZ",
+    "cat": "Government",
+    "domain": "ird.govt.nz",
+    "url": "https://ird.govt.nz/"
+  },
+  {
+    "id": "hotdoc",
+    "name": "HotDoc",
+    "cat": "Health",
+    "domain": "hotdoc.com.au",
+    "url": "https://hotdoc.com.au/",
+    "emoji": "🩺"
+  },
+  {
+    "id": "healthdirect",
+    "name": "Healthdirect",
+    "cat": "Health",
+    "domain": "healthdirect.gov.au",
+    "url": "https://healthdirect.gov.au/"
+  },
+  {
+    "id": "myhealth",
+    "name": "My Health Record",
+    "cat": "Health",
+    "domain": "digitalhealth.gov.au",
+    "url": "https://digitalhealth.gov.au/"
+  },
+  {
+    "id": "healthengine",
+    "name": "HealthEngine",
+    "cat": "Health",
+    "domain": "healthengine.com.au",
+    "url": "https://healthengine.com.au/"
+  },
+  {
+    "id": "chemist",
+    "name": "Chemist Warehouse",
+    "cat": "Health",
+    "domain": "chemistwarehouse.com.au",
+    "url": "https://chemistwarehouse.com.au/"
+  },
+  {
+    "id": "priceline",
+    "name": "Priceline Pharmacy",
+    "cat": "Health",
+    "domain": "priceline.com.au",
+    "url": "https://priceline.com.au/"
+  },
+  {
+    "id": "terrywhite",
+    "name": "TerryWhite Chemmart",
+    "cat": "Health",
+    "domain": "terrywhitechemmart.com.au",
+    "url": "https://terrywhitechemmart.com.au/"
+  },
+  {
+    "id": "nhs",
+    "name": "NHS App",
+    "cat": "Health",
+    "domain": "nhs.uk",
+    "url": "https://nhs.uk/"
+  },
+  {
+    "id": "patientaccess",
+    "name": "Patient Access",
+    "cat": "Health",
+    "domain": "patientaccess.com",
+    "url": "https://patientaccess.com/"
+  },
+  {
+    "id": "zocdoc",
+    "name": "Zocdoc",
+    "cat": "Health",
+    "domain": "zocdoc.com",
+    "url": "https://zocdoc.com/"
+  },
+  {
+    "id": "mychart",
+    "name": "MyChart",
+    "cat": "Health",
+    "domain": "mychart.org",
+    "url": "https://mychart.org/"
+  },
+  {
+    "id": "goodrx",
+    "name": "GoodRx",
+    "cat": "Health",
+    "domain": "goodrx.com",
+    "url": "https://goodrx.com/"
+  },
+  {
+    "id": "cvs",
+    "name": "CVS Pharmacy",
+    "cat": "Health",
+    "domain": "cvs.com",
+    "url": "https://cvs.com/"
+  },
+  {
+    "id": "walgreens",
+    "name": "Walgreens",
+    "cat": "Health",
+    "domain": "walgreens.com",
+    "url": "https://walgreens.com/"
+  },
+  {
+    "id": "boots",
+    "name": "Boots",
+    "cat": "Health",
+    "domain": "boots.com",
+    "url": "https://boots.com/"
+  },
+  {
+    "id": "lloydspharmacy",
+    "name": "LloydsPharmacy",
+    "cat": "Health",
+    "domain": "lloydspharmacy.com",
+    "url": "https://lloydspharmacy.com/"
+  },
+  {
+    "id": "practo",
+    "name": "Practo",
+    "cat": "Health",
+    "domain": "practo.com",
+    "url": "https://practo.com/"
+  },
+  {
+    "id": "onemg",
+    "name": "Tata 1mg",
+    "cat": "Health",
+    "domain": "1mg.com",
+    "url": "https://1mg.com/"
+  },
+  {
+    "id": "halodoc",
+    "name": "Halodoc",
+    "cat": "Health",
+    "domain": "halodoc.com",
+    "url": "https://halodoc.com/"
+  },
+  {
+    "id": "webmd",
+    "name": "WebMD",
+    "cat": "Health",
+    "domain": "webmd.com",
+    "url": "https://webmd.com/"
+  },
+  {
+    "id": "ada",
+    "name": "Ada",
+    "cat": "Health",
+    "domain": "ada.com",
+    "url": "https://ada.com/"
+  },
+  {
+    "id": "headspace",
+    "name": "Headspace",
+    "cat": "Health",
+    "domain": "headspace.com",
+    "url": "https://headspace.com/",
+    "android": "com.getsomeheadspace.android"
+  },
+  {
+    "id": "calm",
+    "name": "Calm",
+    "cat": "Health",
+    "domain": "calm.com",
+    "url": "https://calm.com/",
+    "android": "com.calm.android",
+    "ios": "calm"
+  },
+  {
+    "id": "flo",
+    "name": "Flo",
+    "cat": "Health",
+    "domain": "flo.health",
+    "url": "https://flo.health/"
+  },
+  {
+    "id": "clue",
+    "name": "Clue",
+    "cat": "Health",
+    "domain": "helloclue.com",
+    "url": "https://helloclue.com/"
+  },
+  {
+    "id": "whatsapp",
+    "name": "WhatsApp",
+    "cat": "Messages",
+    "domain": "web.whatsapp.com",
+    "url": "https://web.whatsapp.com/",
+    "emoji": "💬",
+    "android": "com.whatsapp",
+    "ios": "whatsapp",
+    "appleId": "310633997"
+  },
+  {
+    "id": "wabusiness",
+    "name": "WhatsApp Business",
+    "cat": "Messages",
+    "domain": "business.whatsapp.com",
+    "url": "https://business.whatsapp.com/",
+    "android": "com.whatsapp.w4b",
+    "ios": "whatsapp"
+  },
+  {
+    "id": "messenger",
+    "name": "Messenger",
+    "cat": "Messages",
+    "domain": "messenger.com",
+    "url": "https://messenger.com/",
+    "emoji": "💬",
+    "android": "com.facebook.orca",
+    "ios": "fb-messenger",
+    "appleId": "454638411"
+  },
+  {
+    "id": "telegram",
+    "name": "Telegram",
+    "cat": "Messages",
+    "domain": "web.telegram.org",
+    "url": "https://web.telegram.org/",
+    "emoji": "✈️",
+    "android": "org.telegram.messenger",
+    "ios": "tg",
+    "appleId": "686449807"
+  },
+  {
+    "id": "signal",
+    "name": "Signal",
+    "cat": "Messages",
+    "domain": "signal.org",
+    "url": "https://signal.org/",
+    "emoji": "🔒",
+    "android": "org.thoughtcrime.securesms",
+    "ios": "sgnl",
+    "appleId": "874139669"
+  },
+  {
+    "id": "imessage",
+    "name": "Messages",
+    "cat": "Messages",
+    "domain": "support.apple.com",
+    "url": "https://support.apple.com/"
+  },
+  {
+    "id": "wechat",
+    "name": "WeChat",
+    "cat": "Messages",
+    "domain": "wechat.com",
+    "url": "https://wechat.com/",
+    "android": "com.tencent.mm",
+    "ios": "weixin"
+  },
+  {
+    "id": "line",
+    "name": "LINE",
+    "cat": "Messages",
+    "domain": "line.me",
+    "url": "https://line.me/",
+    "android": "jp.naver.line.android",
+    "ios": "line"
+  },
+  {
+    "id": "kakaotalk",
+    "name": "KakaoTalk",
+    "cat": "Messages",
+    "domain": "kakaocorp.com",
+    "url": "https://kakaocorp.com/"
+  },
+  {
+    "id": "viber",
+    "name": "Viber",
+    "cat": "Messages",
+    "domain": "viber.com",
+    "url": "https://viber.com/",
+    "android": "com.viber.voip",
+    "ios": "viber"
+  },
+  {
+    "id": "skype",
+    "name": "Skype",
+    "cat": "Messages",
+    "domain": "skype.com",
+    "url": "https://skype.com/",
+    "android": "com.skype.raider",
+    "ios": "skype"
+  },
+  {
+    "id": "discord",
+    "name": "Discord",
+    "cat": "Messages",
+    "domain": "discord.com",
+    "url": "https://discord.com/",
+    "android": "com.discord",
+    "ios": "discord"
+  },
+  {
+    "id": "slack",
+    "name": "Slack",
+    "cat": "Messages",
+    "domain": "slack.com",
+    "url": "https://slack.com/",
+    "android": "com.Slack",
+    "ios": "slack"
+  },
+  {
+    "id": "teams",
+    "name": "Microsoft Teams",
+    "cat": "Messages",
+    "domain": "teams.microsoft.com",
+    "url": "https://teams.microsoft.com/",
+    "emoji": "👥",
+    "android": "com.microsoft.teams",
+    "ios": "msteams",
+    "appleId": "1113153706"
+  },
+  {
+    "id": "zoom",
+    "name": "Zoom",
+    "cat": "Messages",
+    "domain": "zoom.us",
+    "url": "https://zoom.us/",
+    "emoji": "🎥",
+    "android": "us.zoom.videomeetings",
+    "ios": "zoomus",
+    "appleId": "546505307"
+  },
+  {
+    "id": "meet",
+    "name": "Google Meet",
+    "cat": "Messages",
+    "domain": "meet.google.com",
+    "url": "https://meet.google.com/"
+  },
+  {
+    "id": "facetime",
+    "name": "FaceTime",
+    "cat": "Messages",
+    "domain": "support.apple.com",
+    "url": "https://support.apple.com/"
+  },
+  {
+    "id": "gmail",
+    "name": "Gmail",
+    "cat": "Messages",
+    "domain": "mail.google.com",
+    "url": "https://mail.google.com/",
+    "emoji": "✉️",
+    "android": "com.google.android.gm",
+    "ios": "googlegmail",
+    "appleId": "422689480"
+  },
+  {
+    "id": "yahoo",
+    "name": "Yahoo Mail",
+    "cat": "Messages",
+    "domain": "mail.yahoo.com",
+    "url": "https://mail.yahoo.com/"
+  },
+  {
+    "id": "proton",
+    "name": "Proton Mail",
+    "cat": "Messages",
+    "domain": "proton.me",
+    "url": "https://proton.me/"
+  },
+  {
+    "id": "fastmail",
+    "name": "Fastmail",
+    "cat": "Messages",
+    "domain": "fastmail.com",
+    "url": "https://fastmail.com/"
+  },
+  {
+    "id": "icloudmail",
+    "name": "iCloud Mail",
+    "cat": "Messages",
+    "domain": "icloud.com",
+    "url": "https://icloud.com/"
+  },
+  {
+    "id": "facebook",
+    "name": "Facebook",
+    "cat": "Social",
+    "domain": "facebook.com",
+    "url": "https://facebook.com/",
+    "emoji": "📘",
+    "android": "com.facebook.katana",
+    "ios": "fb",
+    "appleId": "284882215"
+  },
+  {
+    "id": "instagram",
+    "name": "Instagram",
+    "cat": "Social",
+    "domain": "instagram.com",
+    "url": "https://instagram.com/",
+    "emoji": "📷",
+    "android": "com.instagram.android",
+    "ios": "instagram",
+    "appleId": "389801252"
+  },
+  {
+    "id": "threads",
+    "name": "Threads",
+    "cat": "Social",
+    "domain": "threads.net",
+    "url": "https://threads.net/",
+    "android": "com.instagram.barcelona"
+  },
+  {
+    "id": "tiktok",
+    "name": "TikTok",
+    "cat": "Social",
+    "domain": "tiktok.com",
+    "url": "https://tiktok.com/",
+    "emoji": "🎵",
+    "android": "com.zhiliaoapp.musically",
+    "ios": "tiktok",
+    "appleId": "835599320"
+  },
+  {
+    "id": "youtube",
+    "name": "YouTube",
+    "cat": "Social",
+    "domain": "youtube.com",
+    "url": "https://youtube.com/",
+    "emoji": "▶️",
+    "android": "com.google.android.youtube",
+    "ios": "youtube",
+    "appleId": "544007664"
+  },
+  {
+    "id": "x",
+    "name": "X",
+    "cat": "Social",
+    "domain": "x.com",
+    "url": "https://x.com/",
+    "emoji": "𝕏",
+    "android": "com.twitter.android",
+    "ios": "twitter",
+    "appleId": "333903271"
+  },
+  {
+    "id": "snapchat",
+    "name": "Snapchat",
+    "cat": "Social",
+    "domain": "snapchat.com",
+    "url": "https://snapchat.com/",
+    "android": "com.snapchat.android",
+    "ios": "snapchat"
+  },
+  {
+    "id": "reddit",
+    "name": "Reddit",
+    "cat": "Social",
+    "domain": "reddit.com",
+    "url": "https://reddit.com/",
+    "android": "com.reddit.frontpage",
+    "ios": "reddit"
+  },
+  {
+    "id": "linkedin",
+    "name": "LinkedIn",
+    "cat": "Social",
+    "domain": "linkedin.com",
+    "url": "https://linkedin.com/",
+    "android": "com.linkedin.android",
+    "ios": "linkedin"
+  },
+  {
+    "id": "pinterest",
+    "name": "Pinterest",
+    "cat": "Social",
+    "domain": "pinterest.com",
+    "url": "https://pinterest.com/",
+    "android": "com.pinterest",
+    "ios": "pinterest"
+  },
+  {
+    "id": "tumblr",
+    "name": "Tumblr",
+    "cat": "Social",
+    "domain": "tumblr.com",
+    "url": "https://tumblr.com/",
+    "android": "com.tumblr",
+    "ios": "tumblr"
+  },
+  {
+    "id": "bluesky",
+    "name": "Bluesky",
+    "cat": "Social",
+    "domain": "bsky.app",
+    "url": "https://bsky.app/",
+    "android": "xyz.blueskyweb.app"
+  },
+  {
+    "id": "mastodon",
+    "name": "Mastodon",
+    "cat": "Social",
+    "domain": "joinmastodon.org",
+    "url": "https://joinmastodon.org/"
+  },
+  {
+    "id": "nextdoor",
+    "name": "Nextdoor",
+    "cat": "Social",
+    "domain": "nextdoor.com",
+    "url": "https://nextdoor.com/"
+  },
+  {
+    "id": "bereal",
+    "name": "BeReal",
+    "cat": "Social",
+    "domain": "bere.al",
+    "url": "https://bere.al/"
+  },
+  {
+    "id": "clubhouse",
+    "name": "Clubhouse",
+    "cat": "Social",
+    "domain": "clubhouse.com",
+    "url": "https://clubhouse.com/"
+  },
+  {
+    "id": "quora",
+    "name": "Quora",
+    "cat": "Social",
+    "domain": "quora.com",
+    "url": "https://quora.com/"
+  },
+  {
+    "id": "weibo",
+    "name": "Weibo",
+    "cat": "Social",
+    "domain": "weibo.com",
+    "url": "https://weibo.com/"
+  },
+  {
+    "id": "xiaohongshu",
+    "name": "Xiaohongshu",
+    "cat": "Social",
+    "domain": "xiaohongshu.com",
+    "url": "https://xiaohongshu.com/"
+  },
+  {
+    "id": "douyin",
+    "name": "Douyin",
+    "cat": "Social",
+    "domain": "douyin.com",
+    "url": "https://douyin.com/"
+  },
+  {
+    "id": "bilibili",
+    "name": "Bilibili",
+    "cat": "Social",
+    "domain": "bilibili.com",
+    "url": "https://bilibili.com/"
+  },
+  {
+    "id": "twitch",
+    "name": "Twitch",
+    "cat": "Social",
+    "domain": "twitch.tv",
+    "url": "https://twitch.tv/",
+    "android": "tv.twitch.android.app",
+    "ios": "twitch"
+  },
+  {
+    "id": "tinder",
+    "name": "Tinder",
+    "cat": "Social",
+    "domain": "tinder.com",
+    "url": "https://tinder.com/",
+    "android": "com.tinder"
+  },
+  {
+    "id": "bumble",
+    "name": "Bumble",
+    "cat": "Social",
+    "domain": "bumble.com",
+    "url": "https://bumble.com/",
+    "android": "com.bumble.app"
+  },
+  {
+    "id": "hinge",
+    "name": "Hinge",
+    "cat": "Social",
+    "domain": "hinge.co",
+    "url": "https://hinge.co/",
+    "android": "co.hinge.app"
+  },
+  {
+    "id": "gmaps",
+    "name": "Google Maps",
+    "cat": "Transport",
+    "domain": "maps.google.com",
+    "url": "https://maps.google.com/",
+    "emoji": "📍",
+    "android": "com.google.android.apps.maps",
+    "ios": "comgooglemaps",
+    "appleId": "585027354"
+  },
+  {
+    "id": "applemaps",
+    "name": "Apple Maps",
+    "cat": "Transport",
+    "domain": "maps.apple.com",
+    "url": "https://maps.apple.com/"
+  },
+  {
+    "id": "waze",
+    "name": "Waze",
+    "cat": "Transport",
+    "domain": "waze.com",
+    "url": "https://waze.com/"
+  },
+  {
+    "id": "citymapper",
+    "name": "Citymapper",
+    "cat": "Transport",
+    "domain": "citymapper.com",
+    "url": "https://citymapper.com/",
+    "android": "com.citymapper.app.release",
+    "ios": "citymapper"
+  },
+  {
+    "id": "uber",
+    "name": "Uber",
+    "cat": "Transport",
+    "domain": "uber.com",
+    "url": "https://uber.com/",
+    "emoji": "🚗",
+    "android": "com.ubercab",
+    "ios": "uber",
+    "appleId": "368677368"
+  },
+  {
+    "id": "lyft",
+    "name": "Lyft",
+    "cat": "Transport",
+    "domain": "lyft.com",
+    "url": "https://lyft.com/",
+    "android": "com.lyft.android",
+    "ios": "lyft"
+  },
+  {
+    "id": "ola",
+    "name": "Ola",
+    "cat": "Transport",
+    "domain": "olacabs.com",
+    "url": "https://olacabs.com/"
+  },
+  {
+    "id": "didi",
+    "name": "DiDi",
+    "cat": "Transport",
+    "domain": "didiglobal.com",
+    "url": "https://didiglobal.com/"
+  },
+  {
+    "id": "grab",
+    "name": "Grab",
+    "cat": "Transport",
+    "domain": "grab.com",
+    "url": "https://grab.com/",
+    "android": "com.grabtaxi.passenger",
+    "ios": "grab"
+  },
+  {
+    "id": "bolt",
+    "name": "Bolt",
+    "cat": "Transport",
+    "domain": "bolt.eu",
+    "url": "https://bolt.eu/",
+    "android": "ee.mtakso.client"
+  },
+  {
+    "id": "freenow",
+    "name": "FREE NOW",
+    "cat": "Transport",
+    "domain": "free-now.com",
+    "url": "https://free-now.com/"
+  },
+  {
+    "id": "blablacar",
+    "name": "BlaBlaCar",
+    "cat": "Transport",
+    "domain": "blablacar.com",
+    "url": "https://blablacar.com/"
+  },
+  {
+    "id": "gojek",
+    "name": "Gojek",
+    "cat": "Transport",
+    "domain": "gojek.com",
+    "url": "https://gojek.com/"
+  },
+  {
+    "id": "metrotas",
+    "name": "Metro Tasmania",
+    "cat": "Transport",
+    "domain": "metrotas.com.au",
+    "url": "https://metrotas.com.au/"
+  },
+  {
+    "id": "transportnsw",
+    "name": "Transport for NSW",
+    "cat": "Transport",
+    "domain": "transportnsw.info",
+    "url": "https://transportnsw.info/"
+  },
+  {
+    "id": "ptv",
+    "name": "Public Transport Victoria",
+    "cat": "Transport",
+    "domain": "ptv.vic.gov.au",
+    "url": "https://ptv.vic.gov.au/"
+  },
+  {
+    "id": "translink",
+    "name": "Translink Queensland",
+    "cat": "Transport",
+    "domain": "translink.com.au",
+    "url": "https://translink.com.au/"
+  },
+  {
+    "id": "adelaidemetro",
+    "name": "Adelaide Metro",
+    "cat": "Transport",
+    "domain": "adelaidemetro.com.au",
+    "url": "https://adelaidemetro.com.au/"
+  },
+  {
+    "id": "transperth",
+    "name": "Transperth",
+    "cat": "Transport",
+    "domain": "transperth.wa.gov.au",
+    "url": "https://transperth.wa.gov.au/"
+  },
+  {
+    "id": "tfl",
+    "name": "Transport for London",
+    "cat": "Transport",
+    "domain": "tfl.gov.uk",
+    "url": "https://tfl.gov.uk/"
+  },
+  {
+    "id": "nationalrail",
+    "name": "National Rail",
+    "cat": "Transport",
+    "domain": "nationalrail.co.uk",
+    "url": "https://nationalrail.co.uk/"
+  },
+  {
+    "id": "mta",
+    "name": "MTA",
+    "cat": "Transport",
+    "domain": "mta.info",
+    "url": "https://mta.info/"
+  },
+  {
+    "id": "bart",
+    "name": "BART",
+    "cat": "Transport",
+    "domain": "bart.gov",
+    "url": "https://bart.gov/"
+  },
+  {
+    "id": "cta",
+    "name": "CTA",
+    "cat": "Transport",
+    "domain": "transitchicago.com",
+    "url": "https://transitchicago.com/"
+  },
+  {
+    "id": "db",
+    "name": "Deutsche Bahn",
+    "cat": "Transport",
+    "domain": "bahn.de",
+    "url": "https://bahn.de/"
+  },
+  {
+    "id": "sncf",
+    "name": "SNCF",
+    "cat": "Transport",
+    "domain": "sncf-connect.com",
+    "url": "https://sncf-connect.com/"
+  },
+  {
+    "id": "ns",
+    "name": "NS",
+    "cat": "Transport",
+    "domain": "ns.nl",
+    "url": "https://ns.nl/"
+  },
+  {
+    "id": "jr",
+    "name": "JR-EAST",
+    "cat": "Transport",
+    "domain": "jreast.co.jp",
+    "url": "https://jreast.co.jp/"
+  },
+  {
+    "id": "smartrip",
+    "name": "SmarTrip",
+    "cat": "Transport",
+    "domain": "smartrip.com",
+    "url": "https://smartrip.com/"
+  },
+  {
+    "id": "opal",
+    "name": "Opal Travel",
+    "cat": "Transport",
+    "domain": "opal.com.au",
+    "url": "https://opal.com.au/"
+  },
+  {
+    "id": "myki",
+    "name": "myki",
+    "cat": "Transport",
+    "domain": "ptv.vic.gov.au",
+    "url": "https://ptv.vic.gov.au/"
+  },
+  {
+    "id": "amazon",
+    "name": "Amazon",
+    "cat": "Shopping",
+    "domain": "amazon.com",
+    "url": "https://amazon.com/",
+    "android": "com.amazon.mShop.android.shopping",
+    "ios": "amazon"
+  },
+  {
+    "id": "ebay",
+    "name": "eBay",
+    "cat": "Shopping",
+    "domain": "ebay.com",
+    "url": "https://ebay.com/",
+    "android": "com.ebay.mobile",
+    "ios": "ebay"
+  },
+  {
+    "id": "walmart",
+    "name": "Walmart",
+    "cat": "Shopping",
+    "domain": "walmart.com",
+    "url": "https://walmart.com/",
+    "android": "com.walmart.android"
+  },
+  {
+    "id": "target",
+    "name": "Target",
+    "cat": "Shopping",
+    "domain": "target.com",
+    "url": "https://target.com/",
+    "android": "com.target.ui"
+  },
+  {
+    "id": "costco",
+    "name": "Costco",
+    "cat": "Shopping",
+    "domain": "costco.com",
+    "url": "https://costco.com/"
+  },
+  {
+    "id": "woolworths",
+    "name": "Woolworths",
+    "cat": "Shopping",
+    "domain": "woolworths.com.au",
+    "url": "https://woolworths.com.au/"
+  },
+  {
+    "id": "coles",
+    "name": "Coles",
+    "cat": "Shopping",
+    "domain": "coles.com.au",
+    "url": "https://coles.com.au/"
+  },
+  {
+    "id": "aldi",
+    "name": "ALDI",
+    "cat": "Shopping",
+    "domain": "aldi.com.au",
+    "url": "https://aldi.com.au/"
+  },
+  {
+    "id": "iga",
+    "name": "IGA",
+    "cat": "Shopping",
+    "domain": "iga.com.au",
+    "url": "https://iga.com.au/"
+  },
+  {
+    "id": "kmart",
+    "name": "Kmart Australia",
+    "cat": "Shopping",
+    "domain": "kmart.com.au",
+    "url": "https://kmart.com.au/"
+  },
+  {
+    "id": "targetau",
+    "name": "Target Australia",
+    "cat": "Shopping",
+    "domain": "target.com.au",
+    "url": "https://target.com.au/"
+  },
+  {
+    "id": "bigw",
+    "name": "BIG W",
+    "cat": "Shopping",
+    "domain": "bigw.com.au",
+    "url": "https://bigw.com.au/"
+  },
+  {
+    "id": "bunnings",
+    "name": "Bunnings",
+    "cat": "Shopping",
+    "domain": "bunnings.com.au",
+    "url": "https://bunnings.com.au/"
+  },
+  {
+    "id": "officeworks",
+    "name": "Officeworks",
+    "cat": "Shopping",
+    "domain": "officeworks.com.au",
+    "url": "https://officeworks.com.au/"
+  },
+  {
+    "id": "jbhifi",
+    "name": "JB Hi-Fi",
+    "cat": "Shopping",
+    "domain": "jbhifi.com.au",
+    "url": "https://jbhifi.com.au/"
+  },
+  {
+    "id": "thegoodguys",
+    "name": "The Good Guys",
+    "cat": "Shopping",
+    "domain": "thegoodguys.com.au",
+    "url": "https://thegoodguys.com.au/"
+  },
+  {
+    "id": "harveynorman",
+    "name": "Harvey Norman",
+    "cat": "Shopping",
+    "domain": "harveynorman.com.au",
+    "url": "https://harveynorman.com.au/"
+  },
+  {
+    "id": "ikea",
+    "name": "IKEA",
+    "cat": "Shopping",
+    "domain": "ikea.com",
+    "url": "https://ikea.com/"
+  },
+  {
+    "id": "tesco",
+    "name": "Tesco",
+    "cat": "Shopping",
+    "domain": "tesco.com",
+    "url": "https://tesco.com/"
+  },
+  {
+    "id": "sainsburys",
+    "name": "Sainsbury's",
+    "cat": "Shopping",
+    "domain": "sainsburys.co.uk",
+    "url": "https://sainsburys.co.uk/"
+  },
+  {
+    "id": "asda",
+    "name": "Asda",
+    "cat": "Shopping",
+    "domain": "asda.com",
+    "url": "https://asda.com/"
+  },
+  {
+    "id": "morrisons",
+    "name": "Morrisons",
+    "cat": "Shopping",
+    "domain": "morrisons.com",
+    "url": "https://morrisons.com/"
+  },
+  {
+    "id": "waitrose",
+    "name": "Waitrose",
+    "cat": "Shopping",
+    "domain": "waitrose.com",
+    "url": "https://waitrose.com/"
+  },
+  {
+    "id": "marks",
+    "name": "Marks & Spencer",
+    "cat": "Shopping",
+    "domain": "marksandspencer.com",
+    "url": "https://marksandspencer.com/"
+  },
+  {
+    "id": "carrefour",
+    "name": "Carrefour",
+    "cat": "Shopping",
+    "domain": "carrefour.com",
+    "url": "https://carrefour.com/"
+  },
+  {
+    "id": "aldiuk",
+    "name": "ALDI UK",
+    "cat": "Shopping",
+    "domain": "aldi.co.uk",
+    "url": "https://aldi.co.uk/"
+  },
+  {
+    "id": "lidl",
+    "name": "Lidl",
+    "cat": "Shopping",
+    "domain": "lidl.com",
+    "url": "https://lidl.com/"
+  },
+  {
+    "id": "costcoau",
+    "name": "Costco Australia",
+    "cat": "Shopping",
+    "domain": "costco.com.au",
+    "url": "https://costco.com.au/"
+  },
+  {
+    "id": "etsy",
+    "name": "Etsy",
+    "cat": "Shopping",
+    "domain": "etsy.com",
+    "url": "https://etsy.com/",
+    "android": "com.etsy.android",
+    "ios": "etsy"
+  },
+  {
+    "id": "shopify",
+    "name": "Shopify",
+    "cat": "Shopping",
+    "domain": "shopify.com",
+    "url": "https://shopify.com/"
+  },
+  {
+    "id": "asos",
+    "name": "ASOS",
+    "cat": "Shopping",
+    "domain": "asos.com",
+    "url": "https://asos.com/"
+  },
+  {
+    "id": "zara",
+    "name": "Zara",
+    "cat": "Shopping",
+    "domain": "zara.com",
+    "url": "https://zara.com/"
+  },
+  {
+    "id": "hm",
+    "name": "H&M",
+    "cat": "Shopping",
+    "domain": "hm.com",
+    "url": "https://hm.com/"
+  },
+  {
+    "id": "uniqlo",
+    "name": "Uniqlo",
+    "cat": "Shopping",
+    "domain": "uniqlo.com",
+    "url": "https://uniqlo.com/"
+  },
+  {
+    "id": "nike",
+    "name": "Nike",
+    "cat": "Shopping",
+    "domain": "nike.com",
+    "url": "https://nike.com/"
+  },
+  {
+    "id": "adidas",
+    "name": "adidas",
+    "cat": "Shopping",
+    "domain": "adidas.com",
+    "url": "https://adidas.com/"
+  },
+  {
+    "id": "cottonon",
+    "name": "Cotton On",
+    "cat": "Shopping",
+    "domain": "cottonon.com",
+    "url": "https://cottonon.com/"
+  },
+  {
+    "id": "theiconic",
+    "name": "THE ICONIC",
+    "cat": "Shopping",
+    "domain": "theiconic.com.au",
+    "url": "https://theiconic.com.au/"
+  },
+  {
+    "id": "myer",
+    "name": "Myer",
+    "cat": "Shopping",
+    "domain": "myer.com.au",
+    "url": "https://myer.com.au/"
+  },
+  {
+    "id": "davidjones",
+    "name": "David Jones",
+    "cat": "Shopping",
+    "domain": "davidjones.com",
+    "url": "https://davidjones.com/"
+  },
+  {
+    "id": "catch",
+    "name": "Catch",
+    "cat": "Shopping",
+    "domain": "catch.com.au",
+    "url": "https://catch.com.au/"
+  },
+  {
+    "id": "kogan",
+    "name": "Kogan",
+    "cat": "Shopping",
+    "domain": "kogan.com",
+    "url": "https://kogan.com/"
+  },
+  {
+    "id": "shopee",
+    "name": "Shopee",
+    "cat": "Shopping",
+    "domain": "shopee.com",
+    "url": "https://shopee.com/"
+  },
+  {
+    "id": "lazada",
+    "name": "Lazada",
+    "cat": "Shopping",
+    "domain": "lazada.com",
+    "url": "https://lazada.com/"
+  },
+  {
+    "id": "taobao",
+    "name": "Taobao",
+    "cat": "Shopping",
+    "domain": "taobao.com",
+    "url": "https://taobao.com/",
+    "android": "com.taobao.taobao"
+  },
+  {
+    "id": "tmall",
+    "name": "Tmall",
+    "cat": "Shopping",
+    "domain": "tmall.com",
+    "url": "https://tmall.com/"
+  },
+  {
+    "id": "jd",
+    "name": "JD.com",
+    "cat": "Shopping",
+    "domain": "jd.com",
+    "url": "https://jd.com/"
+  },
+  {
+    "id": "flipkart",
+    "name": "Flipkart",
+    "cat": "Shopping",
+    "domain": "flipkart.com",
+    "url": "https://flipkart.com/"
+  },
+  {
+    "id": "tokopedia",
+    "name": "Tokopedia",
+    "cat": "Shopping",
+    "domain": "tokopedia.com",
+    "url": "https://tokopedia.com/"
+  },
+  {
+    "id": "bestbuy",
+    "name": "Best Buy",
+    "cat": "Shopping",
+    "domain": "bestbuy.com",
+    "url": "https://bestbuy.com/"
+  },
+  {
+    "id": "homedepot",
+    "name": "The Home Depot",
+    "cat": "Shopping",
+    "domain": "homedepot.com",
+    "url": "https://homedepot.com/"
+  },
+  {
+    "id": "lowes",
+    "name": "Lowe's",
+    "cat": "Shopping",
+    "domain": "lowes.com",
+    "url": "https://lowes.com/"
+  },
+  {
+    "id": "apple",
+    "name": "Apple Store",
+    "cat": "Shopping",
+    "domain": "apple.com",
+    "url": "https://apple.com/"
+  },
+  {
+    "id": "samsung",
+    "name": "Samsung",
+    "cat": "Shopping",
+    "domain": "samsung.com",
+    "url": "https://samsung.com/"
+  },
+  {
+    "id": "googleplay",
+    "name": "Google Play",
+    "cat": "Shopping",
+    "domain": "play.google.com",
+    "url": "https://play.google.com/"
+  },
+  {
+    "id": "appstore",
+    "name": "App Store",
+    "cat": "Shopping",
+    "domain": "apple.com",
+    "url": "https://apple.com/"
+  },
+  {
+    "id": "ubereats",
+    "name": "Uber Eats",
+    "cat": "Food",
+    "domain": "ubereats.com",
+    "url": "https://ubereats.com/",
+    "android": "com.ubercab.eats"
+  },
+  {
+    "id": "doordash",
+    "name": "DoorDash",
+    "cat": "Food",
+    "domain": "doordash.com",
+    "url": "https://doordash.com/",
+    "android": "com.dd.doordash"
+  },
+  {
+    "id": "menulog",
+    "name": "Menulog",
+    "cat": "Food",
+    "domain": "menulog.com.au",
+    "url": "https://menulog.com.au/"
+  },
+  {
+    "id": "deliveroo",
+    "name": "Deliveroo",
+    "cat": "Food",
+    "domain": "deliveroo.com",
+    "url": "https://deliveroo.com/",
+    "android": "com.deliveroo.orderapp"
+  },
+  {
+    "id": "justeat",
+    "name": "Just Eat",
+    "cat": "Food",
+    "domain": "just-eat.com",
+    "url": "https://just-eat.com/"
+  },
+  {
+    "id": "grubhub",
+    "name": "Grubhub",
+    "cat": "Food",
+    "domain": "grubhub.com",
+    "url": "https://grubhub.com/",
+    "android": "com.grubhub.android"
+  },
+  {
+    "id": "postmates",
+    "name": "Postmates",
+    "cat": "Food",
+    "domain": "postmates.com",
+    "url": "https://postmates.com/"
+  },
+  {
+    "id": "foodpanda",
+    "name": "foodpanda",
+    "cat": "Food",
+    "domain": "foodpanda.com",
+    "url": "https://foodpanda.com/"
+  },
+  {
+    "id": "zomato",
+    "name": "Zomato",
+    "cat": "Food",
+    "domain": "zomato.com",
+    "url": "https://zomato.com/"
+  },
+  {
+    "id": "swiggy",
+    "name": "Swiggy",
+    "cat": "Food",
+    "domain": "swiggy.com",
+    "url": "https://swiggy.com/"
+  },
+  {
+    "id": "demaecan",
+    "name": "Demae-can",
+    "cat": "Food",
+    "domain": "demae-can.com",
+    "url": "https://demae-can.com/"
+  },
+  {
+    "id": "mcdonalds",
+    "name": "McDonald's",
+    "cat": "Food",
+    "domain": "mcdonalds.com",
+    "url": "https://mcdonalds.com/"
+  },
+  {
+    "id": "starbucks",
+    "name": "Starbucks",
+    "cat": "Food",
+    "domain": "starbucks.com",
+    "url": "https://starbucks.com/",
+    "android": "com.starbucks.mobilecard",
+    "ios": "starbucks"
+  },
+  {
+    "id": "dominos",
+    "name": "Domino's",
+    "cat": "Food",
+    "domain": "dominos.com",
+    "url": "https://dominos.com/"
+  },
+  {
+    "id": "kfc",
+    "name": "KFC",
+    "cat": "Food",
+    "domain": "kfc.com",
+    "url": "https://kfc.com/"
+  },
+  {
+    "id": "hungryjacks",
+    "name": "Hungry Jack's",
+    "cat": "Food",
+    "domain": "hungryjacks.com.au",
+    "url": "https://hungryjacks.com.au/"
+  },
+  {
+    "id": "subway",
+    "name": "Subway",
+    "cat": "Food",
+    "domain": "subway.com",
+    "url": "https://subway.com/"
+  },
+  {
+    "id": "pizzahut",
+    "name": "Pizza Hut",
+    "cat": "Food",
+    "domain": "pizzahut.com",
+    "url": "https://pizzahut.com/"
+  },
+  {
+    "id": "chipotle",
+    "name": "Chipotle",
+    "cat": "Food",
+    "domain": "chipotle.com",
+    "url": "https://chipotle.com/"
+  },
+  {
+    "id": "nandos",
+    "name": "Nando's",
+    "cat": "Food",
+    "domain": "nandos.com",
+    "url": "https://nandos.com/"
+  },
+  {
+    "id": "guzman",
+    "name": "Guzman y Gomez",
+    "cat": "Food",
+    "domain": "guzmanygomez.com",
+    "url": "https://guzmanygomez.com/"
+  },
+  {
+    "id": "hellofresh",
+    "name": "HelloFresh",
+    "cat": "Food",
+    "domain": "hellofresh.com",
+    "url": "https://hellofresh.com/"
+  },
+  {
+    "id": "marley",
+    "name": "Marley Spoon",
+    "cat": "Food",
+    "domain": "marleyspoon.com.au",
+    "url": "https://marleyspoon.com.au/"
+  },
+  {
+    "id": "spotify",
+    "name": "Spotify",
+    "cat": "Streaming",
+    "domain": "open.spotify.com",
+    "url": "https://open.spotify.com/",
+    "emoji": "🎧",
+    "android": "com.spotify.music",
+    "ios": "spotify",
+    "appleId": "324684580"
+  },
+  {
+    "id": "netflix",
+    "name": "Netflix",
+    "cat": "Streaming",
+    "domain": "netflix.com",
+    "url": "https://netflix.com/",
+    "emoji": "🎬",
+    "android": "com.netflix.mediaclient",
+    "ios": "nflx",
+    "appleId": "363590051"
+  },
+  {
+    "id": "disney",
+    "name": "Disney+",
+    "cat": "Streaming",
+    "domain": "disneyplus.com",
+    "url": "https://disneyplus.com/",
+    "android": "com.disney.disneyplus"
+  },
+  {
+    "id": "prime",
+    "name": "Prime Video",
+    "cat": "Streaming",
+    "domain": "primevideo.com",
+    "url": "https://primevideo.com/",
+    "android": "com.amazon.avod.thirdpartyclient"
+  },
+  {
+    "id": "appletv",
+    "name": "Apple TV",
+    "cat": "Streaming",
+    "domain": "tv.apple.com",
+    "url": "https://tv.apple.com/"
+  },
+  {
+    "id": "youtube-music",
+    "name": "YouTube Music",
+    "cat": "Streaming",
+    "domain": "music.youtube.com",
+    "url": "https://music.youtube.com/"
+  },
+  {
+    "id": "applemusic",
+    "name": "Apple Music",
+    "cat": "Streaming",
+    "domain": "music.apple.com",
+    "url": "https://music.apple.com/"
+  },
+  {
+    "id": "stan",
+    "name": "Stan",
+    "cat": "Streaming",
+    "domain": "stan.com.au",
+    "url": "https://stan.com.au/"
+  },
+  {
+    "id": "binge",
+    "name": "Binge",
+    "cat": "Streaming",
+    "domain": "binge.com.au",
+    "url": "https://binge.com.au/"
+  },
+  {
+    "id": "kayo",
+    "name": "Kayo Sports",
+    "cat": "Streaming",
+    "domain": "kayosports.com.au",
+    "url": "https://kayosports.com.au/"
+  },
+  {
+    "id": "foxtel",
+    "name": "Foxtel",
+    "cat": "Streaming",
+    "domain": "foxtel.com.au",
+    "url": "https://foxtel.com.au/"
+  },
+  {
+    "id": "abciview",
+    "name": "ABC iview",
+    "cat": "Streaming",
+    "domain": "iview.abc.net.au",
+    "url": "https://iview.abc.net.au/"
+  },
+  {
+    "id": "sbs",
+    "name": "SBS On Demand",
+    "cat": "Streaming",
+    "domain": "sbs.com.au",
+    "url": "https://sbs.com.au/"
+  },
+  {
+    "id": "bbciplayer",
+    "name": "BBC iPlayer",
+    "cat": "Streaming",
+    "domain": "bbc.co.uk",
+    "url": "https://bbc.co.uk/"
+  },
+  {
+    "id": "itvx",
+    "name": "ITVX",
+    "cat": "Streaming",
+    "domain": "itv.com",
+    "url": "https://itv.com/"
+  },
+  {
+    "id": "channel4",
+    "name": "Channel 4",
+    "cat": "Streaming",
+    "domain": "channel4.com",
+    "url": "https://channel4.com/"
+  },
+  {
+    "id": "hulu",
+    "name": "Hulu",
+    "cat": "Streaming",
+    "domain": "hulu.com",
+    "url": "https://hulu.com/",
+    "android": "com.hulu.plus"
+  },
+  {
+    "id": "max",
+    "name": "Max",
+    "cat": "Streaming",
+    "domain": "max.com",
+    "url": "https://max.com/"
+  },
+  {
+    "id": "paramount",
+    "name": "Paramount+",
+    "cat": "Streaming",
+    "domain": "paramountplus.com",
+    "url": "https://paramountplus.com/"
+  },
+  {
+    "id": "peacock",
+    "name": "Peacock",
+    "cat": "Streaming",
+    "domain": "peacocktv.com",
+    "url": "https://peacocktv.com/"
+  },
+  {
+    "id": "crunchyroll",
+    "name": "Crunchyroll",
+    "cat": "Streaming",
+    "domain": "crunchyroll.com",
+    "url": "https://crunchyroll.com/",
+    "android": "com.crunchyroll.crunchyroid"
+  },
+  {
+    "id": "soundcloud",
+    "name": "SoundCloud",
+    "cat": "Streaming",
+    "domain": "soundcloud.com",
+    "url": "https://soundcloud.com/",
+    "android": "com.soundcloud.android",
+    "ios": "soundcloud"
+  },
+  {
+    "id": "deezer",
+    "name": "Deezer",
+    "cat": "Streaming",
+    "domain": "deezer.com",
+    "url": "https://deezer.com/"
+  },
+  {
+    "id": "tidal",
+    "name": "TIDAL",
+    "cat": "Streaming",
+    "domain": "tidal.com",
+    "url": "https://tidal.com/"
+  },
+  {
+    "id": "audible",
+    "name": "Audible",
+    "cat": "Streaming",
+    "domain": "audible.com",
+    "url": "https://audible.com/",
+    "android": "com.audible.application"
+  },
+  {
+    "id": "pocketcasts",
+    "name": "Pocket Casts",
+    "cat": "Streaming",
+    "domain": "pocketcasts.com",
+    "url": "https://pocketcasts.com/"
+  },
+  {
+    "id": "shazam",
+    "name": "Shazam",
+    "cat": "Streaming",
+    "domain": "shazam.com",
+    "url": "https://shazam.com/",
+    "android": "com.shazam.android",
+    "ios": "shazam"
+  },
+  {
+    "id": "spotify-pod",
+    "name": "Spotify for Podcasters",
+    "cat": "Streaming",
+    "domain": "podcasters.spotify.com",
+    "url": "https://podcasters.spotify.com/"
+  },
+  {
+    "id": "iview-news",
+    "name": "ABC News",
+    "cat": "Streaming",
+    "domain": "abc.net.au",
+    "url": "https://abc.net.au/"
+  },
+  {
+    "id": "7plus",
+    "name": "7plus",
+    "cat": "Streaming",
+    "domain": "7plus.com.au",
+    "url": "https://7plus.com.au/"
+  },
+  {
+    "id": "9now",
+    "name": "9Now",
+    "cat": "Streaming",
+    "domain": "9now.com.au",
+    "url": "https://9now.com.au/"
+  },
+  {
+    "id": "10play",
+    "name": "10 play",
+    "cat": "Streaming",
+    "domain": "10play.com.au",
+    "url": "https://10play.com.au/"
+  },
+  {
+    "id": "gcal",
+    "name": "Google Calendar",
+    "cat": "Productivity",
+    "domain": "calendar.google.com",
+    "url": "https://calendar.google.com/",
+    "emoji": "📅",
+    "android": "com.google.android.calendar",
+    "ios": "googlecalendar",
+    "appleId": "909319292",
+    "cal": "Google"
+  },
+  {
+    "id": "outlook",
+    "name": "Outlook",
+    "cat": "Productivity",
+    "domain": "outlook.live.com",
+    "url": "https://outlook.live.com/",
+    "emoji": "📧",
+    "android": "com.microsoft.office.outlook",
+    "ios": "ms-outlook",
+    "appleId": "951937596",
+    "cal": "Outlook"
+  },
+  {
+    "id": "applecal",
+    "name": "Apple Calendar",
+    "cat": "Productivity",
+    "domain": "icloud.com",
+    "url": "https://icloud.com/",
+    "emoji": "🗓️",
+    "cal": "Apple"
+  },
+  {
+    "id": "gdocs",
+    "name": "Google Docs",
+    "cat": "Productivity",
+    "domain": "docs.google.com",
+    "url": "https://docs.google.com/",
+    "android": "com.google.android.apps.docs.editors.docs"
+  },
+  {
+    "id": "gsheets",
+    "name": "Google Sheets",
+    "cat": "Productivity",
+    "domain": "sheets.google.com",
+    "url": "https://sheets.google.com/",
+    "android": "com.google.android.apps.docs.editors.sheets"
+  },
+  {
+    "id": "gslides",
+    "name": "Google Slides",
+    "cat": "Productivity",
+    "domain": "slides.google.com",
+    "url": "https://slides.google.com/",
+    "android": "com.google.android.apps.docs.editors.slides"
+  },
+  {
+    "id": "gdrive",
+    "name": "Google Drive",
+    "cat": "Productivity",
+    "domain": "drive.google.com",
+    "url": "https://drive.google.com/",
+    "android": "com.google.android.apps.docs"
+  },
+  {
+    "id": "gkeep",
+    "name": "Google Keep",
+    "cat": "Productivity",
+    "domain": "keep.google.com",
+    "url": "https://keep.google.com/"
+  },
+  {
+    "id": "gphotos",
+    "name": "Google Photos",
+    "cat": "Productivity",
+    "domain": "photos.google.com",
+    "url": "https://photos.google.com/",
+    "android": "com.google.android.apps.photos"
+  },
+  {
+    "id": "dropbox",
+    "name": "Dropbox",
+    "cat": "Productivity",
+    "domain": "dropbox.com",
+    "url": "https://dropbox.com/",
+    "android": "com.dropbox.android",
+    "ios": "dropbox"
+  },
+  {
+    "id": "onedrive",
+    "name": "OneDrive",
+    "cat": "Productivity",
+    "domain": "onedrive.live.com",
+    "url": "https://onedrive.live.com/",
+    "android": "com.microsoft.skydrive",
+    "ios": "ms-onedrive"
+  },
+  {
+    "id": "box",
+    "name": "Box",
+    "cat": "Productivity",
+    "domain": "box.com",
+    "url": "https://box.com/"
+  },
+  {
+    "id": "notion",
+    "name": "Notion",
+    "cat": "Productivity",
+    "domain": "notion.so",
+    "url": "https://notion.so/",
+    "android": "notion.id",
+    "ios": "notion"
+  },
+  {
+    "id": "evernote",
+    "name": "Evernote",
+    "cat": "Productivity",
+    "domain": "evernote.com",
+    "url": "https://evernote.com/"
+  },
+  {
+    "id": "onenote",
+    "name": "OneNote",
+    "cat": "Productivity",
+    "domain": "onenote.com",
+    "url": "https://onenote.com/",
+    "android": "com.microsoft.office.onenote",
+    "ios": "onenote"
+  },
+  {
+    "id": "todoist",
+    "name": "Todoist",
+    "cat": "Productivity",
+    "domain": "todoist.com",
+    "url": "https://todoist.com/"
+  },
+  {
+    "id": "trello",
+    "name": "Trello",
+    "cat": "Productivity",
+    "domain": "trello.com",
+    "url": "https://trello.com/"
+  },
+  {
+    "id": "asana",
+    "name": "Asana",
+    "cat": "Productivity",
+    "domain": "asana.com",
+    "url": "https://asana.com/"
+  },
+  {
+    "id": "monday",
+    "name": "monday.com",
+    "cat": "Productivity",
+    "domain": "monday.com",
+    "url": "https://monday.com/"
+  },
+  {
+    "id": "clickup",
+    "name": "ClickUp",
+    "cat": "Productivity",
+    "domain": "clickup.com",
+    "url": "https://clickup.com/"
+  },
+  {
+    "id": "jira",
+    "name": "Jira",
+    "cat": "Productivity",
+    "domain": "atlassian.com",
+    "url": "https://atlassian.com/"
+  },
+  {
+    "id": "confluence",
+    "name": "Confluence",
+    "cat": "Productivity",
+    "domain": "atlassian.com",
+    "url": "https://atlassian.com/"
+  },
+  {
+    "id": "word",
+    "name": "Microsoft Word",
+    "cat": "Productivity",
+    "domain": "microsoft.com",
+    "url": "https://microsoft.com/",
+    "android": "com.microsoft.office.word",
+    "ios": "ms-word"
+  },
+  {
+    "id": "excel",
+    "name": "Microsoft Excel",
+    "cat": "Productivity",
+    "domain": "microsoft.com",
+    "url": "https://microsoft.com/",
+    "android": "com.microsoft.office.excel",
+    "ios": "ms-excel"
+  },
+  {
+    "id": "powerpoint",
+    "name": "Microsoft PowerPoint",
+    "cat": "Productivity",
+    "domain": "microsoft.com",
+    "url": "https://microsoft.com/",
+    "android": "com.microsoft.office.powerpoint",
+    "ios": "ms-powerpoint"
+  },
+  {
+    "id": "acrobat",
+    "name": "Adobe Acrobat",
+    "cat": "Productivity",
+    "domain": "adobe.com",
+    "url": "https://adobe.com/"
+  },
+  {
+    "id": "canva",
+    "name": "Canva",
+    "cat": "Productivity",
+    "domain": "canva.com",
+    "url": "https://canva.com/"
+  },
+  {
+    "id": "figma",
+    "name": "Figma",
+    "cat": "Productivity",
+    "domain": "figma.com",
+    "url": "https://figma.com/"
+  },
+  {
+    "id": "miro",
+    "name": "Miro",
+    "cat": "Productivity",
+    "domain": "miro.com",
+    "url": "https://miro.com/"
+  },
+  {
+    "id": "github",
+    "name": "GitHub",
+    "cat": "Productivity",
+    "domain": "github.com",
+    "url": "https://github.com/",
+    "android": "com.github.android",
+    "ios": "github"
+  },
+  {
+    "id": "gitlab",
+    "name": "GitLab",
+    "cat": "Productivity",
+    "domain": "gitlab.com",
+    "url": "https://gitlab.com/"
+  },
+  {
+    "id": "bitbucket",
+    "name": "Bitbucket",
+    "cat": "Productivity",
+    "domain": "bitbucket.org",
+    "url": "https://bitbucket.org/"
+  },
+  {
+    "id": "vscode",
+    "name": "Visual Studio Code",
+    "cat": "Productivity",
+    "domain": "code.visualstudio.com",
+    "url": "https://code.visualstudio.com/"
+  },
+  {
+    "id": "chrome",
+    "name": "Google Chrome",
+    "cat": "Productivity",
+    "domain": "google.com",
+    "url": "https://google.com/"
+  },
+  {
+    "id": "safari",
+    "name": "Safari",
+    "cat": "Productivity",
+    "domain": "apple.com",
+    "url": "https://apple.com/"
+  },
+  {
+    "id": "firefox",
+    "name": "Firefox",
+    "cat": "Productivity",
+    "domain": "mozilla.org",
+    "url": "https://mozilla.org/"
+  },
+  {
+    "id": "edge",
+    "name": "Microsoft Edge",
+    "cat": "Productivity",
+    "domain": "microsoft.com",
+    "url": "https://microsoft.com/"
+  },
+  {
+    "id": "1password",
+    "name": "1Password",
+    "cat": "Productivity",
+    "domain": "1password.com",
+    "url": "https://1password.com/"
+  },
+  {
+    "id": "lastpass",
+    "name": "LastPass",
+    "cat": "Productivity",
+    "domain": "lastpass.com",
+    "url": "https://lastpass.com/"
+  },
+  {
+    "id": "bitwarden",
+    "name": "Bitwarden",
+    "cat": "Productivity",
+    "domain": "bitwarden.com",
+    "url": "https://bitwarden.com/"
+  },
+  {
+    "id": "grammarly",
+    "name": "Grammarly",
+    "cat": "Productivity",
+    "domain": "grammarly.com",
+    "url": "https://grammarly.com/"
+  },
+  {
+    "id": "deepl",
+    "name": "DeepL",
+    "cat": "Productivity",
+    "domain": "deepl.com",
+    "url": "https://deepl.com/"
+  },
+  {
+    "id": "translate",
+    "name": "Google Translate",
+    "cat": "Productivity",
+    "domain": "translate.google.com",
+    "url": "https://translate.google.com/"
+  },
+  {
+    "id": "qantas",
+    "name": "Qantas",
+    "cat": "Travel",
+    "domain": "qantas.com",
+    "url": "https://qantas.com/"
+  },
+  {
+    "id": "jetstar",
+    "name": "Jetstar",
+    "cat": "Travel",
+    "domain": "jetstar.com",
+    "url": "https://jetstar.com/"
+  },
+  {
+    "id": "virginau",
+    "name": "Virgin Australia",
+    "cat": "Travel",
+    "domain": "virginaustralia.com",
+    "url": "https://virginaustralia.com/"
+  },
+  {
+    "id": "rex",
+    "name": "Rex Airlines",
+    "cat": "Travel",
+    "domain": "rex.com.au",
+    "url": "https://rex.com.au/"
+  },
+  {
+    "id": "emirates",
+    "name": "Emirates",
+    "cat": "Travel",
+    "domain": "emirates.com",
+    "url": "https://emirates.com/"
+  },
+  {
+    "id": "singaporeair",
+    "name": "Singapore Airlines",
+    "cat": "Travel",
+    "domain": "singaporeair.com",
+    "url": "https://singaporeair.com/"
+  },
+  {
+    "id": "cathay",
+    "name": "Cathay Pacific",
+    "cat": "Travel",
+    "domain": "cathaypacific.com",
+    "url": "https://cathaypacific.com/"
+  },
+  {
+    "id": "ana",
+    "name": "ANA",
+    "cat": "Travel",
+    "domain": "ana.co.jp",
+    "url": "https://ana.co.jp/"
+  },
+  {
+    "id": "jal",
+    "name": "Japan Airlines",
+    "cat": "Travel",
+    "domain": "jal.co.jp",
+    "url": "https://jal.co.jp/"
+  },
+  {
+    "id": "koreanair",
+    "name": "Korean Air",
+    "cat": "Travel",
+    "domain": "koreanair.com",
+    "url": "https://koreanair.com/"
+  },
+  {
+    "id": "delta",
+    "name": "Delta",
+    "cat": "Travel",
+    "domain": "delta.com",
+    "url": "https://delta.com/"
+  },
+  {
+    "id": "united",
+    "name": "United",
+    "cat": "Travel",
+    "domain": "united.com",
+    "url": "https://united.com/"
+  },
+  {
+    "id": "american",
+    "name": "American Airlines",
+    "cat": "Travel",
+    "domain": "aa.com",
+    "url": "https://aa.com/"
+  },
+  {
+    "id": "southwest",
+    "name": "Southwest",
+    "cat": "Travel",
+    "domain": "southwest.com",
+    "url": "https://southwest.com/"
+  },
+  {
+    "id": "ryanair",
+    "name": "Ryanair",
+    "cat": "Travel",
+    "domain": "ryanair.com",
+    "url": "https://ryanair.com/"
+  },
+  {
+    "id": "easyjet",
+    "name": "easyJet",
+    "cat": "Travel",
+    "domain": "easyjet.com",
+    "url": "https://easyjet.com/"
+  },
+  {
+    "id": "lufthansa",
+    "name": "Lufthansa",
+    "cat": "Travel",
+    "domain": "lufthansa.com",
+    "url": "https://lufthansa.com/"
+  },
+  {
+    "id": "airfrance",
+    "name": "Air France",
+    "cat": "Travel",
+    "domain": "airfrance.com",
+    "url": "https://airfrance.com/"
+  },
+  {
+    "id": "klm",
+    "name": "KLM",
+    "cat": "Travel",
+    "domain": "klm.com",
+    "url": "https://klm.com/"
+  },
+  {
+    "id": "britishair",
+    "name": "British Airways",
+    "cat": "Travel",
+    "domain": "britishairways.com",
+    "url": "https://britishairways.com/"
+  },
+  {
+    "id": "airnz",
+    "name": "Air New Zealand",
+    "cat": "Travel",
+    "domain": "airnewzealand.co.nz",
+    "url": "https://airnewzealand.co.nz/"
+  },
+  {
+    "id": "airbnb",
+    "name": "Airbnb",
+    "cat": "Travel",
+    "domain": "airbnb.com",
+    "url": "https://airbnb.com/",
+    "android": "com.airbnb.android",
+    "ios": "airbnb"
+  },
+  {
+    "id": "booking",
+    "name": "Booking.com",
+    "cat": "Travel",
+    "domain": "booking.com",
+    "url": "https://booking.com/",
+    "android": "com.booking",
+    "ios": "booking"
+  },
+  {
+    "id": "expedia",
+    "name": "Expedia",
+    "cat": "Travel",
+    "domain": "expedia.com",
+    "url": "https://expedia.com/"
+  },
+  {
+    "id": "hotels",
+    "name": "Hotels.com",
+    "cat": "Travel",
+    "domain": "hotels.com",
+    "url": "https://hotels.com/"
+  },
+  {
+    "id": "agoda",
+    "name": "Agoda",
+    "cat": "Travel",
+    "domain": "agoda.com",
+    "url": "https://agoda.com/",
+    "android": "com.agoda.mobile.consumer"
+  },
+  {
+    "id": "tripadvisor",
+    "name": "Tripadvisor",
+    "cat": "Travel",
+    "domain": "tripadvisor.com",
+    "url": "https://tripadvisor.com/",
+    "android": "com.tripadvisor.tripadvisor"
+  },
+  {
+    "id": "skyscanner",
+    "name": "Skyscanner",
+    "cat": "Travel",
+    "domain": "skyscanner.com",
+    "url": "https://skyscanner.com/",
+    "android": "net.skyscanner.android.main"
+  },
+  {
+    "id": "kayak",
+    "name": "KAYAK",
+    "cat": "Travel",
+    "domain": "kayak.com",
+    "url": "https://kayak.com/"
+  },
+  {
+    "id": "googleflights",
+    "name": "Google Flights",
+    "cat": "Travel",
+    "domain": "google.com",
+    "url": "https://google.com/"
+  },
+  {
+    "id": "tripcom",
+    "name": "Trip.com",
+    "cat": "Travel",
+    "domain": "trip.com",
+    "url": "https://trip.com/"
+  },
+  {
+    "id": "hostelworld",
+    "name": "Hostelworld",
+    "cat": "Travel",
+    "domain": "hostelworld.com",
+    "url": "https://hostelworld.com/"
+  },
+  {
+    "id": "rome2rio",
+    "name": "Rome2Rio",
+    "cat": "Travel",
+    "domain": "rome2rio.com",
+    "url": "https://rome2rio.com/"
+  },
+  {
+    "id": "mapsme",
+    "name": "Organic Maps",
+    "cat": "Travel",
+    "domain": "organicmaps.app",
+    "url": "https://organicmaps.app/"
+  },
+  {
+    "id": "strava",
+    "name": "Strava",
+    "cat": "Fitness",
+    "domain": "strava.com",
+    "url": "https://strava.com/",
+    "android": "com.strava",
+    "ios": "strava"
+  },
+  {
+    "id": "nikerun",
+    "name": "Nike Run Club",
+    "cat": "Fitness",
+    "domain": "nike.com",
+    "url": "https://nike.com/",
+    "android": "com.nike.plusgps"
+  },
+  {
+    "id": "adidasrun",
+    "name": "adidas Running",
+    "cat": "Fitness",
+    "domain": "adidas.com",
+    "url": "https://adidas.com/"
+  },
+  {
+    "id": "fitbit",
+    "name": "Fitbit",
+    "cat": "Fitness",
+    "domain": "fitbit.com",
+    "url": "https://fitbit.com/",
+    "android": "com.fitbit.FitbitMobile",
+    "ios": "fitbit"
+  },
+  {
+    "id": "garmin",
+    "name": "Garmin Connect",
+    "cat": "Fitness",
+    "domain": "connect.garmin.com",
+    "url": "https://connect.garmin.com/",
+    "android": "com.garmin.android.apps.connectmobile"
+  },
+  {
+    "id": "peloton",
+    "name": "Peloton",
+    "cat": "Fitness",
+    "domain": "onepeloton.com",
+    "url": "https://onepeloton.com/",
+    "android": "com.onepeloton.callisto"
+  },
+  {
+    "id": "myfitnesspal",
+    "name": "MyFitnessPal",
+    "cat": "Fitness",
+    "domain": "myfitnesspal.com",
+    "url": "https://myfitnesspal.com/",
+    "android": "com.myfitnesspal.android",
+    "ios": "myfitnesspal"
+  },
+  {
+    "id": "whoop",
+    "name": "WHOOP",
+    "cat": "Fitness",
+    "domain": "whoop.com",
+    "url": "https://whoop.com/"
+  },
+  {
+    "id": "applefitness",
+    "name": "Apple Fitness",
+    "cat": "Fitness",
+    "domain": "fitness.apple.com",
+    "url": "https://fitness.apple.com/"
+  },
+  {
+    "id": "freeletics",
+    "name": "Freeletics",
+    "cat": "Fitness",
+    "domain": "freeletics.com",
+    "url": "https://freeletics.com/"
+  },
+  {
+    "id": "alltrails",
+    "name": "AllTrails",
+    "cat": "Fitness",
+    "domain": "alltrails.com",
+    "url": "https://alltrails.com/"
+  },
+  {
+    "id": "komoot",
+    "name": "komoot",
+    "cat": "Fitness",
+    "domain": "komoot.com",
+    "url": "https://komoot.com/"
+  },
+  {
+    "id": "mapmyrun",
+    "name": "MapMyRun",
+    "cat": "Fitness",
+    "domain": "mapmyrun.com",
+    "url": "https://mapmyrun.com/"
+  },
+  {
+    "id": "strong",
+    "name": "Strong",
+    "cat": "Fitness",
+    "domain": "strong.app",
+    "url": "https://strong.app/"
+  },
+  {
+    "id": "hevy",
+    "name": "Hevy",
+    "cat": "Fitness",
+    "domain": "hevyapp.com",
+    "url": "https://hevyapp.com/"
+  },
+  {
+    "id": "centrapp",
+    "name": "Centr",
+    "cat": "Fitness",
+    "domain": "centr.com",
+    "url": "https://centr.com/"
+  },
+  {
+    "id": "sweat",
+    "name": "Sweat",
+    "cat": "Fitness",
+    "domain": "sweat.com",
+    "url": "https://sweat.com/"
+  },
+  {
+    "id": "classpass",
+    "name": "ClassPass",
+    "cat": "Fitness",
+    "domain": "classpass.com",
+    "url": "https://classpass.com/"
+  },
+  {
+    "id": "mindbody",
+    "name": "Mindbody",
+    "cat": "Fitness",
+    "domain": "mindbodyonline.com",
+    "url": "https://mindbodyonline.com/"
+  },
+  {
+    "id": "classroom",
+    "name": "Google Classroom",
+    "cat": "Education",
+    "domain": "classroom.google.com",
+    "url": "https://classroom.google.com/"
+  },
+  {
+    "id": "canvas",
+    "name": "Canvas",
+    "cat": "Education",
+    "domain": "instructure.com",
+    "url": "https://instructure.com/"
+  },
+  {
+    "id": "blackboard",
+    "name": "Blackboard",
+    "cat": "Education",
+    "domain": "blackboard.com",
+    "url": "https://blackboard.com/"
+  },
+  {
+    "id": "moodle",
+    "name": "Moodle",
+    "cat": "Education",
+    "domain": "moodle.org",
+    "url": "https://moodle.org/"
+  },
+  {
+    "id": "duolingo",
+    "name": "Duolingo",
+    "cat": "Education",
+    "domain": "duolingo.com",
+    "url": "https://duolingo.com/",
+    "android": "com.duolingo",
+    "ios": "duolingo"
+  },
+  {
+    "id": "khan",
+    "name": "Khan Academy",
+    "cat": "Education",
+    "domain": "khanacademy.org",
+    "url": "https://khanacademy.org/",
+    "android": "org.khanacademy.android"
+  },
+  {
+    "id": "coursera",
+    "name": "Coursera",
+    "cat": "Education",
+    "domain": "coursera.org",
+    "url": "https://coursera.org/",
+    "android": "org.coursera.android"
+  },
+  {
+    "id": "udemy",
+    "name": "Udemy",
+    "cat": "Education",
+    "domain": "udemy.com",
+    "url": "https://udemy.com/",
+    "android": "com.udemy.android"
+  },
+  {
+    "id": "edx",
+    "name": "edX",
+    "cat": "Education",
+    "domain": "edx.org",
+    "url": "https://edx.org/"
+  },
+  {
+    "id": "quizlet",
+    "name": "Quizlet",
+    "cat": "Education",
+    "domain": "quizlet.com",
+    "url": "https://quizlet.com/",
+    "android": "com.quizlet.quizletandroid"
+  },
+  {
+    "id": "photomath",
+    "name": "Photomath",
+    "cat": "Education",
+    "domain": "photomath.com",
+    "url": "https://photomath.com/",
+    "android": "com.microblink.photomath"
+  },
+  {
+    "id": "chegg",
+    "name": "Chegg",
+    "cat": "Education",
+    "domain": "chegg.com",
+    "url": "https://chegg.com/"
+  },
+  {
+    "id": "memrise",
+    "name": "Memrise",
+    "cat": "Education",
+    "domain": "memrise.com",
+    "url": "https://memrise.com/"
+  },
+  {
+    "id": "babbel",
+    "name": "Babbel",
+    "cat": "Education",
+    "domain": "babbel.com",
+    "url": "https://babbel.com/"
+  },
+  {
+    "id": "busuu",
+    "name": "Busuu",
+    "cat": "Education",
+    "domain": "busuu.com",
+    "url": "https://busuu.com/"
+  },
+  {
+    "id": "anki",
+    "name": "Anki",
+    "cat": "Education",
+    "domain": "apps.ankiweb.net",
+    "url": "https://apps.ankiweb.net/"
+  },
+  {
+    "id": "seesaw",
+    "name": "Seesaw",
+    "cat": "Education",
+    "domain": "seesaw.me",
+    "url": "https://seesaw.me/"
+  },
+  {
+    "id": "classdojo",
+    "name": "ClassDojo",
+    "cat": "Education",
+    "domain": "classdojo.com",
+    "url": "https://classdojo.com/"
+  },
+  {
+    "id": "remind",
+    "name": "Remind",
+    "cat": "Education",
+    "domain": "remind.com",
+    "url": "https://remind.com/"
+  },
+  {
+    "id": "schoology",
+    "name": "Schoology",
+    "cat": "Education",
+    "domain": "schoology.com",
+    "url": "https://schoology.com/"
+  },
+  {
+    "id": "brightspace",
+    "name": "Brightspace",
+    "cat": "Education",
+    "domain": "d2l.com",
+    "url": "https://d2l.com/"
+  },
+  {
+    "id": "turnitin",
+    "name": "Turnitin",
+    "cat": "Education",
+    "domain": "turnitin.com",
+    "url": "https://turnitin.com/"
+  }
+]
