@@ -27,7 +27,6 @@
   "common.saved": "Đã lưu",
   "common.deleted": "Đã xóa",
   "common.hidden": "Đã ẩn",
-
   "banner.emergency": "KHẨN CẤP",
   "banner.calendar": "Lịch",
   "banner.medical": "Y tế",
@@ -38,7 +37,6 @@
   "banner.utilities": "Hóa đơn",
   "banner.documents": "Tài liệu",
   "banner.addnew": "Thêm",
-
   "home.morning": "Chào buổi sáng",
   "home.afternoon": "Chào buổi chiều",
   "home.evening": "Chào buổi tối",
@@ -64,7 +62,6 @@
   "home.groupApps": "{n, plural, one {# ứng dụng} other {# ứng dụng}}",
   "home.dropTitle": "Thả ứng dụng, lối tắt hoặc liên kết vào đây",
   "home.dropBody": "Trên máy tính này bạn có thể thả liên kết trình duyệt, liên kết cửa hàng hoặc tệp lối tắt. LifeHub chỉ đọc những gì bạn thả.",
-
   "onb.lead": "Mọi thứ bạn cần, ở một chỗ.",
   "onb.f1": "Số khẩn cấp và thẻ y tế",
   "onb.f2": "Tiền, hóa đơn và thanh toán",
@@ -103,7 +100,6 @@
   "onb.pinMatch": "Hai PIN không khớp",
   "onb.pwRule": "Dùng ít nhất 8 ký tự",
   "onb.pwMatch": "Hai mật khẩu không khớp",
-
   "auth.pin": "PIN",
   "auth.pinDesc": "Mã 4 đến 6 chữ số",
   "auth.password": "Mật khẩu",
@@ -124,10 +120,8 @@
   "auth.forgot": "Quên rồi? Đặt lại LifeHub",
   "auth.incorrect": "Sai mật khẩu",
   "auth.passkeyFail": "Chưa xác minh được khóa truy cập",
-
   "lock.emergency": "Khẩn cấp",
   "lock.medicalId": "Thẻ y tế",
-
   "search.title": "Tìm",
   "search.placeholder": "Tìm mọi thứ",
   "search.hint": "Tìm liên hệ, sự kiện, hóa đơn, ứng dụng, chat, thông tin y tế và số khẩn cấp.",
@@ -136,13 +130,11 @@
   "search.app": "Liên kết ứng dụng",
   "search.doc": "Tài liệu",
   "search.appt": "Lịch hẹn",
-
   "region.AU": "Úc",
   "region.NZ": "Niu Di-lân",
   "region.US": "Hoa Kỳ",
   "region.UK": "Vương quốc Anh",
   "region.EU": "Liên minh châu Âu",
-
   "emerg.title": "Khẩn cấp",
   "emerg.region": "Vùng",
   "emerg.share": "Chia sẻ vị trí của tôi",
@@ -165,7 +157,6 @@
   "emerg.denied": "bị từ chối quyền",
   "emerg.helpText": "Tôi cần giúp đỡ. Vị trí của tôi (±{m} m): {url}",
   "emerg.regionToast": "Đang hiện số khẩn cấp của {name}",
-
   "med.title": "Y tế",
   "med.id": "Thẻ y tế",
   "med.blood": "Nhóm máu",
@@ -194,7 +185,6 @@
   "med.family": "Tiền sử gia đình",
   "med.appts": "Lịch hẹn",
   "med.apptEmpty": "Chưa có lịch hẹn. Thêm một lịch, nó sẽ hiện trên lịch.",
-
   "bank.title": "Ngân hàng",
   "bank.demo": "Không có ngân hàng thật nào được kết nối. Số dư, chuyển khoản và thanh toán chỉ được mô phỏng trên thiết bị này.",
   "bank.net": "Số dư ròng",
@@ -212,7 +202,6 @@
   "bank.sched": "Khoản đã hẹn",
   "bank.schedEmpty": "Thêm tiền nhà, khoản vay hoặc chuyển khoản và nó hiện trên lịch. Việc này không chuyển tiền thật.",
   "bank.foot": "Khoản đã hẹn chỉ là lời nhắc trên lịch, không phải lệnh trừ tiền thật. Bản chạy thật sẽ liên kết ngân hàng qua nhà cung cấp open banking được công nhận.",
-
   "cal.title": "Lịch",
   "cal.month": "Tháng",
   "cal.week": "Tuần",
@@ -237,7 +226,6 @@
   "cal.dismiss": "Đóng thông báo",
   "cal.work": "Lịch làm việc",
   "cal.foot": "Hóa đơn, khoản trong ngân sách, lịch hẹn, giờ uống thuốc, khoản đã hẹn, sinh nhật, sự kiện xã hội và ứng dụng có ngày sẽ tự hiện ở đây.",
-
   "budget.title": "Ngân sách",
   "budget.currency": "Tiền tệ",
   "budget.income": "Thu",
@@ -259,14 +247,12 @@
   "budget.are": "đang",
   "budget.tools": "Công cụ ngân sách",
   "budget.foot": "Ngân sách ở lại trên thiết bị này. Hóa đơn lặp lại cũng hiện trên lịch. Cảnh báo bắt đầu từ {pct} hạn mức.",
-
   "docs.title": "Tài liệu",
   "docs.add": "Thêm tệp",
   "docs.empty": "Chưa có gì ở đây. Thêm PDF, ảnh, bảng tính hoặc tệp chữ từ thiết bị này.",
   "docs.foot": "Tệp nằm trong cơ sở dữ liệu của trình duyệt này. Khi bạn thêm tệp, bước kiểm tra an toàn chạy trên thiết bị. Đây không phải quét virus điện thoại hay máy tính.",
   "docs.opening": "Đang mở…",
   "docs.missing": "Tệp này không còn trong cơ sở dữ liệu trên thiết bị.",
-
   "add.title": "Thêm",
   "add.sync": "Thêm nhanh",
   "add.syncLead": "Chọn những ứng dụng bạn có thể đang dùng và thêm một lần. LifeHub không thấy ứng dụng đã cài trên thiết bị này.",
@@ -281,7 +267,6 @@
   "add.other": "Ứng dụng khác",
   "add.onHome": " · trên Trang chủ",
   "add.apps": "{n, plural, one {# ứng dụng} other {# ứng dụng}}",
-
   "set.title": "Cài đặt",
   "set.emergencyLine": "{flag} {name} · số khẩn cấp",
   "set.money": "Vùng và tiền tệ",
@@ -335,7 +320,6 @@
   "set.delete": "Xóa dữ liệu của bạn",
   "set.version": "Bản thử LifeHub v{v} · {net} · Bản đã cài tự cập nhật. Ngày giờ theo múi Australia/Hobart.",
   "set.langSaved": "Đã cập nhật ngôn ngữ",
-
   "safety.title": "Kiểm tra an toàn",
   "safety.blocked": "Đã chặn",
   "safety.caution": "Cẩn trọng",
@@ -367,7 +351,6 @@
   "safety.secret": "Liên kết có thứ trông như mật khẩu hoặc token ({keys}).",
   "safety.lookalike": "Địa chỉ này trông giống {hit}, nhưng không phải trang quen.",
   "safety.partial": "Chỉ 8 MB đầu của tệp lớn này được kiểm tra.",
-
   "plan.title": "Gói của bạn",
   "plan.free": "LifeHub Miễn phí",
   "plan.prem": "LifeHub Premium",
@@ -381,7 +364,6 @@
   "plan.checkoutLead": "Thanh toán demo. Không trừ thẻ và không tạo gói đăng ký thật.",
   "plan.charged": "Đã trừ hôm nay",
   "plan.nothing": "Không có · demo",
-
   "loc.title": "Vị trí",
   "loc.off": "Chia sẻ đang tắt. Chọn từng người, chọn thời gian, rồi bắt đầu. Không có cách chia sẻ với tất cả mọi người.",
   "loc.finding": "Đang tìm vị trí của bạn…",
@@ -397,7 +379,6 @@
   "loc.open": "Mở",
   "loc.directions": "Chỉ đường",
   "loc.drive": "Bắt đầu lái",
-
   "toast.currency": "Đã cập nhật tiền tệ. Số tiền không được đổi.",
   "toast.format": "Đã lưu cách hiện số",
   "toast.storage": "Hết chỗ: hãy xuất bản sao lưu",
@@ -408,7 +389,6 @@
   "ad.hide": "Ẩn quảng cáo trong phiên này",
   "ad.premiumTitle": "LifeHub Premium: không quảng cáo",
   "ad.premiumBody": "Ảnh nét hơn, làm mới trực tiếp · giá từ cửa hàng",
-
   "svc.AU.0.name": "Cảnh sát, cứu hỏa, cấp cứu",
   "svc.AU.0.desc": "Tình huống đe dọa tính mạng",
   "svc.AU.1.name": "Gọi khẩn từ điện thoại",
@@ -458,5 +438,24 @@
   "svc.EU.2.name": "Hỗ trợ tinh thần (nơi có)",
   "svc.EU.2.desc": "Đường dây hỗ trợ tinh thần",
   "svc.EU.3.name": "Trẻ mất tích",
-  "svc.EU.3.desc": "Đường dây trẻ mất tích"
+  "svc.EU.3.desc": "Đường dây trẻ mất tích",
+  "set.min1": "1 min",
+  "set.min5": "5 min",
+  "set.min15": "15 min",
+  "set.never": "Never",
+  "set.active": "Active",
+  "set.ends": "Ends soon",
+  "set.glass": "Glass icons",
+  "set.off": "Off",
+  "set.up": "Move up",
+  "set.down": "Move down",
+  "set.show": "Show",
+  "set.hideOne": "Hide",
+  "set.pull": "Pull down on any screen to refresh now.",
+  "set.pullPrem": " 1 min and Live come with Premium.",
+  "set.importSub": "LifeHub backup (.json), contacts (.vcf/.csv)",
+  "set.sampleSub": "Replace current data with demo data",
+  "set.wipeSub": "Clears local storage, caches and the on-device database",
+  "set.deleteSub": "How account deletion works",
+  "set.privacyCard": "What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample, not a tracking network. Banking, chat, social feeds and other people's map pins are demos."
 }

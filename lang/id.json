@@ -27,7 +27,6 @@
   "common.saved": "Tersimpan",
   "common.deleted": "Terhapus",
   "common.hidden": "Disembunyikan",
-
   "banner.emergency": "DARURAT",
   "banner.calendar": "Kalender",
   "banner.medical": "Kesehatan",
@@ -38,7 +37,6 @@
   "banner.utilities": "Tagihan",
   "banner.documents": "Dokumen",
   "banner.addnew": "Tambah",
-
   "home.morning": "Selamat pagi",
   "home.afternoon": "Selamat siang",
   "home.evening": "Selamat malam",
@@ -64,7 +62,6 @@
   "home.groupApps": "{n, plural, one {# aplikasi} other {# aplikasi}}",
   "home.dropTitle": "Letakkan aplikasi, pintasan, atau tautan di sini",
   "home.dropBody": "Di komputer ini kamu bisa meletakkan tautan peramban, tautan toko, atau file pintasan. LifeHub hanya membaca yang kamu letakkan.",
-
   "onb.lead": "Semua yang kamu butuhkan, di satu tempat.",
   "onb.f1": "Nomor darurat & ID medis",
   "onb.f2": "Uang, tagihan & pembayaran",
@@ -103,7 +100,6 @@
   "onb.pinMatch": "PIN tidak sama",
   "onb.pwRule": "Pakai minimal 8 karakter",
   "onb.pwMatch": "Kata sandi tidak sama",
-
   "auth.pin": "PIN",
   "auth.pinDesc": "Kode 4 sampai 6 angka",
   "auth.password": "Kata sandi",
@@ -124,10 +120,8 @@
   "auth.forgot": "Lupa? Atur ulang LifeHub",
   "auth.incorrect": "Kata sandi salah",
   "auth.passkeyFail": "Kunci sandi tidak terverifikasi",
-
   "lock.emergency": "Darurat",
   "lock.medicalId": "ID medis",
-
   "search.title": "Cari",
   "search.placeholder": "Cari semuanya",
   "search.hint": "Cari kontak, acara, tagihan, aplikasi, chat, info medis, dan nomor darurat.",
@@ -136,13 +130,11 @@
   "search.app": "Tautan aplikasi",
   "search.doc": "Dokumen",
   "search.appt": "Janji",
-
   "region.AU": "Australia",
   "region.NZ": "Selandia Baru",
   "region.US": "Amerika Serikat",
   "region.UK": "Britania Raya",
   "region.EU": "Uni Eropa",
-
   "emerg.title": "Darurat",
   "emerg.region": "Wilayah",
   "emerg.share": "Bagikan lokasiku",
@@ -165,7 +157,6 @@
   "emerg.denied": "izin ditolak",
   "emerg.helpText": "Saya butuh bantuan. Lokasiku (±{m} m): {url}",
   "emerg.regionToast": "Menampilkan nomor darurat {name}",
-
   "med.title": "Kesehatan",
   "med.id": "ID medis",
   "med.blood": "Golongan darah",
@@ -194,7 +185,6 @@
   "med.family": "Riwayat keluarga",
   "med.appts": "Janji",
   "med.apptEmpty": "Belum ada janji. Tambah satu dan itu muncul di kalender.",
-
   "bank.title": "Bank",
   "bank.demo": "Tidak ada bank sungguhan yang terhubung. Saldo, transfer, dan pembayaran disimulasikan di perangkat ini.",
   "bank.net": "Saldo bersih",
@@ -212,7 +202,6 @@
   "bank.sched": "Pembayaran terjadwal",
   "bank.schedEmpty": "Tambah sewa, pinjaman, atau transfer dan itu muncul di kalender. Ini tidak memindahkan uang.",
   "bank.foot": "Pembayaran terjadwal hanya pengingat di kalender, bukan debit sungguhan. Di versi nyata, bank dihubungkan lewat penyedia open banking yang terakreditasi.",
-
   "cal.title": "Kalender",
   "cal.month": "Bulan",
   "cal.week": "Minggu",
@@ -237,7 +226,6 @@
   "cal.dismiss": "Tutup notifikasi",
   "cal.work": "Jadwal kerja",
   "cal.foot": "Tagihan, tagihan anggaran, janji, jam obat, pembayaran terjadwal, ulang tahun, acara sosial, dan aplikasi bertanggal muncul di sini sendiri.",
-
   "budget.title": "Anggaran",
   "budget.currency": "Mata uang",
   "budget.income": "Pemasukan",
@@ -259,14 +247,12 @@
   "budget.are": "sudah",
   "budget.tools": "Alat anggaran",
   "budget.foot": "Anggaranmu tetap di perangkat ini. Tagihan berulang juga muncul di kalender. Peringatan mulai pada {pct} dari batas.",
-
   "docs.title": "Dokumen",
   "docs.add": "Tambah file",
   "docs.empty": "Belum ada apa-apa di sini. Tambah PDF, foto, lembar kerja, atau file teks dari perangkat ini.",
   "docs.foot": "File tetap di basis data peramban ini. Pemeriksaan keamanan berjalan di perangkat saat kamu menambahkan sesuatu. Ini bukan pemindaian antivirus ponsel atau komputer.",
   "docs.opening": "Membuka…",
   "docs.missing": "File ini sudah tidak ada di basis data perangkat.",
-
   "add.title": "Tambah",
   "add.sync": "Tambah cepat",
   "add.syncLead": "Centang aplikasi yang mungkin sudah kamu pakai dan tambahkan sekaligus. LifeHub tidak bisa melihat apa yang terpasang di perangkat ini.",
@@ -281,7 +267,6 @@
   "add.other": "Aplikasi lain",
   "add.onHome": " · di Beranda",
   "add.apps": "{n, plural, one {# aplikasi} other {# aplikasi}}",
-
   "set.title": "Setelan",
   "set.emergencyLine": "{flag} {name} · nomor darurat",
   "set.money": "Wilayah & mata uang",
@@ -335,7 +320,6 @@
   "set.delete": "Hapus datamu",
   "set.version": "Prototipe LifeHub v{v} · {net} · Salinan yang terpasang memperbarui diri sendiri. Tanggal memakai waktu Australia/Hobart.",
   "set.langSaved": "Bahasa diperbarui",
-
   "safety.title": "Pemeriksaan keamanan",
   "safety.blocked": "Diblokir",
   "safety.caution": "Waspada",
@@ -367,7 +351,6 @@
   "safety.secret": "Tautan memuat sesuatu yang mirip kata sandi atau token ({keys}).",
   "safety.lookalike": "Alamat ini mirip {hit}, tapi bukan situs yang biasa.",
   "safety.partial": "Hanya 8 MB pertama dari file besar ini yang diperiksa.",
-
   "plan.title": "Paketmu",
   "plan.free": "LifeHub Gratis",
   "plan.prem": "LifeHub Premium",
@@ -381,7 +364,6 @@
   "plan.checkoutLead": "Pembayaran demo. Tidak ada kartu yang ditagih dan tidak ada langganan sungguhan.",
   "plan.charged": "Ditagih hari ini",
   "plan.nothing": "Tidak ada · demo",
-
   "loc.title": "Lokasi",
   "loc.off": "Berbagi mati. Centang tiap orang, pilih berapa lama, lalu mulai. Tidak ada pilihan berbagi ke semua orang.",
   "loc.finding": "Mencari posisimu…",
@@ -397,7 +379,6 @@
   "loc.open": "Buka",
   "loc.directions": "Petunjuk arah",
   "loc.drive": "Mulai menyetir",
-
   "toast.currency": "Mata uang diperbarui. Jumlah tidak dikonversi.",
   "toast.format": "Format angka tersimpan",
   "toast.storage": "Penyimpanan penuh: ekspor cadangan",
@@ -408,7 +389,6 @@
   "ad.hide": "Sembunyikan iklan untuk sesi ini",
   "ad.premiumTitle": "LifeHub Premium: tanpa iklan",
   "ad.premiumBody": "Foto lebih tajam, segar langsung · harga dari toko",
-
   "svc.AU.0.name": "Polisi, pemadam, ambulans",
   "svc.AU.0.desc": "Darurat yang mengancam nyawa",
   "svc.AU.1.name": "Darurat dari ponsel",
@@ -458,5 +438,24 @@
   "svc.EU.2.name": "Dukungan emosional (jika ada)",
   "svc.EU.2.desc": "Saluran dukungan emosional",
   "svc.EU.3.name": "Anak hilang",
-  "svc.EU.3.desc": "Saluran untuk anak hilang"
+  "svc.EU.3.desc": "Saluran untuk anak hilang",
+  "set.min1": "1 min",
+  "set.min5": "5 min",
+  "set.min15": "15 min",
+  "set.never": "Never",
+  "set.active": "Active",
+  "set.ends": "Ends soon",
+  "set.glass": "Glass icons",
+  "set.off": "Off",
+  "set.up": "Move up",
+  "set.down": "Move down",
+  "set.show": "Show",
+  "set.hideOne": "Hide",
+  "set.pull": "Pull down on any screen to refresh now.",
+  "set.pullPrem": " 1 min and Live come with Premium.",
+  "set.importSub": "LifeHub backup (.json), contacts (.vcf/.csv)",
+  "set.sampleSub": "Replace current data with demo data",
+  "set.wipeSub": "Clears local storage, caches and the on-device database",
+  "set.deleteSub": "How account deletion works",
+  "set.privacyCard": "What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample, not a tracking network. Banking, chat, social feeds and other people's map pins are demos."
 }

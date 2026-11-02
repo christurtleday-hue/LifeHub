@@ -17,7 +17,7 @@
     return m ? m[1] : '';
   }
   function result(level, reasons) {
-    return { level: level, reasons: reasons.length ? reasons : (level === 'safe' ? ['Nothing in this check stood out.'] : reasons) };
+    return { level: level, reasons: reasons.length ? reasons : (level === 'safe' ? [{ k: 'safety.ok' }] : reasons) };
   }
   function magicOf(b) {
     if (!b || b.length < 2) return '';
@@ -96,42 +96,42 @@
     const parts = String(name || '').toLowerCase().split('.');
     const magic = magicOf(bytes || new Uint8Array());
     if (parts.length >= 3 && DOC_EXT.has(parts[parts.length - 2]) && parts[parts.length - 1] !== parts[parts.length - 2]) {
-      reasons.push('The name has two extensions (' + parts[parts.length - 2] + ' and ' + ext + '). The last one is the type that would open.');
+      reasons.push({ k: 'safety.doubleExt', prev: parts[parts.length - 2], ext: ext });
       if (BLOCKED_EXT.has(ext)) blocked = true; else caution = true;
     }
     if (BLOCKED_EXT.has(ext)) {
       blocked = true;
-      reasons.push('This is a program or script (.' + ext + '). LifeHub will not store it.');
+      reasons.push({ k: 'safety.program', ext: ext });
     }
     if ((magic === 'pe' || magic === 'elf' || magic === 'script') && !BLOCKED_EXT.has(ext)) {
       blocked = true;
-      reasons.push('The contents are a program, but the name does not say so.');
+      reasons.push({ k: 'safety.hiddenProgram' });
     }
     if (MEDIA_EXT[ext] && magic && magic !== MEDIA_EXT[ext] && magic !== 'script') {
       if (magic === 'pe' || magic === 'elf') blocked = true;
       else caution = true;
-      reasons.push('The contents (' + magic + ') do not match the .' + ext + ' name.');
+      reasons.push({ k: 'safety.magic', magic: magic, ext: ext });
     }
     if (MACRO_EXT.has(ext)) {
       caution = true;
-      reasons.push('This Office file is a macro-enabled type (.' + ext + ').');
+      reasons.push({ k: 'safety.macroType', ext: ext });
     }
     if (magic === 'zip' || ZIP_EXT.has(ext)) {
       const info = zipInfo(bytes);
       if (info && info.bomb) {
         blocked = true;
-        reasons.push('This archive is unusually large when opened, which can be a zip bomb.');
+        reasons.push({ k: 'safety.bomb' });
       }
       if (info && info.entries) {
         info.entries.forEach(entry => {
           const e = extOf(entry);
           if (BLOCKED_EXT.has(e)) {
             blocked = true;
-            reasons.push('The archive contains a program or script (' + entry.split('/').pop() + ').');
+            reasons.push({ k: 'safety.zipProgram', name: entry.split('/').pop() });
           }
           if (/vbaproject\.bin$/i.test(entry)) {
             caution = true;
-            reasons.push('This Office file contains macros (vbaProject.bin).');
+            reasons.push({ k: 'safety.vba' });
           }
         });
       }
@@ -139,22 +139,23 @@
     if (magic === 'ole' && (OLE_EXT.has(ext) || !ext)) {
       if (oleHasMacro(bytes)) {
         caution = true;
-        reasons.push('This older Office file looks like it contains macros.');
+        reasons.push({ k: 'safety.ole' });
       }
     }
     if (magic === 'pdf' || ext === 'pdf') {
       ['/JavaScript', '/JS', '/OpenAction', '/Launch', '/EmbeddedFile'].forEach(token => {
         if (hasPdfName(bytes, token)) {
           caution = true;
-          reasons.push('This PDF contains ' + token + ', which can run or open something when the file is opened.');
+          reasons.push({ k: 'safety.pdf', token: token });
         }
       });
     }
     if (size > 80 * 1024 * 1024) {
       blocked = true;
-      reasons.push('This file is over 80 MB, which is too large to keep in the browser.');
+      reasons.push({ k: 'safety.tooBig' });
     }
-    const uniq = [...new Set(reasons)];
+    const uniq = [];
+    reasons.forEach(r => { if (!uniq.some(x => JSON.stringify(x) === JSON.stringify(r))) uniq.push(r); });
     if (blocked) return result('blocked', uniq);
     if (caution) return result('caution', uniq);
     return result('safe', []);
@@ -193,24 +194,24 @@
     if (!url) return result('safe', []);
     if (!/^[a-z][a-z0-9+.-]*:/i.test(url)) url = 'https://' + url;
     let parsed;
-    try { parsed = new URL(url); } catch (e) { return result('caution', ['This does not look like a usable link.']); }
+    try { parsed = new URL(url); } catch (e) { return result('caution', [{ k: 'safety.badLink' }]); }
     const scheme = parsed.protocol.replace(':', '').toLowerCase();
     if (scheme === 'javascript' || scheme === 'data' || scheme === 'vbscript' || scheme === 'file') {
-      return result('blocked', ['This kind of link (' + scheme + ') can run or open a local file. LifeHub will not save it.']);
+      return result('blocked', [{ k: 'safety.badScheme', scheme: scheme }]);
     }
-    if (scheme === 'http') { caution = true; reasons.push('This link is not encrypted (http, not https).'); }
+    if (scheme === 'http') { caution = true; reasons.push({ k: 'safety.http' }); }
     const host = hostOf(parsed.href);
     if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':') || /^\[[0-9a-f:]+\]$/i.test(parsed.hostname)) {
-      caution = true; reasons.push('The address is a raw IP address, not a normal site name.');
+      caution = true; reasons.push({ k: 'safety.ip' });
     }
-    if (host.includes('xn--')) { caution = true; reasons.push('The address uses punycode, which can imitate another name.'); }
+    if (host.includes('xn--')) { caution = true; reasons.push({ k: 'safety.puny' }); }
     const tld = host.split('.').pop();
-    if (RISKY_TLDS.has(tld)) { caution = true; reasons.push('The ending .' + tld + ' is often used in trick links.'); }
-    if (SHORTENERS.has(host)) { caution = true; reasons.push('This is a shortened link, so the real destination is hidden.'); }
-    if (parsed.username) { caution = true; reasons.push('The link hides the real site behind a username.'); }
+    if (RISKY_TLDS.has(tld)) { caution = true; reasons.push({ k: 'safety.tld', tld: tld }); }
+    if (SHORTENERS.has(host)) { caution = true; reasons.push({ k: 'safety.short' }); }
+    if (parsed.username) { caution = true; reasons.push({ k: 'safety.user' }); }
     const keys = [];
     parsed.searchParams.forEach((val, key) => { if (SECRET_KEYS.has(key.toLowerCase()) && val) keys.push(key); });
-    if (keys.length) { caution = true; reasons.push('The link includes something that looks like a password or token (' + keys.slice(0, 3).join(', ') + ').'); }
+    if (keys.length) { caution = true; reasons.push({ k: 'safety.secret', keys: keys.slice(0, 3).join(', ') }); }
     const brands = (ctx && ctx.brands) || [];
     const officialHosts = (ctx && ctx.official) || [];
     if (host && brands.length && !official(host, officialHosts)) {
@@ -220,9 +221,10 @@
         if (!brand || brand.length < 5) return false;
         return label === brand || (brand.length >= 6 && distance(label, brand) <= 1);
       });
-      if (hit) { caution = true; reasons.push('This address looks like ' + hit + ', but it is not the usual site.'); }
+      if (hit) { caution = true; reasons.push({ k: 'safety.lookalike', hit: hit }); }
     }
-    const uniq = [...new Set(reasons)];
+    const uniq = [];
+    reasons.forEach(r => { if (!uniq.some(x => JSON.stringify(x) === JSON.stringify(r))) uniq.push(r); });
     if (blocked) return result('blocked', uniq);
     if (caution) return result('caution', uniq);
     return result('safe', []);

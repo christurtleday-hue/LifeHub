@@ -27,7 +27,6 @@
   "common.saved": "সেভ হয়েছে",
   "common.deleted": "মুছে ফেলা হয়েছে",
   "common.hidden": "লুকানো",
-
   "banner.emergency": "জরুরি",
   "banner.calendar": "ক্যালেন্ডার",
   "banner.medical": "স্বাস্থ্য",
@@ -38,7 +37,6 @@
   "banner.utilities": "বিল",
   "banner.documents": "নথি",
   "banner.addnew": "যোগ",
-
   "home.morning": "সুপ্রভাত",
   "home.afternoon": "শুভ অপরাহ্ন",
   "home.evening": "শুভ সন্ধ্যা",
@@ -64,7 +62,6 @@
   "home.groupApps": "{n, plural, one {# অ্যাপ} other {# অ্যাপ}}",
   "home.dropTitle": "এখানে অ্যাপ, শর্টকাট বা লিংক ছাড়ুন",
   "home.dropBody": "এই কম্পিউটারে ব্রাউজার লিংক, স্টোর লিংক বা শর্টকাট ফাইল ছাড়তে পারেন। LifeHub শুধু আপনি যা ছাড়েন তাই পড়ে।",
-
   "onb.lead": "যা দরকার, সব এক জায়গায়।",
   "onb.f1": "জরুরি নম্বর ও মেডিকেল আইডি",
   "onb.f2": "টাকা, বিল ও পেমেন্ট",
@@ -103,7 +100,6 @@
   "onb.pinMatch": "PIN মিলছে না",
   "onb.pwRule": "অন্তত ৮ অক্ষর ব্যবহার করুন",
   "onb.pwMatch": "পাসওয়ার্ড মিলছে না",
-
   "auth.pin": "PIN",
   "auth.pinDesc": "৪ থেকে ৬ অঙ্কের কোড",
   "auth.password": "পাসওয়ার্ড",
@@ -124,10 +120,8 @@
   "auth.forgot": "ভুলে গেছেন? LifeHub রিসেট করুন",
   "auth.incorrect": "ভুল পাসওয়ার্ড",
   "auth.passkeyFail": "পাসকি যাচাই হয়নি",
-
   "lock.emergency": "জরুরি",
   "lock.medicalId": "মেডিকেল আইডি",
-
   "search.title": "খুঁজুন",
   "search.placeholder": "সব খুঁজুন",
   "search.hint": "পরিচিতি, ইভেন্ট, বিল, অ্যাপ, চ্যাট, স্বাস্থ্যতথ্য আর জরুরি নম্বর খুঁজুন।",
@@ -136,13 +130,11 @@
   "search.app": "অ্যাপ লিংক",
   "search.doc": "নথি",
   "search.appt": "অ্যাপয়েন্টমেন্ট",
-
   "region.AU": "অস্ট্রেলিয়া",
   "region.NZ": "নিউজিল্যান্ড",
   "region.US": "মার্কিন যুক্তরাষ্ট্র",
   "region.UK": "যুক্তরাজ্য",
   "region.EU": "ইউরোপীয় ইউনিয়ন",
-
   "emerg.title": "জরুরি",
   "emerg.region": "অঞ্চল",
   "emerg.share": "আমার অবস্থান শেয়ার করুন",
@@ -165,7 +157,6 @@
   "emerg.denied": "অনুমতি দেওয়া হয়নি",
   "emerg.helpText": "আমার সাহায্য দরকার। আমার অবস্থান (±{m} মি): {url}",
   "emerg.regionToast": "{name}-এর জরুরি নম্বর দেখানো হচ্ছে",
-
   "med.title": "স্বাস্থ্য",
   "med.id": "মেডিকেল আইডি",
   "med.blood": "রক্তের গ্রুপ",
@@ -194,7 +185,6 @@
   "med.family": "পারিবারিক ইতিহাস",
   "med.appts": "অ্যাপয়েন্টমেন্ট",
   "med.apptEmpty": "এখনো কোনো অ্যাপয়েন্টমেন্ট নেই। একটি যোগ করুন, ক্যালেন্ডারে দেখা যাবে।",
-
   "bank.title": "ব্যাংক",
   "bank.demo": "কোনো আসল ব্যাংক যুক্ত নেই। ব্যালেন্স, ট্রান্সফার ও পেমেন্ট এই ডিভাইসে নকল।",
   "bank.net": "নিট ব্যালেন্স",
@@ -212,7 +202,6 @@
   "bank.sched": "নির্ধারিত পেমেন্ট",
   "bank.schedEmpty": "ভাড়া, ঋণ বা ট্রান্সফার যোগ করুন, ক্যালেন্ডারে উঠবে। এতে টাকা নড়ে না।",
   "bank.foot": "নির্ধারিত পেমেন্ট ক্যালেন্ডারে একটি রিমাইন্ডার, আসল ডেবিট নয়। আসল সংস্করণে ব্যাংক একটি স্বীকৃত ওপেন ব্যাংকিং সরবরাহকারীর মাধ্যমে যুক্ত হত।",
-
   "cal.title": "ক্যালেন্ডার",
   "cal.month": "মাস",
   "cal.week": "সপ্তাহ",
@@ -237,7 +226,6 @@
   "cal.dismiss": "বিজ্ঞপ্তি বন্ধ",
   "cal.work": "কাজের সময়সূচি",
   "cal.foot": "বিল, বাজেটের বিল, অ্যাপয়েন্টমেন্ট, ওষুধের সময়, নির্ধারিত পেমেন্ট, জন্মদিন, সামাজিক ইভেন্ট আর তারিখওয়ালা অ্যাপ এখানে নিজে থেকে আসে।",
-
   "budget.title": "বাজেট",
   "budget.currency": "মুদ্রা",
   "budget.income": "আয়",
@@ -259,14 +247,12 @@
   "budget.are": "আছে",
   "budget.tools": "বাজেটের সরঞ্জাম",
   "budget.foot": "আপনার বাজেট এই ডিভাইসেই থাকে। নিয়মিত বিল ক্যালেন্ডারেও দেখা যায়। সতর্কতা একটি সীমার {pct}-এ শুরু হয়।",
-
   "docs.title": "নথি",
   "docs.add": "ফাইল যোগ",
   "docs.empty": "এখানে এখনো কিছু নেই। এই ডিভাইস থেকে একটি PDF, ছবি, স্প্রেডশিট বা লেখার ফাইল যোগ করুন।",
   "docs.foot": "ফাইল এই ব্রাউজারের ডেটাবেসে থাকে। যোগ করার সময় নিরাপত্তা যাচাই এই ডিভাইসেই চলে। এটা ফোন বা কম্পিউটারের অ্যান্টিভাইরাস স্ক্যান নয়।",
   "docs.opening": "খোলা হচ্ছে…",
   "docs.missing": "এই ফাইল আর ডিভাইসের ডেটাবেসে নেই।",
-
   "add.title": "যোগ",
   "add.sync": "দ্রুত যোগ",
   "add.syncLead": "যে অ্যাপ আপনি হয়তো আগে থেকে ব্যবহার করেন সেগুলো টিক দিন এবং একসাথে যোগ করুন। LifeHub এই ডিভাইসে কী ইনস্টল আছে দেখতে পায় না।",
@@ -281,7 +267,6 @@
   "add.other": "অন্য অ্যাপ",
   "add.onHome": " · হোমে",
   "add.apps": "{n, plural, one {# অ্যাপ} other {# অ্যাপ}}",
-
   "set.title": "সেটিংস",
   "set.emergencyLine": "{flag} {name} · জরুরি নম্বর",
   "set.money": "অঞ্চল ও মুদ্রা",
@@ -335,7 +320,6 @@
   "set.delete": "আপনার তথ্য মুছুন",
   "set.version": "LifeHub প্রোটোটাইপ v{v} · {net} · ইনস্টল করা কপি নিজে আপডেট হয়। তারিখ Australia/Hobart সময় ব্যবহার করে।",
   "set.langSaved": "ভাষা আপডেট হয়েছে",
-
   "safety.title": "নিরাপত্তা যাচাই",
   "safety.blocked": "আটকানো",
   "safety.caution": "সতর্কতা",
@@ -367,7 +351,6 @@
   "safety.secret": "লিংকে এমন কিছু আছে যা পাসওয়ার্ড বা টোকেনের মতো ({keys})।",
   "safety.lookalike": "এই ঠিকানা {hit}-এর মতো, কিন্তু পরিচিত সাইট নয়।",
   "safety.partial": "এই বড় ফাইলের শুধু প্রথম 8 MB যাচাই হয়েছে।",
-
   "plan.title": "আপনার প্ল্যান",
   "plan.free": "LifeHub বিনামূল্যে",
   "plan.prem": "LifeHub Premium",
@@ -381,7 +364,6 @@
   "plan.checkoutLead": "ডেমো পেমেন্ট। কোনো কার্ড কাটা হবে না এবং আসল সাবস্ক্রিপশন তৈরি হবে না।",
   "plan.charged": "আজ কাটা হয়েছে",
   "plan.nothing": "কিছু না · ডেমো",
-
   "loc.title": "অবস্থান",
   "loc.off": "শেয়ার বন্ধ। প্রতিটি মানুষ টিক দিন, কতক্ষণ বেছে নিন, তারপর শুরু করুন। সবার সাথে শেয়ারের কোনো উপায় নেই।",
   "loc.finding": "আপনার অবস্থান খোঁজা হচ্ছে…",
@@ -397,7 +379,6 @@
   "loc.open": "খুলুন",
   "loc.directions": "দিকনির্দেশ",
   "loc.drive": "গাড়ি চালানো শুরু",
-
   "toast.currency": "মুদ্রা আপডেট হয়েছে। অঙ্ক বদলানো হয়নি।",
   "toast.format": "সংখ্যার বিন্যাস সেভ হয়েছে",
   "toast.storage": "জায়গা ভর্তি: একটি ব্যাকআপ বের করুন",
@@ -408,7 +389,6 @@
   "ad.hide": "এই সেশনে বিজ্ঞাপন লুকান",
   "ad.premiumTitle": "LifeHub Premium: বিজ্ঞাপন নেই",
   "ad.premiumBody": "পরিষ্কার ছবি, লাইভ রিফ্রেশ · দোকানের দাম",
-
   "svc.AU.0.name": "পুলিশ, ফায়ার সার্ভিস, অ্যাম্বুলেন্স",
   "svc.AU.0.desc": "জীবনের ঝুঁকি",
   "svc.AU.1.name": "মোবাইল থেকে জরুরি",
@@ -458,5 +438,24 @@
   "svc.EU.2.name": "মানসিক সহায়তা (যেখানে আছে)",
   "svc.EU.2.desc": "মানসিক সহায়তার লাইন",
   "svc.EU.3.name": "নিখোঁজ শিশু",
-  "svc.EU.3.desc": "নিখোঁজ শিশুর হটলাইন"
+  "svc.EU.3.desc": "নিখোঁজ শিশুর হটলাইন",
+  "set.min1": "1 min",
+  "set.min5": "5 min",
+  "set.min15": "15 min",
+  "set.never": "Never",
+  "set.active": "Active",
+  "set.ends": "Ends soon",
+  "set.glass": "Glass icons",
+  "set.off": "Off",
+  "set.up": "Move up",
+  "set.down": "Move down",
+  "set.show": "Show",
+  "set.hideOne": "Hide",
+  "set.pull": "Pull down on any screen to refresh now.",
+  "set.pullPrem": " 1 min and Live come with Premium.",
+  "set.importSub": "LifeHub backup (.json), contacts (.vcf/.csv)",
+  "set.sampleSub": "Replace current data with demo data",
+  "set.wipeSub": "Clears local storage, caches and the on-device database",
+  "set.deleteSub": "How account deletion works",
+  "set.privacyCard": "What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample, not a tracking network. Banking, chat, social feeds and other people's map pins are demos."
 }

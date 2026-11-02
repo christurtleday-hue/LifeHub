@@ -27,7 +27,6 @@
   "common.saved": "Збережено",
   "common.deleted": "Видалено",
   "common.hidden": "Приховано",
-
   "banner.emergency": "ЕКСТРЕНО",
   "banner.calendar": "Календар",
   "banner.medical": "Здоров’я",
@@ -38,7 +37,6 @@
   "banner.utilities": "Рахунки",
   "banner.documents": "Документи",
   "banner.addnew": "Додати",
-
   "home.morning": "Доброго ранку",
   "home.afternoon": "Добрий день",
   "home.evening": "Добрий вечір",
@@ -64,7 +62,6 @@
   "home.groupApps": "{n, plural, one {# застосунок} few {# застосунки} many {# застосунків} other {# застосунку}}",
   "home.dropTitle": "Перетягніть сюди застосунок, ярлик або посилання",
   "home.dropBody": "На цьому комп’ютері можна перетягнути посилання з браузера, з крамниці або файл ярлика. LifeHub читає лише те, що ви перетягуєте.",
-
   "onb.lead": "Усе потрібне — в одному місці.",
   "onb.f1": "Екстрені номери й медкартка",
   "onb.f2": "Гроші, рахунки й платежі",
@@ -103,7 +100,6 @@
   "onb.pinMatch": "PIN-коди не збігаються",
   "onb.pwRule": "Потрібно щонайменше 8 символів",
   "onb.pwMatch": "Паролі не збігаються",
-
   "auth.pin": "PIN",
   "auth.pinDesc": "Код із 4–6 цифр",
   "auth.password": "Пароль",
@@ -124,10 +120,8 @@
   "auth.forgot": "Забули? Скинути LifeHub",
   "auth.incorrect": "Хибний пароль",
   "auth.passkeyFail": "Ключ доступу не підтверджено",
-
   "lock.emergency": "Екстрено",
   "lock.medicalId": "Медкартка",
-
   "search.title": "Пошук",
   "search.placeholder": "Шукати скрізь",
   "search.hint": "Шукайте контакти, події, рахунки, застосунки, чати, медичні дані й екстрені номери.",
@@ -136,13 +130,11 @@
   "search.app": "Посилання на застосунок",
   "search.doc": "Документ",
   "search.appt": "Прийом",
-
   "region.AU": "Австралія",
   "region.NZ": "Нова Зеландія",
   "region.US": "Сполучені Штати",
   "region.UK": "Велика Британія",
   "region.EU": "Європейський Союз",
-
   "emerg.title": "Екстрено",
   "emerg.region": "Регіон",
   "emerg.share": "Поділитися розташуванням",
@@ -165,7 +157,6 @@
   "emerg.denied": "дозвіл відхилено",
   "emerg.helpText": "Мені потрібна допомога. Моє розташування (±{m} м): {url}",
   "emerg.regionToast": "Показано екстрені номери: {name}",
-
   "med.title": "Здоров’я",
   "med.id": "Медкартка",
   "med.blood": "Група крові",
@@ -194,7 +185,6 @@
   "med.family": "Сімейний анамнез",
   "med.appts": "Прийоми",
   "med.apptEmpty": "Прийомів ще немає. Додайте один — він з’явиться в календарі.",
-
   "bank.title": "Банк",
   "bank.demo": "Справжній банк не підключено. Баланси, перекази й платежі тут лише імітація.",
   "bank.net": "Загальний баланс",
@@ -212,7 +202,6 @@
   "bank.sched": "Заплановані платежі",
   "bank.schedEmpty": "Додайте оренду, кредит або переказ — вони з’являться в календарі. Гроші при цьому не списуються.",
   "bank.foot": "Запланований платіж — це нагадування в календарі, а не справжнє списання. У робочій версії банк підключався б через акредитованого постачальника open banking.",
-
   "cal.title": "Календар",
   "cal.month": "Місяць",
   "cal.week": "Тиждень",
@@ -237,7 +226,6 @@
   "cal.dismiss": "Закрити сповіщення",
   "cal.work": "Робочий розклад",
   "cal.foot": "Рахунки, платежі з бюджету, прийоми, час ліків, заплановані платежі, дні народження, зустрічі й застосунки з датою з’являються тут самі.",
-
   "budget.title": "Бюджет",
   "budget.currency": "Валюта",
   "budget.income": "Дохід",
@@ -259,14 +247,12 @@
   "budget.are": "перебувають",
   "budget.tools": "Інструменти бюджету",
   "budget.foot": "Бюджет лишається на цьому пристрої. Повторювані рахунки теж видно в календарі. Сповіщення починаються з {pct} ліміту.",
-
   "docs.title": "Документи",
   "docs.add": "Додати файли",
   "docs.empty": "Тут ще порожньо. Додайте PDF, світлину, таблицю або текстовий файл із цього пристрою.",
   "docs.foot": "Файли лежать у базі цього браузера. Перевірка безпеки виконується на пристрої, коли ви щось додаєте. Це не антивірусна перевірка телефону чи комп’ютера.",
   "docs.opening": "Відкриваємо…",
   "docs.missing": "Цього файла вже немає в базі на пристрої.",
-
   "add.title": "Додати",
   "add.sync": "Швидке додавання",
   "add.syncLead": "Позначте застосунки, якими ви, можливо, вже користуєтеся, і додайте їх разом. LifeHub не бачить, що встановлено на пристрої.",
@@ -281,7 +267,6 @@
   "add.other": "Інші застосунки",
   "add.onHome": " · на головній",
   "add.apps": "{n, plural, one {# застосунок} few {# застосунки} many {# застосунків} other {# застосунку}}",
-
   "set.title": "Налаштування",
   "set.emergencyLine": "{flag} {name} · екстрені номери",
   "set.money": "Регіон і валюта",
@@ -335,7 +320,6 @@
   "set.delete": "Видалити ваші дані",
   "set.version": "Прототип LifeHub v{v} · {net} · Встановлені копії оновлюються самі. Дати рахуються за часом Australia/Hobart.",
   "set.langSaved": "Мову оновлено",
-
   "safety.title": "Перевірка безпеки",
   "safety.blocked": "Заблоковано",
   "safety.caution": "Обережно",
@@ -367,7 +351,6 @@
   "safety.secret": "У посиланні є щось схоже на пароль або токен ({keys}).",
   "safety.lookalike": "Адреса схожа на {hit}, але це не звичний сайт.",
   "safety.partial": "У цього великого файла перевірено лише перші 8 МБ.",
-
   "plan.title": "Ваш план",
   "plan.free": "LifeHub Безкоштовно",
   "plan.prem": "LifeHub Premium",
@@ -381,7 +364,6 @@
   "plan.checkoutLead": "Демо-оплата. Картка не списується, справжня підписка не створюється.",
   "plan.charged": "Списано сьогодні",
   "plan.nothing": "Нічого · демо",
-
   "loc.title": "Розташування",
   "loc.off": "Доступ вимкнено. Позначте кожну людину, оберіть тривалість і почніть. Поділитися одразу з усіма не можна.",
   "loc.finding": "Шукаємо ваше положення…",
@@ -397,7 +379,6 @@
   "loc.open": "Відкрити",
   "loc.directions": "Маршрут",
   "loc.drive": "Поїхати",
-
   "toast.currency": "Валюту оновлено. Суми не перераховувались.",
   "toast.format": "Формат чисел збережено",
   "toast.storage": "Сховище заповнене: експортуйте копію",
@@ -408,7 +389,6 @@
   "ad.hide": "Сховати рекламу до кінця сеансу",
   "ad.premiumTitle": "LifeHub Premium: без реклами",
   "ad.premiumBody": "Чіткіші світлини, живе оновлення · ціна з крамниці",
-
   "svc.AU.0.name": "Поліція, пожежники, швидка",
   "svc.AU.0.desc": "Загроза життю",
   "svc.AU.1.name": "Екстрений виклик із телефона",
@@ -458,5 +438,24 @@
   "svc.EU.2.name": "Емоційна підтримка (де є)",
   "svc.EU.2.desc": "Лінія емоційної підтримки",
   "svc.EU.3.name": "Зниклі діти",
-  "svc.EU.3.desc": "Лінія щодо зниклих дітей"
+  "svc.EU.3.desc": "Лінія щодо зниклих дітей",
+  "set.min1": "1 min",
+  "set.min5": "5 min",
+  "set.min15": "15 min",
+  "set.never": "Never",
+  "set.active": "Active",
+  "set.ends": "Ends soon",
+  "set.glass": "Glass icons",
+  "set.off": "Off",
+  "set.up": "Move up",
+  "set.down": "Move down",
+  "set.show": "Show",
+  "set.hideOne": "Hide",
+  "set.pull": "Pull down on any screen to refresh now.",
+  "set.pullPrem": " 1 min and Live come with Premium.",
+  "set.importSub": "LifeHub backup (.json), contacts (.vcf/.csv)",
+  "set.sampleSub": "Replace current data with demo data",
+  "set.wipeSub": "Clears local storage, caches and the on-device database",
+  "set.deleteSub": "How account deletion works",
+  "set.privacyCard": "What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample, not a tracking network. Banking, chat, social feeds and other people's map pins are demos."
 }

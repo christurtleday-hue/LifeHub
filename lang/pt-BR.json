@@ -27,7 +27,6 @@
   "common.saved": "Salvo",
   "common.deleted": "Excluído",
   "common.hidden": "Oculto",
-
   "banner.emergency": "EMERGÊNCIA",
   "banner.calendar": "Calendário",
   "banner.medical": "Saúde",
@@ -38,7 +37,6 @@
   "banner.utilities": "Contas",
   "banner.documents": "Documentos",
   "banner.addnew": "Adicionar",
-
   "home.morning": "Bom dia",
   "home.afternoon": "Boa tarde",
   "home.evening": "Boa noite",
@@ -64,7 +62,6 @@
   "home.groupApps": "{n, plural, one {# aplicativo} other {# aplicativos}}",
   "home.dropTitle": "Solte um app, atalho ou link aqui",
   "home.dropBody": "Neste computador você pode soltar um link do navegador, um link de loja ou um arquivo de atalho. O LifeHub só lê o que você solta.",
-
   "onb.lead": "Tudo o que você precisa, em um só lugar.",
   "onb.f1": "Números de emergência e ficha médica",
   "onb.f2": "Dinheiro, contas e pagamentos",
@@ -103,7 +100,6 @@
   "onb.pinMatch": "Os PINs não coincidem",
   "onb.pwRule": "Use pelo menos 8 caracteres",
   "onb.pwMatch": "As senhas não coincidem",
-
   "auth.pin": "PIN",
   "auth.pinDesc": "Código de 4 a 6 dígitos",
   "auth.password": "Senha",
@@ -124,10 +120,8 @@
   "auth.forgot": "Esqueceu? Redefinir o LifeHub",
   "auth.incorrect": "Senha incorreta",
   "auth.passkeyFail": "Chave de acesso não verificada",
-
   "lock.emergency": "Emergência",
   "lock.medicalId": "Ficha médica",
-
   "search.title": "Buscar",
   "search.placeholder": "Buscar em tudo",
   "search.hint": "Busque contatos, eventos, contas, apps, chats, dados médicos e números de emergência.",
@@ -136,13 +130,11 @@
   "search.app": "Link de app",
   "search.doc": "Documento",
   "search.appt": "Consulta",
-
   "region.AU": "Austrália",
   "region.NZ": "Nova Zelândia",
   "region.US": "Estados Unidos",
   "region.UK": "Reino Unido",
   "region.EU": "União Europeia",
-
   "emerg.title": "Emergência",
   "emerg.region": "Região",
   "emerg.share": "Compartilhar minha localização",
@@ -165,7 +157,6 @@
   "emerg.denied": "permissão negada",
   "emerg.helpText": "Preciso de ajuda. Minha localização (±{m} m): {url}",
   "emerg.regionToast": "Mostrando os números de emergência de {name}",
-
   "med.title": "Saúde",
   "med.id": "Ficha médica",
   "med.blood": "Tipo sanguíneo",
@@ -194,7 +185,6 @@
   "med.family": "Histórico familiar",
   "med.appts": "Consultas",
   "med.apptEmpty": "Ainda não há consultas. Adicione uma e ela aparece no calendário.",
-
   "bank.title": "Banco",
   "bank.demo": "Nenhum banco de verdade está conectado. Saldos, transferências e pagamentos são simulados neste dispositivo.",
   "bank.net": "Saldo líquido",
@@ -212,7 +202,6 @@
   "bank.sched": "Pagamentos agendados",
   "bank.schedEmpty": "Adicione um aluguel, um empréstimo ou uma transferência e ele aparece no calendário. Isso não move dinheiro nenhum.",
   "bank.foot": "Pagamentos agendados são um lembrete no calendário, não um débito de verdade. Numa versão final, vincular o banco usaria um provedor de open banking credenciado.",
-
   "cal.title": "Calendário",
   "cal.month": "Mês",
   "cal.week": "Semana",
@@ -237,7 +226,6 @@
   "cal.dismiss": "Dispensar notificação",
   "cal.work": "Escala de trabalho",
   "cal.foot": "Contas, contas do orçamento, consultas, horários de remédio, pagamentos agendados, aniversários, eventos sociais e apps com data aparecem aqui sozinhos.",
-
   "budget.title": "Orçamento",
   "budget.currency": "Moeda",
   "budget.income": "Receita",
@@ -259,14 +247,12 @@
   "budget.are": "estão",
   "budget.tools": "Ferramentas de orçamento",
   "budget.foot": "Seu orçamento fica neste dispositivo. Contas recorrentes também aparecem no calendário. Os alertas começam em {pct} de um limite.",
-
   "docs.title": "Documentos",
   "docs.add": "Adicionar arquivos",
   "docs.empty": "Nada aqui ainda. Adicione um PDF, uma foto, uma planilha ou um arquivo de texto deste dispositivo.",
   "docs.foot": "Os arquivos ficam no banco de dados deste navegador. A verificação de segurança roda neste dispositivo quando você adiciona um. Não é um antivírus do celular nem do computador.",
   "docs.opening": "Abrindo…",
   "docs.missing": "Este arquivo não está mais no banco de dados do dispositivo.",
-
   "add.title": "Adicionar",
   "add.sync": "Sincronização rápida",
   "add.syncLead": "Marque apps que você talvez já use e adicione todos de uma vez. O LifeHub não vê o que está instalado neste dispositivo.",
@@ -281,7 +267,6 @@
   "add.other": "Outros apps",
   "add.onHome": " · na Página inicial",
   "add.apps": "{n, plural, one {# aplicativo} other {# aplicativos}}",
-
   "set.title": "Ajustes",
   "set.emergencyLine": "{flag} {name} · números de emergência",
   "set.money": "Região e moeda",
@@ -335,7 +320,6 @@
   "set.delete": "Apagar seus dados",
   "set.version": "Protótipo do LifeHub v{v} · {net} · As cópias instaladas se atualizam sozinhas. As datas usam o horário de Australia/Hobart.",
   "set.langSaved": "Idioma atualizado",
-
   "safety.title": "Verificação de segurança",
   "safety.blocked": "Bloqueado",
   "safety.caution": "Atenção",
@@ -367,7 +351,6 @@
   "safety.secret": "O link inclui algo que parece senha ou token ({keys}).",
   "safety.lookalike": "Este endereço parece {hit}, mas não é o site de sempre.",
   "safety.partial": "Só os primeiros 8 MB deste arquivo grande foram verificados.",
-
   "plan.title": "Seu plano",
   "plan.free": "LifeHub Grátis",
   "plan.prem": "LifeHub Premium",
@@ -381,7 +364,6 @@
   "plan.checkoutLead": "Pagamento de demonstração. Nenhum cartão é cobrado e nenhuma assinatura de verdade é criada.",
   "plan.charged": "Cobrado hoje",
   "plan.nothing": "Nada · demo",
-
   "loc.title": "Localização",
   "loc.off": "O compartilhamento está desligado. Marque cada pessoa, escolha por quanto tempo e comece. Não dá para compartilhar com todo mundo.",
   "loc.finding": "Buscando sua posição…",
@@ -397,7 +379,6 @@
   "loc.open": "Abrir",
   "loc.directions": "Rotas",
   "loc.drive": "Começar a dirigir",
-
   "toast.currency": "Moeda atualizada. Os valores não foram convertidos.",
   "toast.format": "Formato de números salvo",
   "toast.storage": "Armazenamento cheio: exporte um backup",
@@ -408,7 +389,6 @@
   "ad.hide": "Ocultar anúncio nesta sessão",
   "ad.premiumTitle": "LifeHub Premium: sem anúncios",
   "ad.premiumBody": "Fotos mais nítidas, atualização ao vivo · preço da loja",
-
   "svc.AU.0.name": "Polícia, Bombeiros, Ambulância",
   "svc.AU.0.desc": "Emergências com risco de vida",
   "svc.AU.1.name": "Emergência pelo celular",
@@ -458,5 +438,24 @@
   "svc.EU.2.name": "Apoio emocional (onde houver)",
   "svc.EU.2.desc": "Linha de apoio emocional",
   "svc.EU.3.name": "Crianças desaparecidas",
-  "svc.EU.3.desc": "Linha para crianças desaparecidas"
+  "svc.EU.3.desc": "Linha para crianças desaparecidas",
+  "set.min1": "1 min",
+  "set.min5": "5 min",
+  "set.min15": "15 min",
+  "set.never": "Never",
+  "set.active": "Active",
+  "set.ends": "Ends soon",
+  "set.glass": "Glass icons",
+  "set.off": "Off",
+  "set.up": "Move up",
+  "set.down": "Move down",
+  "set.show": "Show",
+  "set.hideOne": "Hide",
+  "set.pull": "Pull down on any screen to refresh now.",
+  "set.pullPrem": " 1 min and Live come with Premium.",
+  "set.importSub": "LifeHub backup (.json), contacts (.vcf/.csv)",
+  "set.sampleSub": "Replace current data with demo data",
+  "set.wipeSub": "Clears local storage, caches and the on-device database",
+  "set.deleteSub": "How account deletion works",
+  "set.privacyCard": "What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample, not a tracking network. Banking, chat, social feeds and other people's map pins are demos."
 }

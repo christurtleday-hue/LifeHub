@@ -27,7 +27,6 @@
   "common.saved": "Сохранено",
   "common.deleted": "Удалено",
   "common.hidden": "Скрыто",
-
   "banner.emergency": "ЭКСТРЕННО",
   "banner.calendar": "Календарь",
   "banner.medical": "Здоровье",
@@ -38,7 +37,6 @@
   "banner.utilities": "Счета",
   "banner.documents": "Документы",
   "banner.addnew": "Добавить",
-
   "home.morning": "Доброе утро",
   "home.afternoon": "Добрый день",
   "home.evening": "Добрый вечер",
@@ -64,7 +62,6 @@
   "home.groupApps": "{n, plural, one {# приложение} few {# приложения} many {# приложений} other {# приложения}}",
   "home.dropTitle": "Перетащите сюда приложение, ярлык или ссылку",
   "home.dropBody": "На этом компьютере можно перетащить ссылку из браузера, из магазина или файл ярлыка. LifeHub читает только то, что вы перетаскиваете.",
-
   "onb.lead": "Всё нужное — в одном месте.",
   "onb.f1": "Экстренные номера и медкарта",
   "onb.f2": "Деньги, счета и платежи",
@@ -103,7 +100,6 @@
   "onb.pinMatch": "PIN не совпадают",
   "onb.pwRule": "Нужно хотя бы 8 символов",
   "onb.pwMatch": "Пароли не совпадают",
-
   "auth.pin": "PIN",
   "auth.pinDesc": "Код из 4–6 цифр",
   "auth.password": "Пароль",
@@ -124,10 +120,8 @@
   "auth.forgot": "Забыли? Сбросить LifeHub",
   "auth.incorrect": "Неверный пароль",
   "auth.passkeyFail": "Ключ доступа не подтверждён",
-
   "lock.emergency": "Экстренно",
   "lock.medicalId": "Медкарта",
-
   "search.title": "Поиск",
   "search.placeholder": "Искать везде",
   "search.hint": "Ищите контакты, события, счета, приложения, чаты, медданные и экстренные номера.",
@@ -136,13 +130,11 @@
   "search.app": "Ссылка на приложение",
   "search.doc": "Документ",
   "search.appt": "Приём",
-
   "region.AU": "Австралия",
   "region.NZ": "Новая Зеландия",
   "region.US": "Соединённые Штаты",
   "region.UK": "Великобритания",
   "region.EU": "Европейский союз",
-
   "emerg.title": "Экстренно",
   "emerg.region": "Регион",
   "emerg.share": "Поделиться местоположением",
@@ -165,7 +157,6 @@
   "emerg.denied": "доступ запрещён",
   "emerg.helpText": "Мне нужна помощь. Моё местоположение (±{m} м): {url}",
   "emerg.regionToast": "Показаны экстренные номера: {name}",
-
   "med.title": "Здоровье",
   "med.id": "Медкарта",
   "med.blood": "Группа крови",
@@ -194,7 +185,6 @@
   "med.family": "Семейный анамнез",
   "med.appts": "Приёмы",
   "med.apptEmpty": "Приёмов пока нет. Добавьте один — он появится в календаре.",
-
   "bank.title": "Банк",
   "bank.demo": "Настоящий банк не подключён. Балансы, переводы и платежи здесь только имитация.",
   "bank.net": "Общий баланс",
@@ -212,7 +202,6 @@
   "bank.sched": "Запланированные платежи",
   "bank.schedEmpty": "Добавьте аренду, кредит или перевод — они появятся в календаре. Деньги при этом не списываются.",
   "bank.foot": "Запланированный платёж — это напоминание в календаре, а не настоящее списание. В рабочей версии банк подключался бы через аккредитованного провайдера open banking.",
-
   "cal.title": "Календарь",
   "cal.month": "Месяц",
   "cal.week": "Неделя",
@@ -237,7 +226,6 @@
   "cal.dismiss": "Закрыть уведомление",
   "cal.work": "Рабочий график",
   "cal.foot": "Счета, платежи из бюджета, приёмы, время лекарств, запланированные платежи, дни рождения, встречи и приложения с датой появляются здесь сами.",
-
   "budget.title": "Бюджет",
   "budget.currency": "Валюта",
   "budget.income": "Доход",
@@ -259,14 +247,12 @@
   "budget.are": "находятся",
   "budget.tools": "Инструменты бюджета",
   "budget.foot": "Бюджет остаётся на этом устройстве. Повторяющиеся счета тоже видны в календаре. Предупреждения начинаются с {pct} лимита.",
-
   "docs.title": "Документы",
   "docs.add": "Добавить файлы",
   "docs.empty": "Пока пусто. Добавьте PDF, фото, таблицу или текстовый файл с этого устройства.",
   "docs.foot": "Файлы лежат в базе этого браузера. Проверка безопасности выполняется на устройстве, когда вы что-то добавляете. Это не антивирусная проверка телефона или компьютера.",
   "docs.opening": "Открываем…",
   "docs.missing": "Этого файла больше нет в базе на устройстве.",
-
   "add.title": "Добавить",
   "add.sync": "Быстрое добавление",
   "add.syncLead": "Отметьте приложения, которыми вы, возможно, уже пользуетесь, и добавьте их разом. LifeHub не видит, что установлено на устройстве.",
@@ -281,7 +267,6 @@
   "add.other": "Другие приложения",
   "add.onHome": " · на главной",
   "add.apps": "{n, plural, one {# приложение} few {# приложения} many {# приложений} other {# приложения}}",
-
   "set.title": "Настройки",
   "set.emergencyLine": "{flag} {name} · экстренные номера",
   "set.money": "Регион и валюта",
@@ -335,7 +320,6 @@
   "set.delete": "Удалить ваши данные",
   "set.version": "Прототип LifeHub v{v} · {net} · Установленные копии обновляются сами. Даты считаются по времени Australia/Hobart.",
   "set.langSaved": "Язык обновлён",
-
   "safety.title": "Проверка безопасности",
   "safety.blocked": "Заблокировано",
   "safety.caution": "Осторожно",
@@ -367,7 +351,6 @@
   "safety.secret": "В ссылке есть что-то похожее на пароль или токен ({keys}).",
   "safety.lookalike": "Адрес похож на {hit}, но это не привычный сайт.",
   "safety.partial": "У этого большого файла проверены только первые 8 МБ.",
-
   "plan.title": "Ваш план",
   "plan.free": "LifeHub Бесплатно",
   "plan.prem": "LifeHub Premium",
@@ -381,7 +364,6 @@
   "plan.checkoutLead": "Демо-оплата. Карта не списывается, настоящая подписка не создаётся.",
   "plan.charged": "Списано сегодня",
   "plan.nothing": "Ничего · демо",
-
   "loc.title": "Геолокация",
   "loc.off": "Доступ выключен. Отметьте каждого человека, выберите срок и начните. Поделиться сразу со всеми нельзя.",
   "loc.finding": "Определяем положение…",
@@ -397,7 +379,6 @@
   "loc.open": "Открыть",
   "loc.directions": "Маршрут",
   "loc.drive": "Поехать",
-
   "toast.currency": "Валюта обновлена. Суммы не пересчитывались.",
   "toast.format": "Формат чисел сохранён",
   "toast.storage": "Память заполнена: экспортируйте копию",
@@ -408,7 +389,6 @@
   "ad.hide": "Скрыть рекламу до конца сеанса",
   "ad.premiumTitle": "LifeHub Premium: без рекламы",
   "ad.premiumBody": "Фото чётче, живое обновление · цена из магазина",
-
   "svc.AU.0.name": "Полиция, пожарные, скорая",
   "svc.AU.0.desc": "Угроза жизни",
   "svc.AU.1.name": "Экстренный вызов с телефона",
@@ -458,5 +438,24 @@
   "svc.EU.2.name": "Эмоциональная поддержка (где есть)",
   "svc.EU.2.desc": "Линия эмоциональной поддержки",
   "svc.EU.3.name": "Пропавшие дети",
-  "svc.EU.3.desc": "Линия по пропавшим детям"
+  "svc.EU.3.desc": "Линия по пропавшим детям",
+  "set.min1": "1 min",
+  "set.min5": "5 min",
+  "set.min15": "15 min",
+  "set.never": "Never",
+  "set.active": "Active",
+  "set.ends": "Ends soon",
+  "set.glass": "Glass icons",
+  "set.off": "Off",
+  "set.up": "Move up",
+  "set.down": "Move down",
+  "set.show": "Show",
+  "set.hideOne": "Hide",
+  "set.pull": "Pull down on any screen to refresh now.",
+  "set.pullPrem": " 1 min and Live come with Premium.",
+  "set.importSub": "LifeHub backup (.json), contacts (.vcf/.csv)",
+  "set.sampleSub": "Replace current data with demo data",
+  "set.wipeSub": "Clears local storage, caches and the on-device database",
+  "set.deleteSub": "How account deletion works",
+  "set.privacyCard": "What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample, not a tracking network. Banking, chat, social feeds and other people's map pins are demos."
 }

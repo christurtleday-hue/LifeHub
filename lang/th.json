@@ -27,7 +27,6 @@
   "common.saved": "บันทึกแล้ว",
   "common.deleted": "ลบแล้ว",
   "common.hidden": "ซ่อนอยู่",
-
   "banner.emergency": "ฉุกเฉิน",
   "banner.calendar": "ปฏิทิน",
   "banner.medical": "สุขภาพ",
@@ -38,7 +37,6 @@
   "banner.utilities": "บิล",
   "banner.documents": "เอกสาร",
   "banner.addnew": "เพิ่ม",
-
   "home.morning": "สวัสดีตอนเช้า",
   "home.afternoon": "สวัสดีตอนบ่าย",
   "home.evening": "สวัสดีตอนเย็น",
@@ -64,7 +62,6 @@
   "home.groupApps": "{n, plural, one {# แอป} other {# แอป}}",
   "home.dropTitle": "วางแอป ทางลัด หรือลิงก์ที่นี่",
   "home.dropBody": "บนคอมพิวเตอร์เครื่องนี้ วางลิงก์จากเบราว์เซอร์ ลิงก์ร้านค้า หรือไฟล์ทางลัดได้ LifeHub อ่านเฉพาะสิ่งที่คุณวาง",
-
   "onb.lead": "ทุกอย่างที่ต้องใช้ รวมไว้ที่เดียว",
   "onb.f1": "เบอร์ฉุกเฉินและบัตรสุขภาพ",
   "onb.f2": "เงิน บิล และการจ่าย",
@@ -103,7 +100,6 @@
   "onb.pinMatch": "PIN ไม่ตรงกัน",
   "onb.pwRule": "ใช้อย่างน้อย 8 ตัวอักษร",
   "onb.pwMatch": "รหัสผ่านไม่ตรงกัน",
-
   "auth.pin": "PIN",
   "auth.pinDesc": "รหัส 4 ถึง 6 หลัก",
   "auth.password": "รหัสผ่าน",
@@ -124,10 +120,8 @@
   "auth.forgot": "ลืมใช่ไหม? รีเซ็ต LifeHub",
   "auth.incorrect": "รหัสผ่านไม่ถูกต้อง",
   "auth.passkeyFail": "ยืนยันพาสคีย์ไม่สำเร็จ",
-
   "lock.emergency": "ฉุกเฉิน",
   "lock.medicalId": "บัตรสุขภาพ",
-
   "search.title": "ค้นหา",
   "search.placeholder": "ค้นหาทั้งหมด",
   "search.hint": "ค้นหารายชื่อ นัดหมาย บิล แอป แชท ข้อมูลสุขภาพ และเบอร์ฉุกเฉิน",
@@ -136,13 +130,11 @@
   "search.app": "ลิงก์แอป",
   "search.doc": "เอกสาร",
   "search.appt": "นัดหมาย",
-
   "region.AU": "ออสเตรเลีย",
   "region.NZ": "นิวซีแลนด์",
   "region.US": "สหรัฐอเมริกา",
   "region.UK": "สหราชอาณาจักร",
   "region.EU": "สหภาพยุโรป",
-
   "emerg.title": "ฉุกเฉิน",
   "emerg.region": "ภูมิภาค",
   "emerg.share": "แชร์ตำแหน่งของฉัน",
@@ -165,7 +157,6 @@
   "emerg.denied": "ไม่ได้รับอนุญาต",
   "emerg.helpText": "ฉันต้องการความช่วยเหลือ ตำแหน่งของฉัน (±{m} ม.): {url}",
   "emerg.regionToast": "กำลังแสดงเบอร์ฉุกเฉินของ {name}",
-
   "med.title": "สุขภาพ",
   "med.id": "บัตรสุขภาพ",
   "med.blood": "กรุ๊ปเลือด",
@@ -194,7 +185,6 @@
   "med.family": "ประวัติครอบครัว",
   "med.appts": "นัดหมาย",
   "med.apptEmpty": "ยังไม่มีนัด เพิ่มหนึ่งรายการ แล้วจะขึ้นในปฏิทิน",
-
   "bank.title": "ธนาคาร",
   "bank.demo": "ไม่ได้เชื่อมธนาคารจริง ยอดเงิน โอน และจ่ายในเครื่องนี้เป็นการจำลอง",
   "bank.net": "ยอดสุทธิ",
@@ -212,7 +202,6 @@
   "bank.sched": "การจ่ายที่ตั้งไว้",
   "bank.schedEmpty": "เพิ่มค่าเช่า เงินกู้ หรือการโอน แล้วจะขึ้นในปฏิทิน ไม่ได้ย้ายเงินจริง",
   "bank.foot": "การจ่ายที่ตั้งไว้เป็นแค่เตือนในปฏิทิน ไม่ใช่การหักเงินจริง รุ่นใช้งานจริงจะเชื่อมธนาคารผ่านผู้ให้บริการ open banking ที่ได้รับรอง",
-
   "cal.title": "ปฏิทิน",
   "cal.month": "เดือน",
   "cal.week": "สัปดาห์",
@@ -237,7 +226,6 @@
   "cal.dismiss": "ปิดการแจ้งเตือน",
   "cal.work": "ตารางงาน",
   "cal.foot": "บิล รายจ่ายในงบ นัด เวลากินยา การจ่ายที่ตั้งไว้ วันเกิด กิจกรรมโซเชียล และแอปที่มีวันที่ จะขึ้นที่นี่เอง",
-
   "budget.title": "งบประมาณ",
   "budget.currency": "สกุลเงิน",
   "budget.income": "รายรับ",
@@ -259,14 +247,12 @@
   "budget.are": "อยู่",
   "budget.tools": "เครื่องมืองบ",
   "budget.foot": "งบอยู่บนเครื่องนี้ บิลที่เกิดซ้ำก็ขึ้นในปฏิทิน การเตือนเริ่มที่ {pct} ของวงเงิน",
-
   "docs.title": "เอกสาร",
   "docs.add": "เพิ่มไฟล์",
   "docs.empty": "ยังไม่มีอะไรที่นี่ เพิ่ม PDF รูป สเปรดชีต หรือไฟล์ข้อความจากเครื่องนี้",
   "docs.foot": "ไฟล์อยู่ในฐานข้อมูลของเบราว์เซอร์นี้ การตรวจความปลอดภัยทำงานบนเครื่องตอนคุณเพิ่มไฟล์ ไม่ใช่การสแกนไวรัสของโทรศัพท์หรือคอมพิวเตอร์",
   "docs.opening": "กำลังเปิด…",
   "docs.missing": "ไฟล์นี้ไม่อยู่ในฐานข้อมูลบนเครื่องแล้ว",
-
   "add.title": "เพิ่ม",
   "add.sync": "เพิ่มเร็ว",
   "add.syncLead": "ติ๊กแอปที่คุณอาจใช้อยู่แล้ว แล้วเพิ่มทีเดียว LifeHub มองไม่เห็นว่าเครื่องนี้ติดตั้งอะไร",
@@ -281,7 +267,6 @@
   "add.other": "แอปอื่น",
   "add.onHome": " · บนหน้าแรก",
   "add.apps": "{n, plural, one {# แอป} other {# แอป}}",
-
   "set.title": "การตั้งค่า",
   "set.emergencyLine": "{flag} {name} · เบอร์ฉุกเฉิน",
   "set.money": "ภูมิภาคและสกุลเงิน",
@@ -335,7 +320,6 @@
   "set.delete": "ลบข้อมูลของคุณ",
   "set.version": "ต้นแบบ LifeHub v{v} · {net} · สำเนาที่ติดตั้งอัปเดตเอง วันที่ใช้เวลา Australia/Hobart",
   "set.langSaved": "อัปเดตภาษาแล้ว",
-
   "safety.title": "ตรวจความปลอดภัย",
   "safety.blocked": "ถูกบล็อก",
   "safety.caution": "ระวัง",
@@ -367,7 +351,6 @@
   "safety.secret": "ลิงก์มีสิ่งที่ดูเหมือนรหัสผ่านหรือ token ({keys})",
   "safety.lookalike": "ที่อยู่นี้ดูเหมือน {hit} แต่ไม่ใช่เว็บที่คุ้น",
   "safety.partial": "ตรวจเฉพาะ 8 MB แรกของไฟล์ใหญ่ไฟล์นี้",
-
   "plan.title": "แผนของคุณ",
   "plan.free": "LifeHub ฟรี",
   "plan.prem": "LifeHub Premium",
@@ -381,7 +364,6 @@
   "plan.checkoutLead": "การชำระแบบเดโม ไม่มีการตัดบัตร และไม่สร้างการสมัครจริง",
   "plan.charged": "เรียกเก็บวันนี้",
   "plan.nothing": "ไม่มี · เดโม",
-
   "loc.title": "ตำแหน่ง",
   "loc.off": "การแชร์ปิดอยู่ ติ๊กแต่ละคน เลือกเวลา แล้วเริ่ม ไม่มีตัวเลือกแชร์กับทุกคน",
   "loc.finding": "กำลังหาตำแหน่งของคุณ…",
@@ -397,7 +379,6 @@
   "loc.open": "เปิด",
   "loc.directions": "เส้นทาง",
   "loc.drive": "เริ่มขับรถ",
-
   "toast.currency": "อัปเดตสกุลเงินแล้ว ยอดไม่ได้ถูกแปลง",
   "toast.format": "บันทึกรูปแบบตัวเลขแล้ว",
   "toast.storage": "พื้นที่เต็ม: ส่งออกข้อมูลสำรอง",
@@ -408,7 +389,6 @@
   "ad.hide": "ซ่อนโฆษณาในเซสชันนี้",
   "ad.premiumTitle": "LifeHub Premium: ไม่มีโฆษณา",
   "ad.premiumBody": "รูปคมขึ้น รีเฟรชสด · ราคาจากร้าน",
-
   "svc.AU.0.name": "ตำรวจ ดับเพลิง รถพยาบาล",
   "svc.AU.0.desc": "เหตุคุกคามชีวิต",
   "svc.AU.1.name": "โทรฉุกเฉินจากมือถือ",
@@ -458,5 +438,24 @@
   "svc.EU.2.name": "สนับสนุนด้านอารมณ์ (ที่มีบริการ)",
   "svc.EU.2.desc": "สายสนับสนุนด้านอารมณ์",
   "svc.EU.3.name": "เด็กหาย",
-  "svc.EU.3.desc": "สายด่วนเด็กหาย"
+  "svc.EU.3.desc": "สายด่วนเด็กหาย",
+  "set.min1": "1 min",
+  "set.min5": "5 min",
+  "set.min15": "15 min",
+  "set.never": "Never",
+  "set.active": "Active",
+  "set.ends": "Ends soon",
+  "set.glass": "Glass icons",
+  "set.off": "Off",
+  "set.up": "Move up",
+  "set.down": "Move down",
+  "set.show": "Show",
+  "set.hideOne": "Hide",
+  "set.pull": "Pull down on any screen to refresh now.",
+  "set.pullPrem": " 1 min and Live come with Premium.",
+  "set.importSub": "LifeHub backup (.json), contacts (.vcf/.csv)",
+  "set.sampleSub": "Replace current data with demo data",
+  "set.wipeSub": "Clears local storage, caches and the on-device database",
+  "set.deleteSub": "How account deletion works",
+  "set.privacyCard": "What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample, not a tracking network. Banking, chat, social feeds and other people's map pins are demos."
 }

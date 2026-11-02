@@ -1,6 +1,7 @@
 /* LifeHub prototype. All data stays on this device (localStorage). */
 'use strict';
 (function () {
+const t = (k, v) => (window.LH ? LH.t(k, v) : k);
 const KEY = 'lifehub.v1';
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -25,16 +26,56 @@ function addDays(iso, n) {
 function wdIndex(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); }
 function onWeekday(want) { const t = hobartToday(); return addDays(t, (want - wdIndex(t) + 7) % 7); }
 function mondayOf(iso) { const w = wdIndex(iso); return addDays(iso, w === 0 ? -6 : 1 - w); }
+function weekStart() {
+  try {
+    const loc = new Intl.Locale(homeLocale());
+    const info = typeof loc.getWeekInfo === 'function' ? loc.getWeekInfo() : loc.weekInfo;
+    if (info && info.firstDay) return info.firstDay % 7;
+  } catch (e) {}
+  return 1;
+}
+function startOfWeek(iso) { const w = wdIndex(iso); return addDays(iso, -((w - weekStart() + 7) % 7)); }
+function weekDayOrder() { const s = weekStart(); return [0, 1, 2, 3, 4, 5, 6].map(i => (s + i) % 7); }
+function weekdayName(jsDay, style) {
+  const iso = addDays('2023-01-01', jsDay);
+  try { return new Date(iso + 'T00:00:00Z').toLocaleDateString(homeLocale(), { weekday: style || 'short', timeZone: 'UTC' }); }
+  catch (e) { return iso; }
+}
+function usesHour12() {
+  try {
+    const c = new Intl.DateTimeFormat(homeLocale(), { hour: 'numeric' }).resolvedOptions().hourCycle;
+    return c === 'h11' || c === 'h12';
+  } catch (e) { return true; }
+}
 function fmtClock(hm) {
   if (!hm) return '';
-  let [h, m] = hm.split(':').map(Number); if (Number.isNaN(h)) return hm;
-  const ap = h >= 12 ? 'pm' : 'am'; h = h % 12; if (h === 0) h = 12;
-  return `${h}:${String(m || 0).padStart(2, '0')}${ap}`;
+  const [h, m] = hm.split(':').map(Number); if (Number.isNaN(h)) return hm;
+  const d = new Date(Date.UTC(2020, 0, 1, h, m || 0));
+  try { return new Intl.DateTimeFormat(homeLocale(), { hour: 'numeric', minute: '2-digit', timeZone: 'UTC', hourCycle: usesHour12() ? 'h12' : 'h23' }).format(d); }
+  catch (e) { return hm; }
 }
 function fmtDay(iso) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  try { return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(homeLocale(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }); }
+  catch (e) { return iso; }
+}
+function pctText(n) {
+  const v = Number(n) || 0;
+  try { return new Intl.NumberFormat(homeLocale(), { style: 'percent', maximumFractionDigits: 0 }).format(v / 100); }
+  catch (e) { return Math.round(v) + '%'; }
+}
+function relTime(ts) {
+  const diff = new Date(ts).getTime() - Date.now();
+  const abs = Math.abs(diff);
+  const rtf = () => new Intl.RelativeTimeFormat(homeLocale(), { numeric: 'auto' });
+  try {
+    if (abs < 60000) return rtf().format(Math.round(diff / 1000), 'second');
+    if (abs < 3600000) return rtf().format(Math.round(diff / 60000), 'minute');
+    if (abs < 86400000) return rtf().format(Math.round(diff / 3600000), 'hour');
+    if (abs < 7 * 86400000) return rtf().format(Math.round(diff / 86400000), 'day');
+  } catch (e) {}
+  return '';
 }
 function span(date, start, end) {
   const endDate = end <= start ? addDays(date, 1) : date;
@@ -108,7 +149,7 @@ const P = {
   ext: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>',
   cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
 };
-const ic = (n, s = 22, w = 2) => `<svg class="ic" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
+const ic = (n, s = 22, w = 2) => `<svg class="ic${n === 'back' || n === 'chev' || n === 'send' ? ' dir' : ''}" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
 
 /* ---------- reference data ---------- */
 const REGIONS = {
@@ -170,12 +211,14 @@ const PLATFORMS = {
 const AU_BANKS = ['Bank of us', 'MyState Bank', 'Commonwealth Bank', 'Westpac', 'NAB', 'ANZ', 'Bendigo Bank', 'ING', 'Macquarie', 'Bank Australia', 'Suncorp', 'BOQ', 'Up', 'ubank', 'Heritage and People\'s Choice'];
 const AV_COLORS = ['#2557d6', '#7c3aed', '#db2777', '#0f766e', '#d97706', '#0891b2', '#4f46e5', '#be123c'];
 const METHODS = {
-  pin: { label: 'PIN', desc: '4 to 6 digit code', icon: ic('grid') },
-  password: { label: 'Password', desc: 'Letters, numbers and symbols', icon: ic('lock') },
-  passkey: { label: 'Passkey or biometric', desc: 'Face, fingerprint or device screen lock', icon: ic('finger') },
-  google: { label: 'Sign in with Google', desc: 'Demo only in this prototype', icon: '<b style="color:#4285f4">G</b>' },
-  apple: { label: 'Sign in with Apple', desc: 'Demo only in this prototype', icon: ic('user') },
+  pin: { label: 'auth.pin', desc: 'auth.pinDesc', icon: ic('grid') },
+  password: { label: 'auth.password', desc: 'auth.passwordDesc', icon: ic('lock') },
+  passkey: { label: 'auth.passkey', desc: 'auth.passkeyDesc', icon: ic('finger') },
+  google: { label: 'auth.google', desc: 'auth.googleDesc', icon: '<b style="color:#4285f4">G</b>' },
+  apple: { label: 'auth.apple', desc: 'auth.appleDesc', icon: ic('user') },
 };
+function methodLabel(k) { return t((METHODS[k] || METHODS.pin).label); }
+function methodDesc(k) { return t((METHODS[k] || METHODS.pin).desc); }
 
 /* ---------- state ---------- */
 let S = null;
@@ -266,7 +309,7 @@ function premiumPrice() {
   const cur = homeCurrency();
   let name = cur;
   try { name = new Intl.DisplayNames(homeLocale(), { type: 'currency' }).of(cur) || cur; } catch (e) {}
-  return { amount: null, currency: cur, period: 'month', source: 'placeholder', label: 'Price in ' + name };
+  return { amount: null, currency: cur, period: 'month', source: 'placeholder', label: t('plan.priceIn', { name }) };
 }
 function currencyChoices() {
   const set = new Set(CURRENCY_CHOICES);
@@ -328,8 +371,8 @@ const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).
 const avColor = s => AV_COLORS[[...String(s)].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_COLORS.length];
 const av = (name, size) => `<span class="av" style="background:${avColor(name)}${size ? `;width:${size}px;height:${size}px` : ''}">${esc(initials(name))}</span>`;
 const telHref = n => 'tel:' + String(n || '').replace(/[^\d+]/g, '');
-const fmtTime = t => { const d = new Date(t); const now = new Date(); return d.toDateString() === now.toDateString() ? d.toLocaleTimeString(region().locale, { hour: 'numeric', minute: '2-digit' }) : d.toLocaleDateString(region().locale, { day: 'numeric', month: 'short' }); };
-const fmtDate = s => s ? new Date(s + 'T00:00:00').toLocaleDateString(region().locale, { weekday: 'short', day: 'numeric', month: 'short' }) : '';
+const fmtTime = ts => { const d = new Date(ts); const now = new Date(); const rel = relTime(ts); if (rel && Math.abs(d - now) < 86400000) return rel; return d.toDateString() === now.toDateString() ? d.toLocaleTimeString(homeLocale(), { hour: 'numeric', minute: '2-digit' }) : d.toLocaleDateString(homeLocale(), { day: 'numeric', month: 'short' }); };
+const fmtDate = s => s ? new Date(s + 'T00:00:00').toLocaleDateString(homeLocale(), { weekday: 'short', day: 'numeric', month: 'short' }) : '';
 const daysUntil = s => Math.round((new Date(s + 'T00:00:00') - new Date(todayISO() + 'T00:00:00')) / 86400000);
 
 function seed(name, regionCode, sample, moneyPrefs) {
@@ -337,7 +380,7 @@ function seed(name, regionCode, sample, moneyPrefs) {
   const locale = (moneyPrefs && moneyPrefs.locale) || 'en-AU';
   const st = {
     v: 1, created: Date.now(),
-    profile: { name: name || 'Me', region: regionCode || 'AU', locale, currency: cur, location: '' },
+    profile: { name: name || 'Me', region: regionCode || 'AU', locale, currency: cur, lang: (moneyPrefs && moneyPrefs.lang) || (window.LH && LH.code) || 'en', location: '' },
     auth: { method: null },
     settings: { theme: 'system', textSize: 'normal', lockMinutes: 5, preferWifi: true, banners: ['emergency', 'calendar', 'medical', 'banking', 'chat', 'contacts', 'social', 'utilities', 'documents', 'addnew'].map(id => ({ id, hidden: false })) },
     medical: { bloodType: '', organDonor: false, allergies: [], conditions: [], medications: [], appointments: [], family: [], doctor: { name: '', clinic: '', phone: '' }, medicare: { number: '', irn: '', expiry: '' }, notes: '', showOnLock: true },
@@ -543,30 +586,30 @@ let ob = { step: 0, name: '', region: 'AU', currency: 'AUD', locale: 'en-AU', me
 function renderOnboarding() {
   const dots = `<div class="onb-dots">${[0, 1, 2, 3].map(i => `<i class="${i <= ob.step ? 'on' : ''}"></i>`).join('')}</div>`;
   let body = '';
-  if (ob.step === 0) body = `<div class="logo">${ic('cross', 40, 2.4)}</div><h1>LifeHub</h1><p class="lead">Everything you need, in one place.</p>
-    <div class="feat"><div>${ic('alert')}Emergency numbers & Medical ID</div><div>${ic('bank')}Money, bills & payments</div><div>${ic('msg')}Chat, calls, contacts & social</div><div>${ic('shield')}Private: your data stays on this device</div></div>
-    <div class="spacer"></div><button class="btn primary full" data-act="obNext">Get started</button>
-    <a class="btn ghost full red" style="margin-top:8px" href="tel:000">${ic('phone', 18)} Need help now? Call 000</a>`;
-  if (ob.step === 1) body = `<h1>About you</h1><p class="lead">Emergency numbers follow the region. Money uses your currency. You can change both later.</p>
-    <form id="obF"><label class="fld"><span>Your name</span><input name="name" value="${esc(ob.name)}" placeholder="e.g. Chris Day" autocomplete="name" required></label>
-    <label class="fld"><span>Emergency region</span><select name="region">${Object.entries(REGIONS).map(([k, r]) => `<option value="${k}" ${k === ob.region ? 'selected' : ''}>${r.flag} ${r.name}</option>`).join('')}</select></label>
-    <label class="fld"><span>Currency</span><select name="currency">${currencyOptionList(ob.currency).map(c => `<option value="${c}" ${c === ob.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
-    <label class="fld chk"><input type="checkbox" name="sample" ${ob.sample ? 'checked' : ''}><span>Start with sample data so I can explore</span></label>
-    <div class="spacer"></div><div class="row gap"><button type="button" class="btn" data-act="obBack">Back</button><button class="btn primary">Continue</button></div></form>`;
-  if (ob.step === 2) body = `<h1>How do you want to sign in?</h1><p class="lead">Pick what's easiest for you. You can change it later.</p>
-    ${Object.entries(METHODS).map(([k, m]) => `<button class="method ${ob.method === k ? 'on' : ''}" data-act="obMethod" data-m="${k}" aria-pressed="${ob.method === k}"><span class="mi">${m.icon}</span><span><b>${m.label}</b><span>${m.desc}</span></span></button>`).join('')}
-    <div class="spacer"></div><div class="row gap"><button class="btn" data-act="obBack">Back</button><button class="btn primary" data-act="obNext">Continue</button></div>`;
+  if (ob.step === 0) body = `<div class="logo">${ic('cross', 40, 2.4)}</div><h1>LifeHub</h1><p class="lead">${esc(t('onb.lead'))}</p>
+    <div class="feat"><div>${ic('alert')}${esc(t('onb.f1'))}</div><div>${ic('bank')}${esc(t('onb.f2'))}</div><div>${ic('msg')}${esc(t('onb.f3'))}</div><div>${ic('shield')}${esc(t('onb.f4'))}</div></div>
+    <div class="spacer"></div><button class="btn primary full" data-act="obNext">${esc(t('onb.start'))}</button>
+    <a class="btn ghost full red" style="margin-top:8px" href="tel:${(REGIONS[ob.region] || REGIONS.AU).primary}">${ic('phone', 18)} ${esc(t('onb.call', { num: (REGIONS[ob.region] || REGIONS.AU).primary }))}</a>`;
+  if (ob.step === 1) body = `<h1>${esc(t('onb.about'))}</h1><p class="lead">${esc(t('onb.aboutLead'))}</p>
+    <form id="obF"><label class="fld"><span>${esc(t('onb.name'))}</span><input name="name" value="${esc(ob.name)}" placeholder="${esc(t('onb.namePh'))}" autocomplete="name" required></label>
+    <label class="fld"><span>${esc(t('onb.region'))}</span><select name="region">${Object.entries(REGIONS).map(([k, r]) => `<option value="${k}" ${k === ob.region ? 'selected' : ''}>${r.flag} ${esc(regionLabel(k))}</option>`).join('')}</select></label>
+    <label class="fld"><span>${esc(t('onb.currency'))}</span><select name="currency">${currencyOptionList(ob.currency).map(c => `<option value="${c}" ${c === ob.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+    <label class="fld chk"><input type="checkbox" name="sample" ${ob.sample ? 'checked' : ''}><span>${esc(t('onb.sample'))}</span></label>
+    <div class="spacer"></div><div class="row gap"><button type="button" class="btn" data-act="obBack">${esc(t('common.back'))}</button><button class="btn primary">${esc(t('common.continue'))}</button></div></form>`;
+  if (ob.step === 2) body = `<h1>${esc(t('onb.signIn'))}</h1><p class="lead">${esc(t('onb.signInLead'))}</p>
+    ${Object.entries(METHODS).map(([k, m]) => `<button class="method ${ob.method === k ? 'on' : ''}" data-act="obMethod" data-m="${k}" aria-pressed="${ob.method === k}"><span class="mi">${m.icon}</span><span><b>${esc(methodLabel(k))}</b><span>${esc(methodDesc(k))}</span></span></button>`).join('')}
+    <div class="spacer"></div><div class="row gap"><button class="btn" data-act="obBack">${esc(t('common.back'))}</button><button class="btn primary" data-act="obNext">${esc(t('common.continue'))}</button></div>`;
   if (ob.step === 3) {
     const m = ob.method;
     if (m === 'pin') body = `<h1>Create a PIN</h1><p class="lead">4 to 6 digits. Avoid birthdays or 1234.</p><form id="setF"><label class="fld"><span>PIN</span><input name="a" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></label><label class="fld"><span>Confirm PIN</span><input name="b" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></label><div class="spacer"></div><div class="row gap"><button type="button" class="btn" data-act="obBack">Back</button><button class="btn primary">Finish</button></div></form>`;
     else if (m === 'password') body = `<h1>Create a password</h1><p class="lead">At least 8 characters.</p><form id="setF"><label class="fld"><span>Password</span><input name="a" type="password" autocomplete="new-password"></label><label class="fld"><span>Confirm password</span><input name="b" type="password" autocomplete="new-password"></label><div class="row gap"><button type="button" class="btn" data-act="obBack">Back</button><button class="btn primary">Finish</button></div></form>`;
     else if (m === 'passkey') body = `<h1>Set up a passkey</h1><p class="lead">Use your face, fingerprint or screen lock to open LifeHub.</p><button class="bigbio" data-act="obPasskey">${ic('finger', 64, 1.6)}<span>${passkeySupported() ? 'Create passkey on this device' : 'Passkeys not available here: use simulated biometric'}</span></button><div class="spacer"></div><button class="btn" data-act="obBack">Back</button>`;
-    else body = `<h1>${METHODS[m].label}</h1><p class="lead">Demo: no real account is contacted. A live build would use ${m === 'google' ? 'Google Identity Services (OAuth 2.0 / OpenID Connect)' : 'Sign in with Apple (OpenID Connect)'}.</p><button class="btn primary full" data-act="obSSO">Continue with ${m === 'google' ? 'Google' : 'Apple'} (demo)</button><div class="spacer"></div><button class="btn" data-act="obBack">Back</button>`;
+    else body = `<h1>${esc(methodLabel(m))}</h1><p class="lead">${esc(t('onb.ssoLead', { method: m === 'google' ? t('onb.ssoGoogle') : t('onb.ssoApple') }))}</p><button class="btn primary full" data-act="obSSO">${esc(t('onb.ssoGo', { name: m === 'google' ? 'Google' : 'Apple' }))}</button><div class="spacer"></div><button class="btn" data-act="obBack">${esc(t('common.back'))}</button>`;
   }
   return `<div class="onb">${dots}${body}</div>`;
 }
 async function finishOnboarding(auth) {
-  S = seed(ob.name, ob.region, ob.sample, { currency: ob.currency, locale: ob.locale }); S.auth = auth; save(); unlocked = true; touchSession(); ob.step = 0; location.hash = '#/home'; render(); toast(`Welcome, ${S.profile.name.split(' ')[0]}!`);
+  S = seed(ob.name, ob.region, ob.sample, { currency: ob.currency, locale: ob.locale, lang: LH.code }); S.auth = auth; save(); unlocked = true; touchSession(); ob.step = 0; location.hash = '#/home'; render(); toast(t('onb.welcome', { name: S.profile.name.split(' ')[0] }));
 }
 function afterOnboarding() {
   const f = $('#obF'); if (f) f.onsubmit = e => { e.preventDefault(); const n = f.name.value.trim(); if (!n) { toast('Please enter your name'); f.name.focus(); return; } ob.name = n; ob.region = f.region.value; ob.currency = f.currency.value || ob.currency; ob.sample = f.sample.checked; ob.step = 2; render(); };
@@ -582,7 +625,7 @@ function renderLock() {
   const unlockUI = m === 'pin' ? keypadHTML() : m === 'password' ? `<form id="lockPw"><label class="fld"><span>Password</span><input type="password" name="pw" autocomplete="current-password"></label><button class="btn primary full">Unlock</button></form>`
     : `<button class="btn primary full" data-act="lockAuth">${m === 'passkey' ? ic('finger', 20) + ' Unlock with passkey' : `Continue with ${m === 'apple' ? 'Apple' : 'Google'}`}</button>`;
   return `<div class="lock"><div class="logo" style="width:64px;height:64px;border-radius:18px">${ic('lock', 30, 2.2)}</div><h1>Hi ${first}</h1><p class="lead">${m === 'pin' ? 'Enter your PIN' : 'LifeHub is locked'}</p>${unlockUI}<div class="spacer"></div>
-    <div class="lock-emerg"><a class="btn redb" href="#/emergency">${ic('alert', 18)} Emergency</a><a class="btn" href="#/medical-id" style="color:var(--red)">${ic('cross', 18)} Medical ID</a></div>
+    <div class="lock-emerg"><a class="btn redb" href="#/emergency">${ic('alert', 18)} ${esc(t('lock.emergency'))}</a><a class="btn" href="#/medical-id" style="color:var(--red)">${ic('cross', 18)} ${esc(t('lock.medicalId'))}</a></div>
     <button class="linkbtn" style="margin-top:10px" data-act="forgot">Forgot? Reset LifeHub</button></div>`;
 }
 function afterLock() {
@@ -591,31 +634,34 @@ function afterLock() {
 }
 
 /* ---------- home ---------- */
+function bannerTitle(id) { return t('banner.' + id); }
+function regionLabel(code) { const s = t('region.' + code); return s === 'region.' + code ? ((REGIONS[code] || {}).name || code) : s; }
+function svcField(code, i, field, fallback) { const key = `svc.${code}.${i}.${field}`; const s = t(key); return s === key ? fallback : s; }
 function bannerInfo(id) {
   const r = region();
   switch (id) {
-    case 'emergency': return { sub: `Tap to call ${r.primary} · Medical ID` };
-    case 'calendar': { const today = hobartToday(); const n = (S.events || []).filter(e => !e.hidden && onDay(e, today)).length; const c = activePairs().length; return { sub: c ? `${c} overlap${c === 1 ? '' : 's'} · ${n} today` : n ? `${n} today` : 'Events, shifts and reminders', badge: c }; }
-    case 'medical': return { sub: S.medical.bloodType ? `Blood ${S.medical.bloodType} · ${S.medical.allergies.length} allergies` : 'Add allergies, conditions, blood type' };
-    case 'banking': return { sub: S.accounts.length ? `${moneyList(groupSum(S.accounts, a => a.balance, a => a.currency))} · ${S.accounts.length} accounts` : 'Link a bank or add an account' };
-    case 'chat': { const u = S.chats.reduce((a, c) => a + (c.unread || 0), 0); return { sub: u ? `${u} unread message${u > 1 ? 's' : ''}` : 'Private messages & calls', badge: u }; }
-    case 'contacts': return { sub: `${S.contacts.filter(c => !c.blocked).length} contacts` };
-    case 'social': { const n = S.platforms.reduce((a, p) => a + p.friendReq + p.dms, 0); return { sub: S.platforms.length ? `${S.platforms.length} platforms · ${n} new` : 'Add your social accounts', badge: n }; }
-    case 'utilities': { const { owed, overdue } = billTotals(); return { sub: owed.length ? `<em class="owe">${moneyList(owed)} owed</em>${overdue ? ` · ${overdue} overdue` : ''}` : 'All bills paid', badge: overdue, raw: true }; }
-    case 'documents': { const n = (S.docs && S.docs.items || []).length; return { sub: n ? `${n} file${n === 1 ? '' : 's'} on this device` : 'PDFs, Office files, text and images' }; }
-    case 'addnew': return { sub: `${S.apps.length} apps · ${S.groups.length} groups` };
+    case 'emergency': return { sub: t('home.emergencySub', { num: r.primary }) };
+    case 'calendar': { const today = hobartToday(); const n = (S.events || []).filter(e => !e.hidden && onDay(e, today)).length; const c = activePairs().length; const todayTxt = t('home.calToday', { n }); return { sub: c ? t('home.calOverlap', { n: c, rest: todayTxt }) : n ? todayTxt : t('home.calEmpty'), badge: c }; }
+    case 'medical': return { sub: S.medical.bloodType ? t('home.medBlood', { type: S.medical.bloodType, n: S.medical.allergies.length }) : t('home.medEmpty') };
+    case 'banking': return { sub: S.accounts.length ? t('home.bankSub', { money: moneyList(groupSum(S.accounts, a => a.balance, a => a.currency)), n: S.accounts.length }) : t('home.bankEmpty') };
+    case 'chat': { const u = S.chats.reduce((a, c) => a + (c.unread || 0), 0); return { sub: u ? t('home.chatUnread', { n: u }) : t('home.chatEmpty'), badge: u }; }
+    case 'contacts': return { sub: t('home.contacts', { n: S.contacts.filter(c => !c.blocked).length }) };
+    case 'social': { const n = S.platforms.reduce((a, p) => a + p.friendReq + p.dms, 0); return { sub: S.platforms.length ? t('home.socialSub', { platforms: S.platforms.length, n }) : t('home.socialEmpty'), badge: n }; }
+    case 'utilities': { const { owed, overdue } = billTotals(); return { sub: owed.length ? `<em class="owe">${esc(t('home.billsOwed', { money: moneyList(owed) }))}</em>${overdue ? esc(t('home.billsOverdue', { n: overdue })) : ''}` : t('home.billsPaid'), badge: overdue, raw: true }; }
+    case 'documents': { const n = (S.docs && S.docs.items || []).length; return { sub: n ? t('home.docs', { n }) : t('home.docsEmpty') }; }
+    case 'addnew': return { sub: t('home.apps', { apps: S.apps.length, groups: S.groups.length }) };
   }
   return { sub: '' };
 }
 function renderHome() {
-  const h = new Date().getHours(); const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const h = new Date().getHours(); const greet = h < 12 ? t('home.morning') : h < 18 ? t('home.afternoon') : t('home.evening');
   const items = S.settings.banners.filter(b => !b.hidden && BANNERS[b.id]);
   const html = items.map(b => { const B = BANNERS[b.id]; const i = bannerInfo(b.id);
-    return `<a class="banner ${b.id === 'emergency' ? 'emergency' : ''}" href="${B.href}"><span class="chip" style="${b.id === 'emergency' ? '' : `background:${B.color}`}">${ic(B.icon, b.id === 'emergency' ? 30 : 26, 2.2)}</span><span class="txt"><b>${B.title}</b><span>${i.raw ? i.sub : esc(i.sub)}</span></span>${i.badge ? `<span class="badge">${i.badge}</span>` : ''}<span class="chev">${ic('chev')}</span></a>`; }).join('');
-  const groups = S.groups.filter(g => g.onHome).map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="banner" href="#/group/${g.id}"><span class="chip" style="background:var(--card2);border:1px solid var(--line)">${esc(g.emoji || '📁')}</span><span class="txt"><b>${esc(g.name)}</b><span>${n} app${n === 1 ? '' : 's'}</span></span><span class="chev">${ic('chev')}</span></a>`; }).join('');
-  return `<header class="home-head"><div class="hello"><small>${greet}</small><b>${esc(S.profile.name.split(' ')[0])}</b>${isPremium() ? ' ' + premBadge() : ''}</div><a class="iconbtn" href="#/search" aria-label="Search">${ic('search')}</a><a class="iconbtn" href="#/settings" aria-label="Settings">${ic('settings')}</a></header>
+    return `<a class="banner ${b.id === 'emergency' ? 'emergency' : ''}" href="${B.href}"><span class="chip" style="${b.id === 'emergency' ? '' : `background:${B.color}`}">${ic(B.icon, b.id === 'emergency' ? 30 : 26, 2.2)}</span><span class="txt"><b>${esc(bannerTitle(b.id))}</b><span>${i.raw ? i.sub : esc(i.sub)}</span></span>${i.badge ? `<span class="badge">${i.badge}</span>` : ''}<span class="chev">${ic('chev')}</span></a>`; }).join('');
+  const groups = S.groups.filter(g => g.onHome).map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="banner" href="#/group/${g.id}"><span class="chip" style="background:var(--card2);border:1px solid var(--line)">${esc(g.emoji || '📁')}</span><span class="txt"><b>${esc(g.name)}</b><span>${esc(t('home.groupApps', { n }))}</span></span><span class="chev">${ic('chev')}</span></a>`; }).join('');
+  return `<header class="home-head"><div class="hello"><small>${esc(greet)}</small><b>${esc(S.profile.name.split(' ')[0])}</b>${isPremium() ? ' ' + premBadge() : ''}</div><a class="iconbtn" href="#/search" aria-label="${esc(t('common.search'))}">${ic('search')}</a><a class="iconbtn" href="#/settings" aria-label="${esc(t('common.settings'))}">${ic('settings')}</a></header>
   <nav class="banners" data-screen="home" aria-label="Main sections">${html}${groups}</nav>
-  <div class="dropzone home-drop" data-drop="home"><b>Drop an app, shortcut or link here</b><span>On this computer you can drop a browser link, a store link, or a shortcut file. LifeHub only reads what you drop.</span></div>
+  <div class="dropzone home-drop" data-drop="home"><b>${esc(t('home.dropTitle'))}</b><span>${esc(t('home.dropBody'))}</span></div>
   ${AdSlot('home-bottom')}`;
 }
 
@@ -624,7 +670,7 @@ let searchQ = '';
 function searchResults(q) {
   q = q.trim().toLowerCase(); if (!q) return '<p class="empty">Search contacts, events, bills, apps, chats, medical info and emergency numbers.</p>';
   const R = [];
-  Object.entries(BANNERS).forEach(([id, b]) => { if (b.title.toLowerCase().includes(q)) R.push([b.href, ic(b.icon), b.title, 'Section']); });
+  Object.entries(BANNERS).forEach(([id, b]) => { const title = bannerTitle(id); if (title.toLowerCase().includes(q) || b.title.toLowerCase().includes(q)) R.push([b.href, ic(b.icon), title, t('search.section')]); });
   region().services.forEach(s => { if ((s.name + s.num + s.desc).toLowerCase().includes(q)) R.push([telHref(s.num), ic('phone'), s.name, s.disp || s.num]); });
   S.contacts.forEach(c => { if ((c.name + c.phone + c.email).toLowerCase().includes(q)) R.push(['#/contacts/' + c.id, ic('user'), c.name, c.phone]); });
   S.bills.forEach(b => { if ((b.provider + b.category).toLowerCase().includes(q)) R.push(['#/utilities', ic('zap'), b.provider, `${b.category} · ${money(b.amount, b.currency)}`]); });
@@ -638,7 +684,7 @@ function searchResults(q) {
   return `<div class="list">${R.slice(0, 40).map(([h, i, t, s]) => `<a class="li" href="${esc(h)}" ${/^https?:/.test(h) ? 'target="_blank" rel="noopener"' : ''}>${i}<span class="grow"><b>${esc(t)}</b><span>${esc(s)}</span></span></a>`).join('')}</div>`;
 }
 function renderSearch() {
-  return { html: screen({ title: 'Search', body: `<div class="searchbox">${ic('search', 20)}<input class="input" id="sq" type="search" placeholder="Search everything" value="${esc(searchQ)}" aria-label="Search everything"></div><div id="sr">${searchResults(searchQ)}</div>` }),
+  return { html: screen({ title: t('search.title'), body: `<div class="searchbox">${ic('search', 20)}<input class="input" id="sq" type="search" placeholder="Search everything" value="${esc(searchQ)}" aria-label="Search everything"></div><div id="sr">${searchResults(searchQ)}</div>` }),
     after: () => { const i = $('#sq'); i.focus(); i.oninput = () => { searchQ = i.value; $('#sr').innerHTML = searchResults(searchQ); }; } };
 }
 
@@ -647,16 +693,16 @@ function renderEmergency() {
   const r = region(); const ice = S.contacts.filter(c => c.ice && !c.blocked);
   const [main, ...rest] = r.services;
   const body = `
-  <label class="fld" style="margin-bottom:12px"><span>Region</span><select data-change="setRegion" aria-label="Region">${Object.entries(REGIONS).map(([k, x]) => `<option value="${k}" ${k === S.profile.region ? 'selected' : ''}>${x.flag} ${x.name}</option>`).join('')}</select></label>
-  <a class="sos" href="${telHref(main.num)}" aria-label="Call ${main.num} ${main.name}"><span class="grow"><span class="num">${main.num}</span><small>${esc(main.name)}<br>${esc(main.desc)}</small></span><span class="callbtn">${ic('phone', 30, 2.4)}</span></a>
+  <label class="fld" style="margin-bottom:12px"><span>${esc(t('emerg.region'))}</span><select data-change="setRegion" aria-label="${esc(t('emerg.region'))}">${Object.entries(REGIONS).map(([k, x]) => `<option value="${k}" ${k === S.profile.region ? 'selected' : ''}>${x.flag} ${esc(regionLabel(k))}</option>`).join('')}</select></label>
+  <a class="sos" href="${telHref(main.num)}" aria-label="${esc(t('common.call'))} ${main.num} ${esc(svcField(S.profile.region, 0, 'name', main.name))}"><span class="grow"><span class="num">${main.num}</span><small>${esc(svcField(S.profile.region, 0, 'name', main.name))}<br>${esc(svcField(S.profile.region, 0, 'desc', main.desc))}</small></span><span class="callbtn">${ic('phone', 30, 2.4)}</span></a>
   <div class="qgrid"><button class="qbtn" data-act="shareLoc">${ic('pin', 26)}Share my location<span>Send a maps link</span></button><a class="qbtn" href="#/medical-id">${ic('cross', 26)}Medical ID<span>Allergies, blood type, meds</span></a></div>
   <div id="locBox"></div>
   <div class="sec-h"><h2>Emergency contacts (ICE)</h2><a class="linkbtn" href="#/contacts">Manage</a></div>
   <div class="list">${ice.length ? ice.map(c => `<div class="li">${av(c.name)}<span class="grow"><b>${esc(c.name)}</b><span>${esc(c.relation || '')} · ${esc(c.phone)}</span></span><a class="callbtn sm" href="${telHref(c.phone)}" aria-label="Call ${esc(c.name)}">${ic('phone', 20)}</a></div>`).join('') : '<p class="empty">No emergency contacts yet. Open a contact and turn on "Emergency contact".</p>'}</div>
   <div class="sec-h"><h2>Other services · ${r.flag} ${r.name}</h2></div>
-  <div class="list">${rest.map(s => `<div class="li"><span class="grow"><b>${esc(s.name)}</b><span>${esc(s.desc)}</span></span><span class="num-pill">${esc(s.disp || s.num)}</span><a class="callbtn sm" href="${telHref(s.num)}" aria-label="Call ${esc(s.name)}">${ic('phone', 20)}</a></div>`).join('')}</div>
-  <p class="footnote">In a life-threatening emergency always call ${r.primary} directly. Numbers verified for ${r.name}; check local numbers when travelling.</p>`;
-  return screen({ title: 'Emergency', back: unlocked ? '#/home' : '#/lock', body, cls: 'red' });
+  <div class="list">${rest.map((s, idx) => { const i = idx + 1; return `<div class="li"><span class="grow"><b>${esc(svcField(S.profile.region, i, 'name', s.name))}</b><span>${esc(svcField(S.profile.region, i, 'desc', s.desc))}</span></span><span class="num-pill">${esc(s.disp || s.num)}</span><a class="callbtn sm" href="${telHref(s.num)}" aria-label="${esc(t('common.call'))} ${esc(svcField(S.profile.region, i, 'name', s.name))}">${ic('phone', 20)}</a></div>`; }).join('')}</div>
+  <p class="footnote">${esc(t('emerg.foot', { num: r.primary, place: regionLabel(S.profile.region) }))}</p>`;
+  return screen({ title: t('emerg.title'), back: unlocked ? '#/home' : '#/lock', body, cls: 'red' });
 }
 function shareLocation() {
   const box = $('#locBox'); if (!navigator.geolocation) { toast('Location not available on this device'); return; }
@@ -690,7 +736,7 @@ function renderMedical() {
   <div class="li">${ic('card')}<span class="grow"><b>Medicare ${m.medicare.number ? esc(m.medicare.number) : 'not added'}</b><span>${m.medicare.number ? `IRN ${esc(m.medicare.irn)} · Exp ${esc(m.medicare.expiry)}` : 'Tap Edit to add'}</span></span></div></div>
   ${m.notes ? `<div class="card"><h3>Notes</h3>${esc(m.notes)}</div>` : ''}
   <p class="footnote">Medical details are stored only on this device. Keep them up to date; first responders may use your Medical ID.</p>`;
-  return screen({ title: 'Medical', body });
+  return screen({ title: t('med.title'), body });
 }
 function editMedBasics() {
   const m = S.medical;
@@ -719,7 +765,7 @@ function renderMedicalID() {
   <div class="sec-h"><h2>Emergency contacts</h2></div><div class="list">${ice.length ? ice.map(c => `<div class="li">${av(c.name)}<span class="grow"><b>${esc(c.name)}</b><span>${esc(c.relation)}</span></span><a class="callbtn sm" href="${telHref(c.phone)}" aria-label="Call ${esc(c.name)}">${ic('phone', 20)}</a></div>`).join('') : '<p class="empty">None</p>'}
   ${m.doctor.name ? `<div class="li">${ic('cross')}<span class="grow"><b>${esc(m.doctor.name)}</b><span>Doctor</span></span>${m.doctor.phone ? `<a class="callbtn sm" href="${telHref(m.doctor.phone)}">${ic('phone', 20)}</a>` : ''}</div>` : ''}</div>
   ${unlocked ? '<a class="btn full" href="#/medical">' + ic('edit', 18) + ' Edit medical details</a>' : ''}`;
-  return screen({ title: 'Medical ID', back: unlocked ? '#/medical' : '#/lock', cls: 'red', body });
+  return screen({ title: t('med.id'), back: unlocked ? '#/medical' : '#/lock', cls: 'red', body });
 }
 
 /* ---------- banking ---------- */
@@ -727,7 +773,7 @@ const acctById = id => S.accounts.find(a => a.id === id);
 function renderBanking() {
   const nets = groupSum(S.accounts, a => a.balance, a => a.currency);
   const tx = [...S.transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 25);
-  const body = `<div class="total"><span class="muted">${nets.length > 1 ? 'Balances' : 'Net balance'}</span><b>${moneyList(nets)}</b></div>
+  const body = `<div class="total"><span class="muted">${nets.length > 1 ? esc(t('bank.balances')) : esc(t('bank.net'))}</span><b>${moneyList(nets)}</b></div>
   <div class="bcards">${S.accounts.map(a => `<button class="bcard" style="background:${a.color}" data-act="acctMenu" data-id="${a.id}"><div class="row between"><small>${esc(a.bank)}</small><small>${esc(a.type)}</small></div><div><small>${esc(a.name)}</small><div class="bal">${money(a.balance, a.currency)}</div><small>${esc(a.number)}</small></div></button>`).join('') || '<p class="empty">No accounts yet</p>'}</div>
   <div class="actions"><button class="act" data-act="transfer">${ic('swap', 26)}Transfer</button><a class="act" href="#/banking/pay">${ic('nfc', 26)}Tap to pay</a><a class="act" href="#/banking/link">${ic('link', 26)}Link a bank</a></div>
   <a class="card" href="#/banking/budget" style="display:flex;align-items:center;gap:12px"><span style="flex:1"><b>Budget planner</b><span class="small muted" style="display:block">Categories, goals and what you have left this month</span></span>${ic('chev')}</a>
@@ -735,7 +781,7 @@ function renderBanking() {
   <div class="list">${tx.length ? tx.map(t => { const a = acctById(t.accountId); return `<div class="li"><span class="av" style="background:var(--card2);color:var(--text);border:1px solid var(--line)">${t.amount > 0 ? '↓' : t.cat === 'App fee' ? '¢' : '↑'}</span><span class="grow"><b>${esc(t.desc)}</b><span>${fmtDate(t.date)} · ${esc(a ? a.name : 'Account')}${t.cat ? ' · ' + esc(t.cat) : ''}</span></span><span class="amt ${t.amount > 0 ? 'green' : ''}">${t.amount > 0 ? '+' : ''}${money(t.amount, txCurrency(t))}</span></div>`; }).join('') : '<p class="empty">No transactions</p>'}</div>
   ${schedSection()}
   <p class="footnote">To go live in Australia, bank linking would use the Consumer Data Right (Open Banking) via an accredited data recipient, and payments via the New Payments Platform (PayTo / Osko). Scheduled payments are a reminder on your calendar, not a real debit.</p>`;
-  return screen({ title: 'Banking', demo: 'No real bank is connected. Balances, transfers and payments are simulated on this device.', body, right: `<button class="iconbtn" data-act="addAcct" aria-label="Add account">${ic('plus')}</button>` });
+  return screen({ title: t('bank.title'), demo: t('bank.demo'), body, right: `<button class="iconbtn" data-act="addAcct" aria-label="${esc(t('bank.add'))}">${ic('plus')}</button>` });
 }
 function addAccount(bank) {
   formSheet({ title: 'Add account manually', fields: [{ k: 'bank', label: 'Bank', req: true }, { k: 'name', label: 'Account name', req: true, ph: 'e.g. Everyday' }, { k: 'type', label: 'Type', type: 'select', options: ['transaction', 'savings', 'credit', 'loan'] }, { k: 'currency', label: 'Currency', type: 'select', options: currencyChoices() }, { k: 'number', label: 'Account number (last 4 is enough)' }, { k: 'balance', label: 'Current balance', type: 'number', step: '0.01', req: true, im: 'decimal' }],
@@ -838,7 +884,7 @@ function renderChats() {
   <label class="card row between" style="padding:12px 14px"><span><b>Prefer Wi‑Fi</b><br><span class="small muted">Fall back to mobile data when Wi‑Fi isn't available</span></span><span class="switch"><input type="checkbox" data-change="preferWifi" ${S.settings.preferWifi ? 'checked' : ''}><i></i></span></label>
   <div class="list">${threads.length ? threads.map(t => { const c = contactById(t.contactId); const last = t.messages.at(-1); return `<a class="li" href="#/chat/${t.id}">${av(c.name)}<span class="grow"><b>${esc(c.name)}</b><span>${last ? (last.me ? 'You: ' : '') + esc(last.text) : 'No messages yet'}</span></span><span style="text-align:right"><span class="small muted">${last ? fmtTime(last.t) : ''}</span><br>${t.unread ? `<span class="badge">${t.unread}</span>` : ''}</span></a>`; }).join('') : '<p class="empty">No conversations yet</p>'}</div>
   <p class="footnote">A live version would use end-to-end encryption. This one does not contact a chat server.</p>`;
-  return screen({ title: 'Chat', demo: 'Messages stay on this device. Replies and calls are simulated.', body, right: `<button class="iconbtn" data-act="newChat" aria-label="New chat">${ic('edit')}</button>` });
+  return screen({ title: t('banner.chat'), demo: t('home.chatEmpty'), body, right: `<button class="iconbtn" data-act="newChat" aria-label="New chat">${ic('edit')}</button>` });
 }
 function openChatWith(cid) { let t = S.chats.find(x => x.contactId === cid); if (!t) { t = { id: uid(), contactId: cid, unread: 0, messages: [] }; S.chats.push(t); save(); } location.hash = '#/chat/' + t.id; }
 function newChat() {
@@ -889,7 +935,7 @@ function renderContacts() {
   const body = `<div class="searchbox">${ic('search', 20)}<input class="input" id="cq" type="search" placeholder="Search ${S.contacts.length} contacts" value="${esc(contactQ)}"></div>
   <div class="row gap" style="margin-bottom:12px"><button class="btn sm" data-act="importContacts">${ic('upload', 16)} Import</button>${'contacts' in navigator && 'ContactsManager' in window ? `<button class="btn sm" data-act="pickContacts">${ic('users', 16)} From phone</button>` : ''}<button class="btn sm primary" data-act="addContact">${ic('plus', 16)} Add</button></div>
   <div id="clist">${contactRows(contactQ)}</div><p class="footnote">Import a vCard (.vcf) or CSV exported from Google Contacts, iCloud or Outlook.</p>`;
-  return { html: screen({ title: 'Contacts', body }), after: () => { const i = $('#cq'); i.oninput = () => { contactQ = i.value; $('#clist').innerHTML = contactRows(contactQ); }; } };
+  return { html: screen({ title: t('banner.contacts'), body }), after: () => { const i = $('#cq'); i.oninput = () => { contactQ = i.value; $('#clist').innerHTML = contactRows(contactQ); }; } };
 }
 const CONTACT_FIELDS = [{ k: 'name', label: 'Name', req: true }, { k: 'phone', label: 'Phone', type: 'tel', im: 'tel' }, { k: 'email', label: 'Email', type: 'email' }, { k: 'relation', label: 'Relationship', ph: 'e.g. Partner, Friend' }, { k: 'birthday', label: 'Birthday', type: 'date' }, { k: 'notes', label: 'Notes', type: 'textarea' }, { k: 'ice', label: 'Emergency contact (ICE)', type: 'checkbox' }, { k: 'onLifeHub', label: 'Uses LifeHub (in-app chat & calls)', type: 'checkbox' }, { k: 'premium', label: 'LifeHub Premium (demo). Only Premium contacts can be picked for location sharing', type: 'checkbox' }];
 function editContact(id) {
@@ -943,7 +989,7 @@ function ensurePlan() {
 }
 const isPremium = () => !!(S && S.plan && S.plan.tier === 'premium');
 const premBadge = (txt = 'Premium') => `<span class="pbadge" title="LifeHub Premium">★ ${txt}</span>`;
-const fmtLong = t => new Date(t).toLocaleDateString(region().locale, { day: 'numeric', month: 'long', year: 'numeric' });
+const fmtLong = ts => new Date(ts).toLocaleDateString(homeLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
 /* Ad slot: one component. Only Home's bottom placement is allowed. Never rendered for Premium
    or on Emergency, Medical ID, lock, payment/authorisation or call screens. To use a real network,
@@ -1000,7 +1046,7 @@ function renderPlan() {
   <button class="btn ghost full" style="margin-top:8px" data-act="restore">Restore purchase</button>
   ${prem ? '<button class="linkbtn" style="width:100%" data-act="endNow">Switch to Free now (demo/testing)</button>' : ''}
   <p class="footnote">Free is never slowed down on purpose. Emergency numbers, the Emergency screen location readout and Medical ID are never behind a paywall and never show ads. Sharing your live location with contacts is part of Premium.</p>`;
-  return screen({ title: 'Your plan', back: '#/settings', body });
+  return screen({ title: t('plan.title'), back: '#/settings', body });
 }
 function upgrade() {
   openSheet(`<h2>Checkout</h2><div class="notice">${ic('alert', 18)}<div><b>Demo checkout.</b> No card is charged and no real subscription is created.</div></div>
@@ -1086,7 +1132,7 @@ function renderSocial() {
   ${updatedLine()}<div class="sec-h"><h2>Important notifications</h2>${notes.length ? '<button class="linkbtn" data-act="clearNotes">Clear all</button>' : ''}</div>
   <div class="list">${notes.length ? notes.map(n => { const p = S.platforms.find(x => x.key === n.key) || { key: n.key }; return `<div class="li">${platBadge(p, 36)}<span class="grow"><b style="font-weight:600;font-size:.95rem">${esc(n.text)}</b><span>${esc((PLATFORMS[n.key] || {}).name || '')} · ${fmtTime(n.t)}</span></span><button class="iconbtn" style="box-shadow:none;width:36px;height:36px" data-act="dismissNote" data-id="${n.id}" aria-label="Dismiss">${ic('x', 18)}</button></div>`; }).join('') : '<p class="empty">You\'re all caught up 🎉</p>'}</div>
   ${S.posts.length ? `<div class="sec-h"><h2>Your recent posts</h2></div><div class="list">${S.posts.slice(-5).reverse().map(p => `<div class="li"><span class="grow"><b style="font-weight:550">${esc(p.text || '(media)')}</b><span>${fmtTime(p.t)} · ${esc(p.to.join(', '))}${p.media ? ' · 📷' : ''}</span></span><span class="tag green">Posted</span></div>`).join('')}</div>` : ''}`;
-  return screen({ title: 'Social', demo: 'Feeds, counts and posts are samples. No social network is connected.', body });
+  return screen({ title: t('banner.social'), demo: t('home.socialEmpty'), body });
 }
 function addPlatform() {
   formSheet({ title: 'Add a platform', intro: 'Demo: a live version would sign in with the platform (OAuth) to read notifications and post on your behalf.', submit: 'Add',
@@ -1135,7 +1181,7 @@ function renderUtilities() {
   <div class="seg" style="margin-bottom:12px" role="tablist"><button class="${billSort === 'due' ? 'on' : ''}" data-act="billSort" data-s="due">By due date</button><button class="${billSort === 'amount' ? 'on' : ''}" data-act="billSort" data-s="amount">By amount</button></div>
   <div class="list">${arr.length ? arr.map(row).join('') : '<p class="empty">No bills yet. Add one manually, upload a photo/PDF, or import a CSV.</p>'}</div>
   <p class="footnote">Tap a bill to edit, set reminders or delete. CSV columns: provider, category, amount, due, type (owed/credit).</p>`;
-  return screen({ title: 'Utilities & bills', body });
+  return screen({ title: t('banner.utilities'), body });
 }
 const BILL_FIELDS = [{ k: 'provider', label: 'Provider', req: true, ph: 'e.g. Aurora Energy' }, { k: 'category', label: 'Category', type: 'select', options: ['Electricity', 'Gas', 'Water', 'Internet', 'Mobile', 'Council rates', 'Insurance', 'Rent / mortgage', 'Subscription', 'Car / rego', 'Other'] },
   { k: 'amount', label: 'Amount', type: 'number', step: '0.01', req: true, im: 'decimal' }, { k: 'type', label: 'Balance', type: 'select', options: [['owed', 'Amount owed'], ['credit', 'In credit']] }, { k: 'due', label: 'Due date', type: 'date' },
@@ -1182,7 +1228,7 @@ function renderAddNew() {
   <div class="list">${S.groups.length ? S.groups.map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="li" href="#/group/${g.id}"><span class="ai" style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);font-size:1.4rem">${esc(g.emoji || '📁')}</span><span class="grow"><b>${esc(g.name)}</b><span>${n} app${n === 1 ? '' : 's'}${g.onHome ? ' · on Home' : ''}</span></span>${ic('chev')}</a>`; }).join('') : '<p class="empty">No groups yet</p>'}</div>
   <div class="sec-h"><h2>Other apps</h2></div><div class="appgrid">${ung.map(appTile).join('')}<button class="app add" data-act="addApp"><span class="ai">${ic('plus', 26)}</span>Add</button></div>
   <p class="footnote">Tip: long-press (or right-click) an app to edit it. Deep links like spotify: or whatsapp: also work. On a phone, use Share and choose LifeHub.</p>`;
-  return { html: screen({ title: 'Add New', body }), after: () => openPendingDraft() };
+  return { html: screen({ title: t('add.title'), body }), after: () => openPendingDraft() };
 }
 function renderGroup(id) {
   const g = S.groups.find(x => x.id === id); if (!g) { location.hash = '#/addnew'; return ''; }
@@ -1216,47 +1262,66 @@ function editGroup(id) {
 function renderSettings() {
   const s = S.settings; const bs = s.banners;
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${String(s[key]) === String(v) ? 'on' : ''}" data-act="setPref" data-k="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  const body = `<div class="list"><button class="li" data-act="editProfile">${av(S.profile.name)}<span class="grow"><b>${esc(S.profile.name)}</b><span>${region().flag} ${region().name} · emergency numbers</span></span>${ic('edit', 18)}</button>
-  <button class="li" data-act="editMoney">${ic('bank')}<span class="grow"><b>Region & currency</b><span>${esc(homeLocale())} · ${esc(homeCurrency())} · ${esc(money(1234.56))}</span></span>${ic('edit', 18)}</button>
-  <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>Plan: ${isPremium() ? 'Premium ' + premBadge(S.plan.status === 'cancelled' ? 'Ends soon' : 'Active') : 'Free'}</b><span>${isPremium() ? 'No ads · location · budget tools · themes' : `Go ad-free · ${esc(premiumPrice().label)}`}</span></span>${ic('chev')}</a>
-  <a class="li" href="#/location">${ic('pin')}<span class="grow"><b>Location ${isPremium() ? premBadge() : '<span class="tag">Premium</span>'}</b><span>${S.loc && S.loc.on ? 'Sharing is on' : 'Off until you pick people'}</span></span>${ic('chev')}</a></div>
-  <div class="sec-h"><h2>Security</h2></div>
-  <div class="list"><button class="li" data-act="changeLogin">${ic('lock')}<span class="grow"><b>Sign-in method</b><span>${METHODS[S.auth.method].label}</span></span>${ic('chev')}</button>
-  <div class="li" style="display:block">${ic('clock')} <b>Auto-lock when idle</b><div style="margin-top:8px">${seg('lockMinutes', [[1, '1 min'], [5, '5 min'], [15, '15 min'], [0, 'Never']])}</div></div>
-  <button class="li" data-act="lockNow">${ic('lock')}<span class="grow"><b>Lock now</b></span></button></div>
-  <div class="sec-h"><h2>Display</h2></div>
-  <div class="list"><div class="li" style="display:block">${ic('type')} <b>Text size</b><div style="margin-top:8px">${seg('textSize', [['normal', 'Standard'], ['large', 'Large'], ['xl', 'Extra large']])}</div></div>
-  <div class="li" style="display:block">${ic('sun')} <b>Theme</b><div style="margin-top:8px">${seg('theme', [['system', 'Auto'], ['light', 'Light'], ['dark', 'Dark']])}</div></div>
-  <div class="li" style="display:block"><b>Premium looks</b> ${isPremium() ? premBadge() : '<span class="tag">Premium</span>'}
+  const langName = (LH.LANGS.find(([c]) => c === (S.profile.lang || LH.code)) || ['', LH.code])[1];
+  const body = `<div class="list"><button class="li" data-act="editProfile">${av(S.profile.name)}<span class="grow"><b>${esc(S.profile.name)}</b><span>${esc(t('set.emergencyLine', { flag: region().flag, name: regionLabel(S.profile.region) }))}</span></span>${ic('edit', 18)}</button>
+  <button class="li" data-act="editLang">${ic('type')}<span class="grow"><b>${esc(t('set.language'))}</b><span>${esc(langName)}</span></span>${ic('edit', 18)}</button>
+  <button class="li" data-act="editMoney">${ic('bank')}<span class="grow"><b>${esc(t('set.money'))}</b><span>${esc(homeLocale())} · ${esc(homeCurrency())} · ${esc(money(1234.56))}</span></span>${ic('edit', 18)}</button>
+  <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>${esc(isPremium() ? t('set.planPrem') : t('set.planFree'))} ${isPremium() ? premBadge(S.plan.status === 'cancelled' ? t('set.ends') : t('set.active')) : ''}</b><span>${isPremium() ? esc(t('set.planSubPrem')) : esc(t('set.planSubFree', { price: premiumPrice().label }))}</span></span>${ic('chev')}</a>
+  <a class="li" href="#/location">${ic('pin')}<span class="grow"><b>${esc(t('set.location'))} ${isPremium() ? premBadge() : '<span class="tag">' + esc(t('common.premium')) + '</span>'}</b><span>${S.loc && S.loc.on ? esc(t('set.locOn')) : esc(t('set.locOff'))}</span></span>${ic('chev')}</a></div>
+  <div class="sec-h"><h2>${esc(t('set.security'))}</h2></div>
+  <div class="list"><button class="li" data-act="changeLogin">${ic('lock')}<span class="grow"><b>${esc(t('set.signin'))}</b><span>${esc(methodLabel(S.auth.method))}</span></span>${ic('chev')}</button>
+  <div class="li" style="display:block">${ic('clock')} <b>${esc(t('set.autolock'))}</b><div style="margin-top:8px">${seg('lockMinutes', [[1, t('set.min1')], [5, t('set.min5')], [15, t('set.min15')], [0, t('set.never')]])}</div></div>
+  <button class="li" data-act="lockNow">${ic('lock')}<span class="grow"><b>${esc(t('set.lockNow'))}</b></span></button></div>
+  <div class="sec-h"><h2>${esc(t('set.display'))}</h2></div>
+  <div class="list"><div class="li" style="display:block">${ic('type')} <b>${esc(t('set.text'))}</b><div style="margin-top:8px">${seg('textSize', [['normal', t('set.textStd')], ['large', t('set.textLg')], ['xl', t('set.textXl')]])}</div></div>
+  <div class="li" style="display:block">${ic('sun')} <b>${esc(t('set.theme'))}</b><div style="margin-top:8px">${seg('theme', [['system', t('set.themeAuto')], ['light', t('set.themeLight')], ['dark', t('set.themeDark')]])}</div></div>
+  <div class="li" style="display:block"><b>${esc(t('set.looks'))}</b> ${isPremium() ? premBadge() : '<span class="tag">' + esc(t('common.premium')) + '</span>'}
    <div class="swatches">${Object.entries(SKINS).map(([k, l]) => `<button class="skin skin-${k} ${s.skin === k && isPremium() ? 'on' : ''}" data-act="prem" data-k="skin" data-v="${k}">${isPremium() ? '' : ic('lock', 14) + ' '}${l}</button>`).join('')}${isPremium() && s.skin ? '<button class="skin" data-act="prem" data-k="skin" data-v="">Off</button>' : ''}</div>
    <div class="swatches">${Object.entries(ACCENTS).map(([k, [l, c, pr]]) => `<button class="sw ${(s.accent || 'blue') === k ? 'on' : ''}" style="background:${c}" data-act="prem" data-k="accent" data-v="${k}" aria-label="${l} accent${pr && !isPremium() ? ' (Premium)' : ''}">${pr && !isPremium() ? ic('lock', 14) : (s.accent || 'blue') === k ? ic('check', 16, 3) : ''}</button>`).join('')}</div>
-   <label class="row between" style="margin-top:10px"><span>Glass icons ${isPremium() ? '' : ic('lock', 14)}</span><span class="switch"><input type="checkbox" data-change="glass" ${s.iconStyle === 'glass' && isPremium() ? 'checked' : ''}><i></i></span></label></div></div>
-  <div class="sec-h"><h2>Home banners</h2></div><p class="small muted" style="margin:-4px 2px 8px">Reorder or hide banners to keep Home tidy. Emergency always stays visible.</p>
-  <div class="list reorder">${bs.map((b, i) => `<div class="li"><span class="chip" style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;background:${BANNERS[b.id].color}">${ic(BANNERS[b.id].icon, 18)}</span><span class="grow"><b style="${b.hidden ? 'opacity:.45' : ''}">${BANNERS[b.id].title}</b></span>
+   <label class="row between" style="margin-top:10px"><span>${esc(t('set.glass'))} ${isPremium() ? '' : ic('lock', 14)}</span><span class="switch"><input type="checkbox" data-change="glass" ${s.iconStyle === 'glass' && isPremium() ? 'checked' : ''}><i></i></span></label></div></div>
+  <div class="sec-h"><h2>${esc(t('set.banners'))}</h2></div><p class="small muted" style="margin:-4px 2px 8px">${esc(t('set.bannerNote'))}</p>
+  <div class="list reorder">${bs.map((b, i) => `<div class="li"><span class="chip" style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;background:${BANNERS[b.id].color}">${ic(BANNERS[b.id].icon, 18)}</span><span class="grow"><b style="${b.hidden ? 'opacity:.45' : ''}">${esc(bannerTitle(b.id))}</b></span>
     <button class="mv" data-act="mvBanner" data-i="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="Move up">${ic('up', 18)}</button><button class="mv" data-act="mvBanner" data-i="${i}" data-d="1" ${i === bs.length - 1 ? 'disabled' : ''} aria-label="Move down">${ic('down', 18)}</button>
     ${b.id === 'emergency' ? '<span class="mv" style="border:0;background:none"></span>' : `<button class="mv" data-act="hideBanner" data-i="${i}" aria-label="${b.hidden ? 'Show' : 'Hide'}">${ic(b.hidden ? 'eyeoff' : 'eye', 18)}</button>`}</div>`).join('')}</div>
-  <div class="sec-h"><h2>Refresh</h2></div>
-  <div class="list"><div class="li" style="display:block">${ic('clock')} <b>Auto-refresh feeds, balances & chat</b><div class="seg" style="margin-top:8px">${REFRESH.map(([v, l, pr]) => `<button class="${refreshSetting() === v ? 'on' : ''}" data-act="setRefresh" data-v="${v}">${pr && !isPremium() ? ic('lock', 12) + ' ' : ''}${l}</button>`).join('')}</div><div class="small muted" style="margin-top:6px">Pull down on any screen to refresh now.${isPremium() ? '' : ' 1 min and Live come with Premium.'}</div></div></div>
-  <div class="sec-h"><h2>Network</h2></div>
-  <label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>Prefer Wi‑Fi for chat & calls</b><span>Use mobile data only when Wi‑Fi isn't available</span></span><span class="switch"><input type="checkbox" data-change="preferWifi" ${s.preferWifi ? 'checked' : ''}><i></i></span></label>
-  <div class="sec-h"><h2>Safety</h2></div>
-  <p class="small muted" style="margin:-4px 2px 8px">Safety check looks at files and links you add to LifeHub. It does not scan this device, and it does not send them anywhere. It is not an antivirus.</p>
-  <label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>Strict mode</b><span>A caution is blocked too. You cannot choose Add anyway.</span></span><span class="switch"><input type="checkbox" data-change="safetyStrict" ${S.safety && S.safety.strict ? 'checked' : ''}><i></i></span></label>
-  <div class="list">${(S.safety && S.safety.log || []).length ? S.safety.log.slice(0, 12).map(item => `<div class="li"><span class="grow"><b>${esc(item.name || 'Check')}</b><span>${esc(item.reason || '')}</span></span>${safetyTag(item.level)}</div>`).join('') : '<p class="empty">No checks yet. One runs when you add a file or save a link.</p>'}</div>
-  <p class="footnote">Checks stay on this device. A reputation list can be added later. None is used now.</p>
-  <div class="sec-h"><h2>Your data</h2></div>
-  <div class="list"><button class="li" data-act="exportData">${ic('download')}<span class="grow"><b>Export backup</b><span>Download everything as a JSON file</span></span></button>
-  <button class="li" data-act="importData">${ic('upload')}<span class="grow"><b>Import backup or data</b><span>LifeHub backup (.json), contacts (.vcf/.csv)</span></span></button>
-  <button class="li" data-act="loadSample">${ic('grid')}<span class="grow"><b>Reload sample data</b><span>Replace current data with demo data</span></span></button>
-  <button class="li" data-act="wipeData" style="color:var(--red)">${ic('trash')}<span class="grow"><b>Delete all my data</b><span>Clears local storage, caches and the on-device database</span></span></button></div>
-  <div class="sec-h"><h2>Policies</h2></div>
-  <div class="list"><a class="li" href="privacy.html">${ic('shield')}<span class="grow"><b>Privacy Policy</b><span>What stays on this device</span></span>${ic('chev')}</a>
-  <a class="li" href="terms.html">${ic('file')}<span class="grow"><b>Terms of Use</b></span>${ic('chev')}</a>
-  <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>Support</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
-  <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>Delete your data</b><span>How account deletion works</span></span>${ic('chev')}</a></div>
-  <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample placeholder, not a tracking network. Banking, chat, social feeds and other people's map pins are demos. Export a backup before you delete your data.</div>
-  <p class="footnote">LifeHub prototype v1.4.4 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
-  return screen({ title: 'Settings', body });
+  <div class="sec-h"><h2>${esc(t('set.refresh'))}</h2></div>
+  <div class="list"><div class="li" style="display:block">${ic('clock')} <b>${esc(t('set.refreshTitle'))}</b><div class="seg" style="margin-top:8px">${REFRESH.map(([v, l, pr]) => `<button class="${refreshSetting() === v ? 'on' : ''}" data-act="setRefresh" data-v="${v}">${pr && !isPremium() ? ic('lock', 12) + ' ' : ''}${esc(t('set.refresh.' + v) === 'set.refresh.' + v ? l : t('set.refresh.' + v))}</button>`).join('')}</div><div class="small muted" style="margin-top:6px">${esc(t('set.pull'))}${isPremium() ? '' : esc(t('set.pullPrem'))}</div></div></div>
+  <div class="sec-h"><h2>${esc(t('set.network'))}</h2></div>
+  <label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>${esc(t('set.wifi'))}</b><span>${esc(t('set.wifiSub'))}</span></span><span class="switch"><input type="checkbox" data-change="preferWifi" ${s.preferWifi ? 'checked' : ''}><i></i></span></label>
+  <div class="sec-h"><h2>${esc(t('set.safety'))}</h2></div>
+  <p class="small muted" style="margin:-4px 2px 8px">${esc(t('set.safetyNote'))}</p>
+  <label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>${esc(t('set.strict'))}</b><span>${esc(t('set.strictSub'))}</span></span><span class="switch"><input type="checkbox" data-change="safetyStrict" ${S.safety && S.safety.strict ? 'checked' : ''}><i></i></span></label>
+  <div class="list">${(S.safety && S.safety.log || []).length ? S.safety.log.slice(0, 12).map(item => { const why = item.reasons ? item.reasons.map(reasonText).filter(Boolean).join(' ') : (item.reason || ''); return `<div class="li"><span class="grow"><b>${esc(item.name || t('safety.title'))}</b><span>${esc(why)}</span></span>${safetyTag(item.level)}</div>`; }).join('') : '<p class="empty">' + esc(t('set.noChecks')) + '</p>'}</div>
+  <p class="footnote">${esc(t('set.safetyFoot'))}</p>
+  <div class="sec-h"><h2>${esc(t('set.data'))}</h2></div>
+  <div class="list"><button class="li" data-act="exportData">${ic('download')}<span class="grow"><b>${esc(t('set.export'))}</b><span>${esc(t('set.exportSub'))}</span></span></button>
+  <button class="li" data-act="importData">${ic('upload')}<span class="grow"><b>${esc(t('set.import'))}</b><span>${esc(t('set.importSub'))}</span></span></button>
+  <button class="li" data-act="loadSample">${ic('grid')}<span class="grow"><b>${esc(t('set.sample'))}</b><span>${esc(t('set.sampleSub'))}</span></span></button>
+  <button class="li" data-act="wipeData" style="color:var(--red)">${ic('trash')}<span class="grow"><b>${esc(t('set.wipe'))}</b><span>${esc(t('set.wipeSub'))}</span></span></button></div>
+  <div class="sec-h"><h2>${esc(t('set.policies'))}</h2></div>
+  <div class="list"><a class="li" href="privacy.html">${ic('shield')}<span class="grow"><b>${esc(t('set.privacy'))}</b><span>${esc(t('set.privacySub'))}</span></span>${ic('chev')}</a>
+  <a class="li" href="terms.html">${ic('file')}<span class="grow"><b>${esc(t('set.terms'))}</b></span>${ic('chev')}</a>
+  <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
+  <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>${esc(t('set.delete'))}</b><span>${esc(t('set.deleteSub'))}</span></span>${ic('chev')}</a></div>
+  <div class="card small"><h3>${ic('shield', 18)} ${esc(t('set.privacy'))}</h3>${esc(t('set.privacyCard'))}</div>
+  <p class="footnote">${esc(t('set.version', { v: '1.5.0', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
+  return screen({ title: t('set.title'), body });
+}
+async function setLanguage(code) {
+  const use = await LH.load(code);
+  try { localStorage.setItem('lifehub.lang', use); } catch (e) {}
+  if (S && S.profile) { S.profile.lang = use; save(); }
+  render();
+  toast(t('set.langSaved'));
+}
+function editLang() {
+  const buttons = LH.LANGS.map(([code, name]) => `<button class="method ${LH.code === code ? 'on' : ''}" data-lang="${esc(code)}" dir="auto"><span><b>${esc(name)}</b></span>${LH.code === code ? ic('check', 18) : ''}</button>`).join('');
+  openSheet(`<h2>${esc(t('set.language'))}</h2><p class="muted small">${esc(t('set.languageNote'))}</p>${buttons}`, el => {
+    el.addEventListener('click', async e => {
+      const b = e.target.closest('[data-lang]'); if (!b) return;
+      closeSheet(true);
+      await setLanguage(b.dataset.lang);
+    });
+  });
 }
 function editProfile() {
   formSheet({ title: 'Profile', fields: [{ k: 'name', label: 'Name', req: true }, { k: 'region', label: 'Emergency region', type: 'select', options: Object.entries(REGIONS).map(([k, r]) => [k, `${r.flag} ${r.name}`]) }], values: S.profile, onSave: v => { Object.assign(S.profile, v); } });
@@ -1270,7 +1335,7 @@ function editMoney() {
   ], values: { locale: homeLocale(), currency: homeCurrency() }, onSave: v => { setHomeMoney(v.locale, v.currency); } });
 }
 function changeLogin() {
-  openSheet(`<h2>Sign-in method</h2><p class="muted small">Confirm with your current method, then choose a new one.</p>${Object.entries(METHODS).map(([k, m]) => `<button class="method ${S.auth.method === k ? 'on' : ''}" data-m="${k}"><span class="mi">${m.icon}</span><span><b>${m.label}</b><span>${m.desc}</span></span></button>`).join('')}`, el => {
+  openSheet(`<h2>${esc(t('set.signin'))}</h2><p class="muted small">${esc(t('onb.signInLead'))}</p>${Object.entries(METHODS).map(([k, m]) => `<button class="method ${S.auth.method === k ? 'on' : ''}" data-m="${k}"><span class="mi">${m.icon}</span><span><b>${esc(methodLabel(k))}</b><span>${esc(methodDesc(k))}</span></span></button>`).join('')}`, el => {
     el.addEventListener('click', async e => { const b = e.target.closest('[data-m]'); if (!b) return; const nm = b.dataset.m; closeSheet(true);
       if (!(await authorize('Confirm to change your sign-in method'))) return;
       if (nm === 'pin' || nm === 'password') formSheet({ title: nm === 'pin' ? 'New PIN' : 'New password', fields: [{ k: 'a', label: nm === 'pin' ? 'PIN (4–6 digits)' : 'Password (8+ characters)', type: 'password', im: nm === 'pin' ? 'numeric' : '' }, { k: 'b', label: 'Confirm', type: 'password', im: nm === 'pin' ? 'numeric' : '' }],
@@ -1588,7 +1653,7 @@ function noticesBlock() {
 function monthCells(iso) {
   const [y, m] = iso.split('-').map(Number);
   const first = `${y}-${String(m).padStart(2, '0')}-01`;
-  const lead = (wdIndex(first) + 6) % 7;
+  const lead = (wdIndex(first) - weekStart() + 7) % 7;
   const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const cells = [];
   for (let i = 0; i < lead; i++) cells.push('');
@@ -1596,7 +1661,7 @@ function monthCells(iso) {
   while (cells.length % 7) cells.push('');
   return cells;
 }
-function monthLabel(iso) { const [y, m] = iso.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-AU', { month: 'long', year: 'numeric', timeZone: 'UTC' }); }
+function monthLabel(iso) { const [y, m] = iso.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(homeLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' }); }
 function navRow(label, mode) {
   const prev = mode === 'month' ? 'data-m="-1"' : 'data-d="-7"';
   const next = mode === 'month' ? 'data-m="1"' : 'data-d="7"';
@@ -1611,18 +1676,18 @@ function monthView(day) {
     return `<button class="cal-day ${d === today ? 'today' : ''} ${d === day ? 'on' : ''}" data-act="calDay" data-d="${d}" aria-current="${d === today ? 'date' : 'false'}" aria-label="${esc(fmtDay(d))}"><span class="n">${Number(d.slice(8))}</span><span class="dots">${ev.map(e => `<i class="dot" style="background:${esc(e.color || '#1d4ed8')}"></i>`).join('')}</span></button>`;
   }).join('');
   const list = dayEvents(day);
-  return `${navRow(monthLabel(day), 'month')}<div class="cal-grid cal-dow">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => `<span>${d}</span>`).join('')}</div><div class="cal-grid">${grid}</div>
-    <div class="sec-h"><h2>${esc(fmtDay(day))}${day === today ? ' · today' : ''}</h2></div><div class="list">${list.length ? list.map(eventRow).join('') : '<p class="empty">Nothing on this day</p>'}</div>`;
+  return `${navRow(monthLabel(day), 'month')}<div class="cal-grid cal-dow">${weekDayOrder().map(wd => `<span>${esc(weekdayName(wd, 'narrow'))}</span>`).join('')}</div><div class="cal-grid">${grid}</div>
+    <div class="sec-h"><h2>${esc(fmtDay(day))}${day === today ? esc(t('cal.todayMark')) : ''}</h2></div><div class="list">${list.length ? list.map(eventRow).join('') : '<p class="empty">' + esc(t('cal.emptyDay')) + '</p>'}</div>`;
 }
 function weekView(day) {
-  const start = mondayOf(day);
+  const start = startOfWeek(day);
   const today = hobartToday();
-  const rows = WDAYS.map(([name, i], idx) => {
+  const rows = weekDayOrder().map((wd, idx) => {
     const d = addDays(start, idx);
     const list = dayEvents(d);
-    return `<div class="sec-h"><h2>${name} ${Number(d.slice(8))}${d === today ? ' · today' : ''}</h2></div><div class="list">${list.length ? list.map(eventRow).join('') : '<p class="empty">Nothing scheduled</p>'}</div>`;
+    return `<div class="sec-h"><h2>${esc(weekdayName(wd, 'short'))} ${Number(d.slice(8))}${d === today ? esc(t('cal.todayMark')) : ''}</h2></div><div class="list">${list.length ? list.map(eventRow).join('') : '<p class="empty">' + esc(t('cal.emptyWeek')) + '</p>'}</div>`;
   }).join('');
-  return navRow('Week of ' + fmtDay(start), 'week') + rows;
+  return navRow(t('cal.weekOf', { day: fmtDay(start) }), 'week') + rows;
 }
 function agendaView(day) {
   const end = addDays(day, 45);
@@ -1650,7 +1715,7 @@ function renderCalendar() {
   const body = `<div data-screen="calendar"><div class="seg" style="margin-bottom:12px" role="tablist" aria-label="Calendar view">${btn('month', 'Month')}${btn('week', 'Week')}${btn('agenda', 'Agenda')}</div>
     ${clashBlock(pairs)}${noticesBlock()}${calView === 'month' ? monthView(day) : calView === 'week' ? weekView(day) : agendaView(day)}
     ${importBlock()}${hidden.length ? `<div class="sec-h"><h2>Hidden</h2></div><div class="list">${hidden.map(e => `<div class="li"><span class="grow"><b>${esc(e.title)}</b><span>${esc(e.sourceLabel || '')}</span></span><button class="btn sm" data-act="showAuto" data-id="${e.id}">Show</button></div>`).join('')}</div>` : ''}</div>`;
-  return screen({ title: 'Calendar', body, right: `<button class="iconbtn" data-act="addEvent" aria-label="Add event">${ic('plus')}</button>` });
+  return screen({ title: t('cal.title'), body, right: `<button class="iconbtn" data-act="addEvent" aria-label="${esc(t('cal.add'))}">${ic('plus')}</button>` });
 }
 function calNav(el) {
   const day = cursor();
@@ -1972,7 +2037,7 @@ function renderLocation() {
       <p class="muted">See where you are on a map. If you want, share that only with LifeHub Premium contacts you tick yourself. Sharing stays off until you start it.</p>
       <p class="small muted">On the Emergency screen, anyone can still show their location to read out to emergency services. That stays free.</p>
       <a class="btn primary full" href="#/plan">${ic('star', 18)} See Premium · ${esc(premiumPrice().label)}</a></div>`;
-    return screen({ title: 'Location', body });
+    return screen({ title: t('loc.title'), body });
   }
   const selected = shareNames();
   const modeBtn = (v, label) => `<button type="button" class="${S.loc.mode === v ? 'on' : ''}" data-act="locMode" data-v="${v}">${label}</button>`;
@@ -1996,7 +2061,7 @@ function renderLocation() {
       ${S.loc.on ? '<button class="btn redb full" data-act="locStop">Stop sharing now</button>' : `<button class="btn primary full" data-act="locStart" ${!S.loc.ids.length || !S.loc.mode ? 'disabled' : ''}>Start sharing</button>`}
       <p class="small muted" style="margin:8px 0 0">Only the people in the list above are included. Removing someone, or stopping, takes effect straight away.</p>
     </div></div>`;
-  return { html: screen({ title: 'Location', body }), after: mountLocation };
+  return { html: screen({ title: t('loc.title'), body }), after: mountLocation };
 }
 
 /* ---------- budget planner ---------- */
@@ -2011,7 +2076,7 @@ function shiftMonth(ym, n) {
 function daysInMonth(ym) { const [y, m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
 function ymLabel(ym) {
   const [y, m] = ym.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-AU', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(homeLocale(), { month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 function ensureBudget() {
   let changed = false;
@@ -2084,8 +2149,8 @@ function renderBudget() {
   const curOpts = currencyChoices().map(c => `<option value="${c}" ${c === S.budget.currency ? 'selected' : ''}>${c}</option>`).join('');
   const alerts = exp.filter(c => { const lim = limitFor(c, ym); return lim > 0 && catAmount(c, ym) / lim * 100 >= alertLevel(); });
   const body = `<div class="monthnav"><button class="iconbtn" data-act="budMonth" data-d="-1" aria-label="Previous month">${ic('back')}</button><b>${esc(ymLabel(ym))}</b><button class="iconbtn" data-act="budMonth" data-d="1" aria-label="Next month">${ic('chev')}</button></div>
-    <label class="fld"><span>Currency</span><select data-change="budCur" aria-label="Budget currency">${curOpts}</select></label>
-    <div class="bsum"><div><span>Income</span><b class="green">${bm(income)}</b></div><div><span>Spent</span><b>${bm(spent)}</b></div><div><span>${cap > 0 ? 'Left in budget' : 'Left after income'}</span><b class="${left < 0 ? 'red' : ''}">${bm(left)}</b></div></div>
+    <label class="fld"><span>${esc(t('budget.currency'))}</span><select data-change="budCur" aria-label="${esc(t('budget.currency'))}">${curOpts}</select></label>
+    <div class="bsum"><div><span>${esc(t('budget.income'))}</span><b class="green">${bm(income)}</b></div><div><span>${esc(t('budget.spent'))}</span><b>${bm(spent)}</b></div><div><span>${cap > 0 ? esc(t('budget.left')) : esc(t('budget.leftIncome'))}</span><b class="${left < 0 ? 'red' : ''}">${bm(left)}</b></div></div>
     ${alerts.length ? `<div class="notice">${ic('alert', 18)}<div>${alerts.map(c => esc(c.name)).join(', ')} ${alerts.length === 1 ? 'is' : 'are'} near or over the limit.</div></div>` : ''}
     <button class="btn primary full" data-act="budAdd">${ic('plus', 18)} Add income or expense</button>
     <div class="sec-h"><h2>Spending</h2></div>
@@ -2098,13 +2163,13 @@ function renderBudget() {
     ${!isPremium() && goals.length >= FREE_GOALS ? premRow('Unlimited goals', 'Free includes ' + FREE_GOALS + ' goals. Premium removes the cap.') : ''}
     <a class="btn full" href="#/banking/budget/tools" style="margin-top:8px">More tools</a>
     <p class="footnote">Your budget stays on this device. Recurring bills also show on the calendar. Alerts start at ${alertLevel()}% of a limit.</p>`;
-  return screen({ title: 'Budget', back: '#/banking', body });
+  return screen({ title: t('budget.title'), back: '#/banking', body });
 }
 function catSpendRow(c, ym) {
   const spent = catAmount(c, ym);
   const lim = c.kind === 'expense' ? limitFor(c, ym) : 0;
   const pct = lim > 0 ? spent / lim * 100 : 0;
-  const sub = c.kind === 'income' ? 'Income this month' : lim > 0 ? Math.round(pct) + '% of the monthly budget' + (isPremium() && S.budget.rollover && lim > Number(c.limit) ? ' · includes rollover' : '') : 'Tap to set a monthly limit';
+  const sub = c.kind === 'income' ? t('budget.incomeMonth') : lim > 0 ? t('budget.ofBudget', { pct: pctText(pct) }) + (isPremium() && S.budget.rollover && lim > Number(c.limit) ? t('budget.rollover') : '') : t('budget.setLimit');
   const right = c.kind === 'income' ? bm(spent) : lim > 0 ? bm(spent) : bm(spent);
   return `<button class="li" data-act="budSpend" data-id="${c.id}"><span class="grow"><b>${esc(c.name)}</b><span>${sub}</span>${c.kind === 'expense' && lim > 0 ? budgetBar(pct) : ''}</span><span class="amt ${c.kind === 'income' ? 'green' : pct >= 100 ? 'red' : ''}">${right}</span></button>`;
 }
@@ -2386,10 +2451,16 @@ function docKind(name, type) {
   return 'file';
 }
 function fmtBytes(n) { n = Number(n) || 0; if (n < 1024) return n + ' B'; if (n < 1048576) return Math.round(n / 1024) + ' KB'; return (n / 1048576).toFixed(1) + ' MB'; }
+function reasonText(r) {
+  if (!r) return '';
+  if (typeof r === 'string') return r;
+  if (r.k) return t(r.k, r);
+  return '';
+}
 function safetyTag(level) {
-  if (level === 'safe') return '<span class="tag green">Safe</span>';
-  if (level === 'caution') return '<span class="tag amber">Caution</span>';
-  if (level === 'blocked') return '<span class="tag red">Blocked</span>';
+  if (level === 'safe') return '<span class="tag green">' + esc(t('safety.safe')) + '</span>';
+  if (level === 'caution') return '<span class="tag amber">' + esc(t('safety.caution')) + '</span>';
+  if (level === 'blocked') return '<span class="tag red">' + esc(t('safety.blocked')) + '</span>';
   return '';
 }
 function safetyStrict() { return !!(S && S.safety && S.safety.strict); }
@@ -2418,7 +2489,7 @@ function linkCheckContext() {
 }
 function logSafety(result, name) {
   ensureSafety();
-  S.safety.log.unshift({ t: Date.now(), name: String(name || 'Check').slice(0, 80), level: result.level, reason: (result.reasons || []).filter(r => r && r !== 'Nothing in this check stood out.').join(' ') });
+  S.safety.log.unshift({ t: Date.now(), name: String(name || 'Check').slice(0, 80), level: result.level, reasons: (result.reasons || []).filter(r => r && r.k !== 'safety.ok' && r !== 'Nothing in this check stood out.'), reason: (result.reasons || []).map(reasonText).filter(s => s && s !== t('safety.ok')).join(' ') });
   if (S.safety.log.length > 30) S.safety.log.length = 30;
   save();
 }
@@ -2427,13 +2498,13 @@ function presentSafety(result, name) {
   if (result.level === 'safe') return Promise.resolve(true);
   const strict = safetyStrict();
   const blocked = result.level === 'blocked' || (result.level === 'caution' && strict);
-  const label = blocked ? 'Blocked' : 'Caution';
-  const why = strict && result.level === 'caution' ? '<p class="small muted">Strict mode is on, so a caution cannot be added.</p>' : '';
+    const label = blocked ? t('safety.blocked') : t('safety.caution');
+  const why = strict && result.level === 'caution' ? '<p class="small muted">' + esc(t('safety.strictOn')) + '</p>' : '';
   return new Promise(res => {
     let done = false;
     const fin = v => { if (done) return; done = true; closeSheet(true); res(!!v); };
-    const buttons = blocked ? '<button class="btn full" id="sNo">Don\'t add</button>' : '<div class="row gap"><button class="btn" id="sNo">Don\'t add</button><button class="btn primary" id="sYes">Add anyway</button></div>';
-    openSheet(`<p class="safebadge ${blocked ? 'blocked' : 'caution'}">${label}</p><h2>Safety check</h2><p class="muted">This looks at what you are adding to LifeHub. It does not scan your device, and nothing is uploaded.</p><ul class="safer">${(result.reasons || []).map(r => '<li>' + esc(r) + '</li>').join('')}</ul>${why}${buttons}`, el => {
+    const buttons = blocked ? '<button class="btn full" id="sNo">' + esc(t('safety.dont')) + '</button>' : '<div class="row gap"><button class="btn" id="sNo">' + esc(t('safety.dont')) + '</button><button class="btn primary" id="sYes">' + esc(t('safety.anyway')) + '</button></div>';
+    openSheet(`<p class="safebadge ${blocked ? 'blocked' : 'caution'}">${esc(label)}</p><h2>${esc(t('safety.title'))}</h2><p class="muted">${esc(t('safety.lead'))}</p><ul class="safer">${(result.reasons || []).map(r => '<li>' + esc(reasonText(r)) + '</li>').join('')}</ul>${why}${buttons}`, el => {
       const no = $('#sNo', el); if (no) no.onclick = () => fin(false);
       const yes = $('#sYes', el); if (yes) yes.onclick = () => fin(true);
     }, () => fin(false));
@@ -2444,7 +2515,7 @@ async function scanFile(file) {
   const cap = Math.min(size, 8 * 1024 * 1024);
   const bytes = new Uint8Array(await file.slice(0, cap).arrayBuffer());
   const result = LHSafety.scanBytes(file.name || 'file', bytes, size);
-  if (size > cap && result.level === 'safe') return { level: 'caution', reasons: ['Only the first 8 MB of this large file were checked.'] };
+  if (size > cap && result.level === 'safe') return { level: 'caution', reasons: [{ k: 'safety.partial' }] };
   return result;
 }
 async function addDocFiles(list) {
@@ -2504,7 +2575,7 @@ function renderDocuments() {
     <div class="sec-h"><h2>${q ? 'Results' : docFolder ? 'In this folder' : 'All files'}</h2></div>
     <div class="list">${items.length ? items.map(row).join('') : '<p class="empty">Nothing here yet. Add a PDF, photo, spreadsheet or text file from this device.</p>'}</div>
     <p class="footnote">Files stay in this browser's database. A safety check runs on this device when you add one. It is not an antivirus scan of your phone or computer.</p>`;
-  return { html: screen({ title: 'Documents', body, right: `<button class="iconbtn" data-act="docAdd" aria-label="Add files">${ic('plus')}</button>` }), after: () => {
+  return { html: screen({ title: t('docs.title'), body, right: `<button class="iconbtn" data-act="docAdd" aria-label="${esc(t('docs.add'))}">${ic('plus')}</button>` }), after: () => {
     const i = $('#docQ'); if (!i) return;
     i.oninput = () => { docQ = i.value; const p = i.selectionStart; render(); const j = $('#docQ'); if (j) { j.focus(); j.setSelectionRange(p, p); } };
   } };
@@ -3038,7 +3109,7 @@ const A = {
   docAdd: async () => addDocFiles(await pickFiles(DOC_ACCEPT)), docFolder: el => { docFolder = el.dataset.id || ''; render(); }, docNewFolder: () => newFolder(),
   docDl: el => downloadDoc(el.dataset.id), docTags: el => editDocTags(el.dataset.id), docMove: el => moveDoc(el.dataset.id), docDel: el => deleteDoc(el.dataset.id),
   gmapsHere: el => gmapsHere(el),
-  editProfile, editMoney, changeLogin, lockNow: lock,
+  editProfile, editMoney, editLang, changeLogin, lockNow: lock,
   refreshNow: () => refreshAll(true),
   setRefresh: el => { const o = REFRESH.find(r => r[0] === el.dataset.v); if (o[2] && !isPremium()) { location.hash = '#/plan'; toast('That\'s a Premium perk'); return; } S.settings.refresh = o[0]; save(); scheduleRefresh(); render(); toast(o[0] === 'manual' ? 'Manual refresh only' : `Refreshing ${o[0] === 'live' ? 'live' : 'every ' + o[1]}`); },
   hideAd: el => { sessionStorage.setItem('lh.adHidden', '1'); const a = el.closest('.adslot'); if (a) a.remove(); },
@@ -3081,7 +3152,7 @@ document.addEventListener('change', e => {
   const el = e.target.closest('[data-change]'); if (!el) return;
   invalidateCache();
   if (el.dataset.change === 'glass') { if (!isPremium()) { el.checked = false; location.hash = '#/plan'; toast('That\'s a Premium perk'); return; } S.settings.iconStyle = el.checked ? 'glass' : 'standard'; save(); render(); return; }
-  if (el.dataset.change === 'setRegion') { S.profile.region = el.value; save(); render(); toast(`Showing ${region().name} emergency numbers`); }
+  if (el.dataset.change === 'setRegion') { S.profile.region = el.value; save(); render(); toast(t('emerg.regionToast', { name: regionLabel(el.value) })); }
   if (el.dataset.change === 'preferWifi') { S.settings.preferWifi = el.checked; save(); render(); toast(el.checked ? 'Wi‑Fi preferred, mobile data as backup' : 'Using any available network'); }
   if (el.dataset.change === 'safetyStrict') { ensureSafety(); S.safety.strict = el.checked; save(); render(); toast(el.checked ? 'Strict mode on. A caution is blocked.' : 'Strict mode off. You can still add a caution.'); }
   if (el.dataset.change === 'budCur') {
@@ -3113,10 +3184,22 @@ setInterval(() => {
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (unlocked && S && S.settings.lockMinutes > 0 && hiddenAt && Date.now() - hiddenAt > S.settings.lockMinutes * 60000) lock(); });
 
-setupUpdates();
-render();
-if (unlocked) { checkReminders(); absorbInbox(); absorbAddIntent(); openPendingDraft(); }
+function initialLang() {
+  try { const saved = localStorage.getItem('lifehub.lang'); if (saved) return saved; } catch (e) {}
+  if (S && S.profile && S.profile.lang) return S.profile.lang;
+  return LH.matchLang(navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en']);
+}
+async function boot() {
+  let code = 'en';
+  try { code = await LH.load(initialLang()); } catch (e) { try { code = await LH.load('en'); } catch (e2) {} }
+  try { localStorage.setItem('lifehub.lang', code); } catch (e) {}
+  if (S && S.profile && !S.profile.lang) { S.profile.lang = code; save(); }
+  setupUpdates();
+  render();
+  if (unlocked) { checkReminders(); absorbInbox(); absorbAddIntent(); openPendingDraft(); }
+}
+boot();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.4.4', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
+window.LifeHub = { version: '1.5.0', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
 })();

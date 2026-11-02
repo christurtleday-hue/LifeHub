@@ -27,7 +27,6 @@
   "common.saved": "Kaydedildi",
   "common.deleted": "Silindi",
   "common.hidden": "Gizli",
-
   "banner.emergency": "ACİL",
   "banner.calendar": "Takvim",
   "banner.medical": "Sağlık",
@@ -38,7 +37,6 @@
   "banner.utilities": "Faturalar",
   "banner.documents": "Belgeler",
   "banner.addnew": "Ekle",
-
   "home.morning": "Günaydın",
   "home.afternoon": "İyi günler",
   "home.evening": "İyi akşamlar",
@@ -64,7 +62,6 @@
   "home.groupApps": "{n, plural, one {# uygulama} other {# uygulama}}",
   "home.dropTitle": "Buraya uygulama, kısayol veya bağlantı bırak",
   "home.dropBody": "Bu bilgisayarda tarayıcı bağlantısı, mağaza bağlantısı veya kısayol dosyası bırakabilirsin. LifeHub yalnızca bıraktığını okur.",
-
   "onb.lead": "İhtiyacın olan her şey, tek yerde.",
   "onb.f1": "Acil numaralar ve sağlık kartı",
   "onb.f2": "Para, faturalar ve ödemeler",
@@ -103,7 +100,6 @@
   "onb.pinMatch": "PIN’ler aynı değil",
   "onb.pwRule": "En az 8 karakter kullan",
   "onb.pwMatch": "Şifreler aynı değil",
-
   "auth.pin": "PIN",
   "auth.pinDesc": "4–6 rakamlık kod",
   "auth.password": "Şifre",
@@ -124,10 +120,8 @@
   "auth.forgot": "Unuttun mu? LifeHub’ı sıfırla",
   "auth.incorrect": "Şifre yanlış",
   "auth.passkeyFail": "Geçiş anahtarı doğrulanmadı",
-
   "lock.emergency": "Acil",
   "lock.medicalId": "Sağlık kartı",
-
   "search.title": "Ara",
   "search.placeholder": "Her yerde ara",
   "search.hint": "Kişileri, etkinlikleri, faturaları, uygulamaları, sohbetleri, sağlık bilgilerini ve acil numaraları ara.",
@@ -136,13 +130,11 @@
   "search.app": "Uygulama bağlantısı",
   "search.doc": "Belge",
   "search.appt": "Randevu",
-
   "region.AU": "Avustralya",
   "region.NZ": "Yeni Zelanda",
   "region.US": "Amerika Birleşik Devletleri",
   "region.UK": "Birleşik Krallık",
   "region.EU": "Avrupa Birliği",
-
   "emerg.title": "Acil",
   "emerg.region": "Bölge",
   "emerg.share": "Konumumu paylaş",
@@ -165,7 +157,6 @@
   "emerg.denied": "izin reddedildi",
   "emerg.helpText": "Yardıma ihtiyacım var. Konumum (±{m} m): {url}",
   "emerg.regionToast": "{name} acil numaraları gösteriliyor",
-
   "med.title": "Sağlık",
   "med.id": "Sağlık kartı",
   "med.blood": "Kan grubu",
@@ -194,7 +185,6 @@
   "med.family": "Aile öyküsü",
   "med.appts": "Randevular",
   "med.apptEmpty": "Henüz randevu yok. Bir tane ekle, takvimde görünsün.",
-
   "bank.title": "Banka",
   "bank.demo": "Gerçek bir banka bağlı değil. Bakiyeler, transferler ve ödemeler bu cihazda simüle edilir.",
   "bank.net": "Net bakiye",
@@ -212,7 +202,6 @@
   "bank.sched": "Planlı ödemeler",
   "bank.schedEmpty": "Kira, kredi veya transfer ekle, takvimde görünsün. Bu para hareket ettirmez.",
   "bank.foot": "Planlı ödeme takvimde bir anımsatıcıdır, gerçek bir çekim değildir. Canlı sürümde banka, yetkili bir açık bankacılık sağlayıcısıyla bağlanırdı.",
-
   "cal.title": "Takvim",
   "cal.month": "Ay",
   "cal.week": "Hafta",
@@ -237,7 +226,6 @@
   "cal.dismiss": "Bildirimi kapat",
   "cal.work": "Çalışma düzeni",
   "cal.foot": "Faturalar, bütçe ödemeleri, randevular, ilaç saatleri, planlı ödemeler, doğum günleri, sosyal etkinlikler ve tarihli uygulamalar burada kendiliğinden görünür.",
-
   "budget.title": "Bütçe",
   "budget.currency": "Para birimi",
   "budget.income": "Gelir",
@@ -259,14 +247,12 @@
   "budget.are": "kalemleri",
   "budget.tools": "Bütçe araçları",
   "budget.foot": "Bütçen bu cihazda kalır. Yinelenen faturalar takvimde de görünür. Uyarılar bir sınırın {pct} oranında başlar.",
-
   "docs.title": "Belgeler",
   "docs.add": "Dosya ekle",
   "docs.empty": "Burada henüz bir şey yok. Bu cihazdan bir PDF, fotoğraf, hesap tablosu veya metin dosyası ekle.",
   "docs.foot": "Dosyalar bu tarayıcının veritabanında kalır. Bir dosya eklediğinde güvenlik kontrolü cihazda çalışır. Telefonunun veya bilgisayarının antivirüs taraması değildir.",
   "docs.opening": "Açılıyor…",
   "docs.missing": "Bu dosya artık cihazdaki veritabanında yok.",
-
   "add.title": "Ekle",
   "add.sync": "Hızlı ekleme",
   "add.syncLead": "Belki kullandığın uygulamaları işaretle ve tek seferde ekle. LifeHub bu cihazda ne yüklü olduğunu göremez.",
@@ -281,7 +267,6 @@
   "add.other": "Diğer uygulamalar",
   "add.onHome": " · Ana sayfada",
   "add.apps": "{n, plural, one {# uygulama} other {# uygulama}}",
-
   "set.title": "Ayarlar",
   "set.emergencyLine": "{flag} {name} · acil numaralar",
   "set.money": "Bölge ve para birimi",
@@ -335,7 +320,6 @@
   "set.delete": "Verilerini sil",
   "set.version": "LifeHub prototipi v{v} · {net} · Kurulu kopyalar kendini günceller. Tarihler Australia/Hobart saatini kullanır.",
   "set.langSaved": "Dil güncellendi",
-
   "safety.title": "Güvenlik kontrolü",
   "safety.blocked": "Engellendi",
   "safety.caution": "Dikkat",
@@ -367,7 +351,6 @@
   "safety.secret": "Bağlantıda şifre veya token gibi duran bir şey var ({keys}).",
   "safety.lookalike": "Bu adres {hit} gibi duruyor ama alışılmış site değil.",
   "safety.partial": "Bu büyük dosyanın yalnızca ilk 8 MB’ı kontrol edildi.",
-
   "plan.title": "Planın",
   "plan.free": "LifeHub Ücretsiz",
   "plan.prem": "LifeHub Premium",
@@ -381,7 +364,6 @@
   "plan.checkoutLead": "Demo ödeme. Karttan çekim yapılmaz ve gerçek abonelik oluşmaz.",
   "plan.charged": "Bugün çekilen",
   "plan.nothing": "Hiçbir şey · demo",
-
   "loc.title": "Konum",
   "loc.off": "Paylaşım kapalı. Her kişiyi işaretle, süreyi seç, sonra başlat. Herkesle paylaşma seçeneği yok.",
   "loc.finding": "Konumun aranıyor…",
@@ -397,7 +379,6 @@
   "loc.open": "Aç",
   "loc.directions": "Yol tarifi",
   "loc.drive": "Sürüşe başla",
-
   "toast.currency": "Para birimi güncellendi. Tutarlar çevrilmedi.",
   "toast.format": "Sayı biçimi kaydedildi",
   "toast.storage": "Depolama dolu: bir yedek dışa aktar",
@@ -408,7 +389,6 @@
   "ad.hide": "Reklamı bu oturumda gizle",
   "ad.premiumTitle": "LifeHub Premium: reklamsız",
   "ad.premiumBody": "Daha net fotoğraflar, canlı yenileme · fiyat mağazadan",
-
   "svc.AU.0.name": "Polis, itfaiye, ambulans",
   "svc.AU.0.desc": "Hayati acil durumlar",
   "svc.AU.1.name": "Telefondan acil çağrı",
@@ -458,5 +438,24 @@
   "svc.EU.2.name": "Duygusal destek (varsa)",
   "svc.EU.2.desc": "Duygusal destek hattı",
   "svc.EU.3.name": "Kayıp çocuklar",
-  "svc.EU.3.desc": "Kayıp çocuklar hattı"
+  "svc.EU.3.desc": "Kayıp çocuklar hattı",
+  "set.min1": "1 min",
+  "set.min5": "5 min",
+  "set.min15": "15 min",
+  "set.never": "Never",
+  "set.active": "Active",
+  "set.ends": "Ends soon",
+  "set.glass": "Glass icons",
+  "set.off": "Off",
+  "set.up": "Move up",
+  "set.down": "Move down",
+  "set.show": "Show",
+  "set.hideOne": "Hide",
+  "set.pull": "Pull down on any screen to refresh now.",
+  "set.pullPrem": " 1 min and Live come with Premium.",
+  "set.importSub": "LifeHub backup (.json), contacts (.vcf/.csv)",
+  "set.sampleSub": "Replace current data with demo data",
+  "set.wipeSub": "Clears local storage, caches and the on-device database",
+  "set.deleteSub": "How account deletion works",
+  "set.privacyCard": "What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample, not a tracking network. Banking, chat, social feeds and other people's map pins are demos."
 }

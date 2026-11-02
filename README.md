@@ -12,10 +12,13 @@ Plain HTML/CSS/JS with no build step and no backend. All data stays in the brows
   On a phone, choose "Add to Home Screen" (iOS Safari) or "Install app" (Android Chrome). Over a LAN you'll need HTTPS for install, camera, location and passkeys (e.g. `npx serve` behind a tunnel such as Cloudflare Tunnel or ngrok).
 
 ## First run
-Onboarding asks for your name and region (AU default; NZ/US/UK/EU also available) and offers optional sample data. You then choose a sign-in method: PIN, password, passkey/biometric (real WebAuthn where supported, otherwise simulated), or Google/Apple (demo buttons).
+Onboarding asks for your name and emergency region (detected from the device, with AU, NZ, US, UK, and EU available) and offers optional sample data. Language and currency are detected separately and can be changed in Settings. You then choose a sign-in method: PIN, password, passkey/biometric (real WebAuthn where supported, otherwise simulated), or Google/Apple (demo buttons).
+
+## Languages
+User-facing words live in `lang/*.json` and load only for the active language, with English filling any missing key. Settings has a Language picker next to Region & currency. Dates, times, the week start, and money follow the region locale, not the UI language. See `TRANSLATIONS.md`. The privacy, terms, support, and delete-data pages are still English.
 
 ## Files
-- `index.html`, `styles.css`, `app.js`: the app (hash router, single file of logic)
+- `index.html`, `styles.css`, `app.js`, `i18n.js`, `lang/`: the app (hash router, lazy language files)
 - `manifest.webmanifest`, `sw.js`, `icons/`, `screenshots/`: PWA install, offline cache and store listing images
 - `privacy.html`, `terms.html`, `support.html`, `delete-account.html`: store and privacy pages
 - `CNAME`: custom domain name `lifehubapp.app` (GitHub Actions Pages ignores this file for domain setup; set the domain in Settings > Pages)
