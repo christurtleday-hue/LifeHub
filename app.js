@@ -187,7 +187,143 @@ let lastAct = Date.now();
 const touchSession = () => { lastAct = Date.now(); if (unlocked) sessionStorage.setItem('lh.session', JSON.stringify({ t: lastAct })); };
 
 const region = () => REGIONS[S?.profile?.region] || REGIONS.AU;
-const money = (n, cur) => new Intl.NumberFormat(region().locale, { style: 'currency', currency: cur || region().currency }).format(Number(n) || 0);
+const REGION_CURRENCY = {
+  AU: 'AUD', NZ: 'NZD', US: 'USD', GB: 'GBP', CA: 'CAD', IE: 'EUR', DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR', AT: 'EUR', PT: 'EUR', FI: 'EUR', GR: 'EUR', LU: 'EUR', SI: 'EUR', SK: 'EUR', EE: 'EUR', LV: 'EUR', LT: 'EUR', MT: 'EUR', CY: 'EUR', HR: 'EUR',
+  JP: 'JPY', KR: 'KRW', IN: 'INR', BR: 'BRL', MX: 'MXN', CN: 'CNY', HK: 'HKD', TW: 'TWD', SG: 'SGD', MY: 'MYR', TH: 'THB', ID: 'IDR', PH: 'PHP', VN: 'VND',
+  CH: 'CHF', SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN', CZ: 'CZK', HU: 'HUF', RO: 'RON', BG: 'BGN',
+  ZA: 'ZAR', AE: 'AED', SA: 'SAR', IL: 'ILS', TR: 'TRY',
+  AR: 'ARS', CL: 'CLP', CO: 'COP', PE: 'PEN', EG: 'EGP', NG: 'NGN', KE: 'KES', PK: 'PKR', BD: 'BDT', FJ: 'FJD'
+};
+const EURO = new Set(['AT', 'BE', 'CY', 'DE', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PT', 'SI', 'SK']);
+const CURRENCY_CHOICES = ['AUD', 'NZD', 'USD', 'GBP', 'EUR', 'CAD', 'JPY', 'KRW', 'INR', 'BRL', 'MXN', 'CNY', 'HKD', 'SGD', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'ZAR', 'AED'];
+const LOCALE_CHOICES = ['en-AU', 'en-NZ', 'en-US', 'en-GB', 'en-CA', 'en-IN', 'de-DE', 'fr-FR', 'es-ES', 'it-IT', 'pt-BR', 'ja-JP', 'ko-KR', 'zh-CN'];
+function emergencyForCountry(country) {
+  if (country === 'AU') return 'AU';
+  if (country === 'NZ') return 'NZ';
+  if (country === 'US') return 'US';
+  if (country === 'GB') return 'UK';
+  if (EURO.has(country)) return 'EU';
+  return 'EU';
+}
+function detectMoney(langs) {
+  const list = (langs && langs.length) ? langs : (typeof navigator !== 'undefined' && navigator.languages && navigator.languages.length ? [...navigator.languages] : [(typeof navigator !== 'undefined' && navigator.language) || 'en-AU']);
+  let tag = list[0] || 'en-AU';
+  let country = '';
+  for (const item of list) {
+    try {
+      const loc = new Intl.Locale(item);
+      const regionCode = loc.region || (loc.maximize ? loc.maximize().region : '');
+      if (regionCode) { tag = loc.baseName || item; country = regionCode; break; }
+    } catch (e) {}
+  }
+  if (!country) {
+    try { const loc = new Intl.Locale(tag); country = loc.region || (loc.maximize ? loc.maximize().region : '') || ''; tag = loc.baseName || tag; } catch (e) {}
+  }
+  const currency = REGION_CURRENCY[country] || 'USD';
+  return { locale: tag || 'en-AU', currency, country, emergency: emergencyForCountry(country) };
+}
+function homeCurrency() { return (S && S.profile && S.profile.currency) || 'AUD'; }
+function homeLocale() { return (S && S.profile && S.profile.locale) || region().locale || 'en-AU'; }
+function currencyDigits(code) {
+  try { return new Intl.NumberFormat('en', { style: 'currency', currency: code }).resolvedOptions().maximumFractionDigits; }
+  catch (e) { return 2; }
+}
+function formatMoney(n, cur, locale) {
+  const code = cur || 'AUD';
+  const loc = locale || 'en-AU';
+  const digits = currencyDigits(code);
+  const num = Number(n);
+  const safe = Number.isFinite(num) ? num : 0;
+  try { return new Intl.NumberFormat(loc, { style: 'currency', currency: code, minimumFractionDigits: digits, maximumFractionDigits: digits }).format(safe); }
+  catch (e) { return safe.toFixed(digits) + ' ' + code; }
+}
+function money(n, cur) { return formatMoney(n, cur || homeCurrency(), homeLocale()); }
+function appFee(cur) { return currencyDigits(cur || homeCurrency()) === 0 ? 1 : 0.01; }
+function currencyOptionList(selected) {
+  const list = [...CURRENCY_CHOICES];
+  if (selected && !list.includes(selected)) list.unshift(selected);
+  return list;
+}
+function moneyList(pairs) {
+  if (!pairs || !pairs.length) return money(0);
+  return pairs.map(([c, n]) => money(n, c)).join(' · ');
+}
+function groupSum(items, amountOf, currencyOf) {
+  const map = new Map();
+  (items || []).forEach(it => {
+    const c = currencyOf(it) || homeCurrency();
+    map.set(c, (map.get(c) || 0) + (Number(amountOf(it)) || 0));
+  });
+  return [...map.entries()];
+}
+function acctCurrency(a) { return (a && a.currency) || homeCurrency(); }
+function txCurrency(t) { const a = t && acctById(t.accountId); return (t && t.currency) || (a && a.currency) || homeCurrency(); }
+function premiumPrice() {
+  const store = S && S.plan && S.plan.storePrice;
+  if (store && typeof store.amount === 'number' && store.currency) {
+    return { amount: store.amount, currency: store.currency, period: store.period || 'month', source: store.source || 'store', label: money(store.amount, store.currency) + '/' + (store.period || 'month') };
+  }
+  const cur = homeCurrency();
+  let name = cur;
+  try { name = new Intl.DisplayNames(homeLocale(), { type: 'currency' }).of(cur) || cur; } catch (e) {}
+  return { amount: null, currency: cur, period: 'month', source: 'placeholder', label: 'Price in ' + name };
+}
+function currencyChoices() {
+  const set = new Set(CURRENCY_CHOICES);
+  set.add(homeCurrency());
+  (S && S.accounts || []).forEach(a => { if (a.currency) set.add(a.currency); });
+  if (S && S.budget && S.budget.currency) set.add(S.budget.currency);
+  return [...set];
+}
+function stampMissing(obj, code) {
+  if (obj && !obj.currency) { obj.currency = code; return true; }
+  return false;
+}
+function migrateMoney() {
+  if (!S || !S.profile) return false;
+  let changed = false;
+  if (!S.profile.currency) { S.profile.currency = 'AUD'; changed = true; }
+  if (!S.profile.locale) { S.profile.locale = (REGIONS[S.profile.region] || REGIONS.AU).locale || 'en-AU'; changed = true; }
+  const home = S.profile.currency;
+  (S.accounts || []).forEach(a => { if (stampMissing(a, home)) changed = true; });
+  (S.transactions || []).forEach(t => {
+    if (!t.currency) {
+      const a = (S.accounts || []).find(x => x.id === t.accountId);
+      t.currency = (a && a.currency) || home;
+      changed = true;
+    }
+  });
+  (S.bills || []).forEach(b => { if (stampMissing(b, home)) changed = true; });
+  (S.scheduled || []).forEach(p => { if (stampMissing(p, home)) changed = true; });
+  if (S.budget && typeof S.budget === 'object') {
+    if (!S.budget.currency) { S.budget.currency = home; changed = true; }
+    ['entries', 'bills', 'debts', 'goals'].forEach(k => {
+      (S.budget[k] || []).forEach(item => { if (stampMissing(item, S.budget.currency)) changed = true; });
+    });
+  }
+  return changed;
+}
+function retagCurrency(obj, prev, next) {
+  if (!obj) return;
+  if (!obj.currency || obj.currency === prev) obj.currency = next;
+}
+function setHomeMoney(locale, currency) {
+  const prev = homeCurrency();
+  const next = String(currency || prev).toUpperCase();
+  S.profile.locale = locale || homeLocale();
+  if (next !== prev) {
+    (S.accounts || []).forEach(a => retagCurrency(a, prev, next));
+    (S.transactions || []).forEach(t => retagCurrency(t, prev, next));
+    (S.bills || []).forEach(b => retagCurrency(b, prev, next));
+    (S.scheduled || []).forEach(p => retagCurrency(p, prev, next));
+    if (S.budget && typeof S.budget === 'object' && (!S.budget.currency || S.budget.currency === prev)) {
+      ['entries', 'bills', 'debts', 'goals'].forEach(k => (S.budget[k] || []).forEach(item => retagCurrency(item, prev, next)));
+      S.budget.currency = next;
+    }
+    S.profile.currency = next;
+    toast('Currency updated. Amounts were not converted.');
+  } else toast('Number format saved');
+}
 const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w.replace(/[^\p{L}\p{N}]/gu, '')).filter(Boolean).map(w => w[0].toUpperCase()).join('') || '?';
 const avColor = s => AV_COLORS[[...String(s)].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_COLORS.length];
 const av = (name, size) => `<span class="av" style="background:${avColor(name)}${size ? `;width:${size}px;height:${size}px` : ''}">${esc(initials(name))}</span>`;
@@ -196,10 +332,12 @@ const fmtTime = t => { const d = new Date(t); const now = new Date(); return d.t
 const fmtDate = s => s ? new Date(s + 'T00:00:00').toLocaleDateString(region().locale, { weekday: 'short', day: 'numeric', month: 'short' }) : '';
 const daysUntil = s => Math.round((new Date(s + 'T00:00:00') - new Date(todayISO() + 'T00:00:00')) / 86400000);
 
-function seed(name, regionCode, sample) {
+function seed(name, regionCode, sample, moneyPrefs) {
+  const cur = (moneyPrefs && moneyPrefs.currency) || 'AUD';
+  const locale = (moneyPrefs && moneyPrefs.locale) || 'en-AU';
   const st = {
     v: 1, created: Date.now(),
-    profile: { name: name || 'Me', region: regionCode || 'AU', location: '' },
+    profile: { name: name || 'Me', region: regionCode || 'AU', locale, currency: cur, location: '' },
     auth: { method: null },
     settings: { theme: 'system', textSize: 'normal', lockMinutes: 5, preferWifi: true, banners: ['emergency', 'calendar', 'medical', 'banking', 'chat', 'contacts', 'social', 'utilities', 'documents', 'addnew'].map(id => ({ id, hidden: false })) },
     medical: { bloodType: '', organDonor: false, allergies: [], conditions: [], medications: [], appointments: [], family: [], doctor: { name: '', clinic: '', phone: '' }, medicare: { number: '', irn: '', expiry: '' }, notes: '', showOnLock: true },
@@ -225,11 +363,11 @@ function seed(name, regionCode, sample) {
     family: [{ id: uid(), condition: 'Type 2 diabetes', relative: 'Father', status: 'Likely inherited' }, { id: uid(), condition: 'High cholesterol', relative: 'Mother', status: 'Confirmed inherited' }],
     doctor: { name: 'Dr Anika Patel', clinic: 'Launceston Medical Centre (sample)', phone: '(03) 6000 0000' },
     medicare: { number: '2123 45670 1', irn: '1', expiry: '2029-06' }, notes: '', showOnLock: true };
-  const a1 = { id: uid(), bank: 'Bank of us', name: 'Everyday', number: '807-009 •••• 4821', balance: 2341.56, type: 'transaction', color: 'linear-gradient(135deg,#0f766e,#115e59)' };
-  const a2 = { id: uid(), bank: 'Bank of us', name: 'Savings', number: '807-009 •••• 9930', balance: 12480, type: 'savings', color: 'linear-gradient(135deg,#2557d6,#1e3a8a)' };
-  const a3 = { id: uid(), bank: 'MyState Bank', name: 'Low Rate Visa', number: '•••• •••• •••• 5512', balance: -842.1, type: 'credit', color: 'linear-gradient(135deg,#334155,#0f172a)' };
+  const a1 = { id: uid(), bank: 'Bank of us', name: 'Everyday', number: '807-009 •••• 4821', balance: 2341.56, currency: cur, type: 'transaction', color: 'linear-gradient(135deg,#0f766e,#115e59)' };
+  const a2 = { id: uid(), bank: 'Bank of us', name: 'Savings', number: '807-009 •••• 9930', balance: 12480, currency: cur, type: 'savings', color: 'linear-gradient(135deg,#2557d6,#1e3a8a)' };
+  const a3 = { id: uid(), bank: 'MyState Bank', name: 'Low Rate Visa', number: '•••• •••• •••• 5512', balance: -842.1, currency: cur, type: 'credit', color: 'linear-gradient(135deg,#334155,#0f172a)' };
   st.accounts = [a1, a2, a3];
-  const t = (acc, days, desc, amount, cat) => ({ id: uid(), accountId: acc.id, date: dOff(-days), desc, amount, cat });
+  const t = (acc, days, desc, amount, cat) => ({ id: uid(), accountId: acc.id, date: dOff(-days), desc, amount, currency: cur, cat });
   st.transactions = [t(a1, 0, 'Banjo\'s Bakery Launceston', -8.9, 'Food'), t(a1, 1, 'Woolworths Launceston', -86.4, 'Groceries'), t(a1, 2, 'Salary', 2950, 'Income'),
     t(a3, 3, 'Ampol Kings Meadows', -72.15, 'Fuel'), t(a1, 4, 'Transfer to Savings', -500, 'Transfer'), t(a2, 4, 'Transfer from Everyday', 500, 'Transfer'), t(a1, 6, 'Aurora Energy', -212.3, 'Bills')];
   st.chats = [
@@ -244,14 +382,23 @@ function seed(name, regionCode, sample) {
     { id: uid(), key: 'linkedin', text: 'Priya Shah wants to connect (1 new request)', t: minsAgo(240) },
     { id: uid(), key: 'facebook', text: 'Event reminder: Launceston Show is tomorrow', t: minsAgo(600), eventTitle: 'Launceston Show', eventStart: tomorrow + 'T10:00', eventEnd: tomorrow + 'T16:00' },
   ];
-  const b = (provider, category, amount, due, type = 'owed', extra = {}) => ({ id: uid(), provider, category, amount, due, type, paid: false, reminder: true, remindDays: 3, ...extra });
+  const b = (provider, category, amount, due, type = 'owed', extra = {}) => ({ id: uid(), provider, category, amount, currency: cur, due, type, paid: false, reminder: true, remindDays: 3, ...extra });
   st.bills = [b('TasWater', 'Water', 182.75, dOff(-2)), b('Aurora Energy', 'Electricity', 286.4, dOff(4)), b('Launtel NBN', 'Internet', 89, dOff(9)), b('Telstra', 'Mobile', 65, dOff(12)), b('City of Launceston', 'Council rates', 420.5, dOff(26)), b('RACT Insurance', 'Insurance', 35.2, '', 'credit', { reminder: false })];
   const g1 = { id: uid(), name: 'Shopping', emoji: '🛒', onHome: false };
   const g2 = { id: uid(), name: 'Family', emoji: '🏡', onHome: true };
   st.groups = [g1, g2];
   st.apps = [{ id: uid(), name: 'Woolworths', url: 'https://www.woolworths.com.au/', emoji: '🥦', groupId: g1.id }, { id: uid(), name: 'Coles', url: 'https://www.coles.com.au/', emoji: '🍎', groupId: g1.id }, { id: uid(), name: 'eBay', url: 'https://www.ebay.com.au/', emoji: '🏷️', groupId: g1.id },
     { id: uid(), name: 'School app', url: 'https://www.education.tas.gov.au/', emoji: '🎒', groupId: g2.id, nextOn: tomorrow, nextLabel: 'School pickup', nextStart: '15:00', nextEnd: '15:20' }, { id: uid(), name: 'Family calendar', url: 'https://calendar.google.com/', emoji: '📅', groupId: g2.id }, { id: uid(), name: 'Metro Tas', url: 'https://www.metrotas.com.au/', emoji: '🚌', groupId: '' }];
-  st.scheduled = [{ id: uid(), name: 'Rent', amount: 450, every: 'fortnight', next: fri }];
+  st.scheduled = [{ id: uid(), name: 'Rent', amount: 450, currency: cur, every: 'fortnight', next: fri }];
+  const budCats = [['Pay', 'income', ''], ['Other income', 'income', ''], ['Housing', 'expense', 'needs'], ['Groceries', 'expense', 'needs'], ['Transport', 'expense', 'needs'], ['Bills & utilities', 'expense', 'needs'], ['Health', 'expense', 'needs'], ['Eating out', 'expense', 'wants'], ['Fun', 'expense', 'wants'], ['Shopping', 'expense', 'wants'], ['Savings', 'expense', 'save']].map(([name, kind, group]) => ({ id: uid(), name, kind, group, limit: name === 'Groceries' ? 600 : name === 'Housing' ? 900 : name === 'Eating out' ? 200 : 0 }));
+  const payCat = budCats.find(c => c.name === 'Pay');
+  const grocCat = budCats.find(c => c.name === 'Groceries');
+  const houseCat = budCats.find(c => c.name === 'Housing');
+  const budMonth = hobartToday().slice(0, 7);
+  st.budget = { currency: cur, alertAt: 80, rollover: false, extra: 0, strategy: 'snowball', categories: budCats, seen: {}, debts: [],
+    entries: [{ id: uid(), catId: payCat.id, amount: 2950, date: budMonth + '-01', note: 'Salary', currency: cur }, { id: uid(), catId: grocCat.id, amount: 186.4, date: hobartToday(), note: 'Woolworths', currency: cur }],
+    goals: [{ id: uid(), name: 'Holiday', target: 2000, saved: 450, due: addDays(hobartToday(), 120), currency: cur }],
+    bills: [{ id: uid(), name: 'Rent', amount: 450, day: 14, catId: houseCat.id, currency: cur }] };
   const job = { id: uid(), name: 'Day job', color: '#0f766e' };
   st.jobs = [job];
   const weekMon = mondayOf(hobartToday());
@@ -391,7 +538,8 @@ function screen({ title, back = '#/home', body, right = '', cls = '', demo = '' 
 const demoNote = txt => `<div class="notice">${ic('alert', 18)}<div>${txt}</div></div>`;
 
 /* ---------- onboarding ---------- */
-let ob = { step: 0, name: '', region: 'AU', method: 'pin', sample: true };
+let ob = { step: 0, name: '', region: 'AU', currency: 'AUD', locale: 'en-AU', method: 'pin', sample: true };
+(function initOb() { const d = detectMoney(); ob.region = d.emergency; ob.currency = d.currency; ob.locale = d.locale; })();
 function renderOnboarding() {
   const dots = `<div class="onb-dots">${[0, 1, 2, 3].map(i => `<i class="${i <= ob.step ? 'on' : ''}"></i>`).join('')}</div>`;
   let body = '';
@@ -399,9 +547,10 @@ function renderOnboarding() {
     <div class="feat"><div>${ic('alert')}Emergency numbers & Medical ID</div><div>${ic('bank')}Money, bills & payments</div><div>${ic('msg')}Chat, calls, contacts & social</div><div>${ic('shield')}Private: your data stays on this device</div></div>
     <div class="spacer"></div><button class="btn primary full" data-act="obNext">Get started</button>
     <a class="btn ghost full red" style="margin-top:8px" href="tel:000">${ic('phone', 18)} Need help now? Call 000</a>`;
-  if (ob.step === 1) body = `<h1>About you</h1><p class="lead">This sets your emergency numbers and currency.</p>
+  if (ob.step === 1) body = `<h1>About you</h1><p class="lead">Emergency numbers follow the region. Money uses your currency. You can change both later.</p>
     <form id="obF"><label class="fld"><span>Your name</span><input name="name" value="${esc(ob.name)}" placeholder="e.g. Chris Day" autocomplete="name" required></label>
-    <label class="fld"><span>Region</span><select name="region">${Object.entries(REGIONS).map(([k, r]) => `<option value="${k}" ${k === ob.region ? 'selected' : ''}>${r.flag} ${r.name}</option>`).join('')}</select></label>
+    <label class="fld"><span>Emergency region</span><select name="region">${Object.entries(REGIONS).map(([k, r]) => `<option value="${k}" ${k === ob.region ? 'selected' : ''}>${r.flag} ${r.name}</option>`).join('')}</select></label>
+    <label class="fld"><span>Currency</span><select name="currency">${currencyOptionList(ob.currency).map(c => `<option value="${c}" ${c === ob.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
     <label class="fld chk"><input type="checkbox" name="sample" ${ob.sample ? 'checked' : ''}><span>Start with sample data so I can explore</span></label>
     <div class="spacer"></div><div class="row gap"><button type="button" class="btn" data-act="obBack">Back</button><button class="btn primary">Continue</button></div></form>`;
   if (ob.step === 2) body = `<h1>How do you want to sign in?</h1><p class="lead">Pick what's easiest for you. You can change it later.</p>
@@ -417,10 +566,10 @@ function renderOnboarding() {
   return `<div class="onb">${dots}${body}</div>`;
 }
 async function finishOnboarding(auth) {
-  S = seed(ob.name, ob.region, ob.sample); S.auth = auth; save(); unlocked = true; touchSession(); ob.step = 0; location.hash = '#/home'; render(); toast(`Welcome, ${S.profile.name.split(' ')[0]}!`);
+  S = seed(ob.name, ob.region, ob.sample, { currency: ob.currency, locale: ob.locale }); S.auth = auth; save(); unlocked = true; touchSession(); ob.step = 0; location.hash = '#/home'; render(); toast(`Welcome, ${S.profile.name.split(' ')[0]}!`);
 }
 function afterOnboarding() {
-  const f = $('#obF'); if (f) f.onsubmit = e => { e.preventDefault(); const n = f.name.value.trim(); if (!n) { toast('Please enter your name'); f.name.focus(); return; } ob.name = n; ob.region = f.region.value; ob.sample = f.sample.checked; ob.step = 2; render(); };
+  const f = $('#obF'); if (f) f.onsubmit = e => { e.preventDefault(); const n = f.name.value.trim(); if (!n) { toast('Please enter your name'); f.name.focus(); return; } ob.name = n; ob.region = f.region.value; ob.currency = f.currency.value || ob.currency; ob.sample = f.sample.checked; ob.step = 2; render(); };
   const s = $('#setF'); if (s) s.onsubmit = async e => { e.preventDefault(); const a = s.a.value, b = s.b.value;
     if (ob.method === 'pin') { if (!/^\d{4,6}$/.test(a)) return toast('PIN must be 4 to 6 digits'); if (a !== b) return toast('PINs do not match'); finishOnboarding({ method: 'pin', pinHash: await hash(a), pinLen: a.length }); }
     else { if (a.length < 8) return toast('Use at least 8 characters'); if (a !== b) return toast('Passwords do not match'); finishOnboarding({ method: 'password', pwHash: await hash(a) }); } };
@@ -448,11 +597,11 @@ function bannerInfo(id) {
     case 'emergency': return { sub: `Tap to call ${r.primary} · Medical ID` };
     case 'calendar': { const today = hobartToday(); const n = (S.events || []).filter(e => !e.hidden && onDay(e, today)).length; const c = activePairs().length; return { sub: c ? `${c} overlap${c === 1 ? '' : 's'} · ${n} today` : n ? `${n} today` : 'Events, shifts and reminders', badge: c }; }
     case 'medical': return { sub: S.medical.bloodType ? `Blood ${S.medical.bloodType} · ${S.medical.allergies.length} allergies` : 'Add allergies, conditions, blood type' };
-    case 'banking': return { sub: S.accounts.length ? `${money(S.accounts.reduce((a, x) => a + x.balance, 0))} net · ${S.accounts.length} accounts` : 'Link a bank or add an account' };
+    case 'banking': return { sub: S.accounts.length ? `${moneyList(groupSum(S.accounts, a => a.balance, a => a.currency))} · ${S.accounts.length} accounts` : 'Link a bank or add an account' };
     case 'chat': { const u = S.chats.reduce((a, c) => a + (c.unread || 0), 0); return { sub: u ? `${u} unread message${u > 1 ? 's' : ''}` : 'Private messages & calls', badge: u }; }
     case 'contacts': return { sub: `${S.contacts.filter(c => !c.blocked).length} contacts` };
     case 'social': { const n = S.platforms.reduce((a, p) => a + p.friendReq + p.dms, 0); return { sub: S.platforms.length ? `${S.platforms.length} platforms · ${n} new` : 'Add your social accounts', badge: n }; }
-    case 'utilities': { const { owed, overdue } = billTotals(); return { sub: owed ? `<em class="owe">${money(owed)} owed</em>${overdue ? ` · ${overdue} overdue` : ''}` : 'All bills paid', badge: overdue, raw: true }; }
+    case 'utilities': { const { owed, overdue } = billTotals(); return { sub: owed.length ? `<em class="owe">${moneyList(owed)} owed</em>${overdue ? ` · ${overdue} overdue` : ''}` : 'All bills paid', badge: overdue, raw: true }; }
     case 'documents': { const n = (S.docs && S.docs.items || []).length; return { sub: n ? `${n} file${n === 1 ? '' : 's'} on this device` : 'PDFs, Office files, text and images' }; }
     case 'addnew': return { sub: `${S.apps.length} apps · ${S.groups.length} groups` };
   }
@@ -478,7 +627,7 @@ function searchResults(q) {
   Object.entries(BANNERS).forEach(([id, b]) => { if (b.title.toLowerCase().includes(q)) R.push([b.href, ic(b.icon), b.title, 'Section']); });
   region().services.forEach(s => { if ((s.name + s.num + s.desc).toLowerCase().includes(q)) R.push([telHref(s.num), ic('phone'), s.name, s.disp || s.num]); });
   S.contacts.forEach(c => { if ((c.name + c.phone + c.email).toLowerCase().includes(q)) R.push(['#/contacts/' + c.id, ic('user'), c.name, c.phone]); });
-  S.bills.forEach(b => { if ((b.provider + b.category).toLowerCase().includes(q)) R.push(['#/utilities', ic('zap'), b.provider, `${b.category} · ${money(b.amount)}`]); });
+  S.bills.forEach(b => { if ((b.provider + b.category).toLowerCase().includes(q)) R.push(['#/utilities', ic('zap'), b.provider, `${b.category} · ${money(b.amount, b.currency)}`]); });
   S.apps.forEach(a => { if (a.name.toLowerCase().includes(q)) R.push([a.url, `<span style="font-size:1.3rem">${esc(a.emoji)}</span>`, a.name, 'App link']); });
   S.chats.forEach(c => { const ct = contactById(c.contactId); c.messages.forEach(m => { if (m.text.toLowerCase().includes(q)) R.push(['#/chat/' + c.id, ic('msg'), ct ? ct.name : 'Chat', m.text]); }); });
   ['allergies', 'conditions', 'medications'].forEach(k => S.medical[k].forEach(x => { if (x.name.toLowerCase().includes(q)) R.push(['#/medical', ic('cross'), x.name, k[0].toUpperCase() + k.slice(1)]); }));
@@ -576,78 +725,84 @@ function renderMedicalID() {
 /* ---------- banking ---------- */
 const acctById = id => S.accounts.find(a => a.id === id);
 function renderBanking() {
-  const net = S.accounts.reduce((a, x) => a + x.balance, 0);
+  const nets = groupSum(S.accounts, a => a.balance, a => a.currency);
   const tx = [...S.transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 25);
-  const body = `<div class="total"><span class="muted">Net balance</span><b>${money(net)}</b></div>
-  <div class="bcards">${S.accounts.map(a => `<button class="bcard" style="background:${a.color}" data-act="acctMenu" data-id="${a.id}"><div class="row between"><small>${esc(a.bank)}</small><small>${esc(a.type)}</small></div><div><small>${esc(a.name)}</small><div class="bal">${money(a.balance)}</div><small>${esc(a.number)}</small></div></button>`).join('') || '<p class="empty">No accounts yet</p>'}</div>
+  const body = `<div class="total"><span class="muted">${nets.length > 1 ? 'Balances' : 'Net balance'}</span><b>${moneyList(nets)}</b></div>
+  <div class="bcards">${S.accounts.map(a => `<button class="bcard" style="background:${a.color}" data-act="acctMenu" data-id="${a.id}"><div class="row between"><small>${esc(a.bank)}</small><small>${esc(a.type)}</small></div><div><small>${esc(a.name)}</small><div class="bal">${money(a.balance, a.currency)}</div><small>${esc(a.number)}</small></div></button>`).join('') || '<p class="empty">No accounts yet</p>'}</div>
   <div class="actions"><button class="act" data-act="transfer">${ic('swap', 26)}Transfer</button><a class="act" href="#/banking/pay">${ic('nfc', 26)}Tap to pay</a><a class="act" href="#/banking/link">${ic('link', 26)}Link a bank</a></div>
   <a class="card" href="#/banking/budget" style="display:flex;align-items:center;gap:12px"><span style="flex:1"><b>Budget planner</b><span class="small muted" style="display:block">Categories, goals and what you have left this month</span></span>${ic('chev')}</a>
   ${updatedLine()}<div class="sec-h"><h2>Recent transactions</h2><button class="btn sm" data-act="importTx">${ic('upload', 16)} Import CSV</button></div>
-  <div class="list">${tx.length ? tx.map(t => { const a = acctById(t.accountId); return `<div class="li"><span class="av" style="background:var(--card2);color:var(--text);border:1px solid var(--line)">${t.amount > 0 ? '↓' : t.cat === 'App fee' ? '¢' : '↑'}</span><span class="grow"><b>${esc(t.desc)}</b><span>${fmtDate(t.date)} · ${esc(a ? a.name : 'Account')}${t.cat ? ' · ' + esc(t.cat) : ''}</span></span><span class="amt ${t.amount > 0 ? 'green' : ''}">${t.amount > 0 ? '+' : ''}${money(t.amount)}</span></div>`; }).join('') : '<p class="empty">No transactions</p>'}</div>
+  <div class="list">${tx.length ? tx.map(t => { const a = acctById(t.accountId); return `<div class="li"><span class="av" style="background:var(--card2);color:var(--text);border:1px solid var(--line)">${t.amount > 0 ? '↓' : t.cat === 'App fee' ? '¢' : '↑'}</span><span class="grow"><b>${esc(t.desc)}</b><span>${fmtDate(t.date)} · ${esc(a ? a.name : 'Account')}${t.cat ? ' · ' + esc(t.cat) : ''}</span></span><span class="amt ${t.amount > 0 ? 'green' : ''}">${t.amount > 0 ? '+' : ''}${money(t.amount, txCurrency(t))}</span></div>`; }).join('') : '<p class="empty">No transactions</p>'}</div>
   ${schedSection()}
   <p class="footnote">To go live in Australia, bank linking would use the Consumer Data Right (Open Banking) via an accredited data recipient, and payments via the New Payments Platform (PayTo / Osko). Scheduled payments are a reminder on your calendar, not a real debit.</p>`;
   return screen({ title: 'Banking', demo: 'No real bank is connected. Balances, transfers and payments are simulated on this device.', body, right: `<button class="iconbtn" data-act="addAcct" aria-label="Add account">${ic('plus')}</button>` });
 }
 function addAccount(bank) {
-  formSheet({ title: 'Add account manually', fields: [{ k: 'bank', label: 'Bank', req: true }, { k: 'name', label: 'Account name', req: true, ph: 'e.g. Everyday' }, { k: 'type', label: 'Type', type: 'select', options: ['transaction', 'savings', 'credit', 'loan'] }, { k: 'number', label: 'BSB / account (last 4 is enough)' }, { k: 'balance', label: 'Current balance', type: 'number', step: '0.01', req: true, im: 'decimal' }],
-    values: { bank: bank || '' }, onSave: v => { S.accounts.push({ id: uid(), ...v, balance: v.type === 'credit' || v.type === 'loan' ? -Math.abs(v.balance) : v.balance, color: `linear-gradient(135deg,${avColor(v.bank + v.name)},#0f172a)` }); toast('Account added'); } });
+  formSheet({ title: 'Add account manually', fields: [{ k: 'bank', label: 'Bank', req: true }, { k: 'name', label: 'Account name', req: true, ph: 'e.g. Everyday' }, { k: 'type', label: 'Type', type: 'select', options: ['transaction', 'savings', 'credit', 'loan'] }, { k: 'currency', label: 'Currency', type: 'select', options: currencyChoices() }, { k: 'number', label: 'Account number (last 4 is enough)' }, { k: 'balance', label: 'Current balance', type: 'number', step: '0.01', req: true, im: 'decimal' }],
+    values: { bank: bank || '', currency: homeCurrency() }, onSave: v => { S.accounts.push({ id: uid(), ...v, currency: v.currency || homeCurrency(), balance: v.type === 'credit' || v.type === 'loan' ? -Math.abs(v.balance) : v.balance, color: `linear-gradient(135deg,${avColor(v.bank + v.name)},#0f172a)` }); toast('Account added'); } });
 }
 function acctMenu(id) {
   const a = acctById(id); if (!a) return;
-  formSheet({ title: `${a.bank} · ${a.name}`, intro: 'Edit or remove this account (demo).', fields: [{ k: 'name', label: 'Account name' }, { k: 'balance', label: 'Balance', type: 'number', step: '0.01' }], values: a,
-    onSave: v => { a.name = v.name; if (!isNaN(v.balance)) a.balance = v.balance; }, danger: { label: 'Unlink account', fn: () => { S.accounts = S.accounts.filter(x => x.id !== id); S.transactions = S.transactions.filter(t => t.accountId !== id); } } });
+  formSheet({ title: `${a.bank} · ${a.name}`, intro: 'Edit or remove this account (demo). Changing the currency re-labels this account. The number is not converted.', fields: [{ k: 'name', label: 'Account name' }, { k: 'currency', label: 'Currency', type: 'select', options: currencyChoices() }, { k: 'balance', label: 'Balance', type: 'number', step: '0.01' }], values: { name: a.name, balance: a.balance, currency: acctCurrency(a) },
+    onSave: v => { const prev = acctCurrency(a); a.name = v.name; if (!isNaN(v.balance)) a.balance = v.balance; if (v.currency) { a.currency = v.currency; S.transactions.forEach(t => { if (t.accountId === a.id && (!t.currency || t.currency === prev)) t.currency = v.currency; }); } }, danger: { label: 'Unlink account', fn: () => { S.accounts = S.accounts.filter(x => x.id !== id); S.transactions = S.transactions.filter(t => t.accountId !== id); } } });
 }
 function transfer() {
   if (S.accounts.length < 1) return toast('Add an account first');
-  const opts = S.accounts.map(a => [a.id, `${a.name} (${money(a.balance)})`]);
+  const opts = S.accounts.map(a => [a.id, `${a.name} (${money(a.balance, a.currency)})`]);
   formSheet({ title: 'Transfer money', intro: '<span class="tag amber">Demo</span> No money moves. This transfer stays on this device.', submit: 'Review & authorise',
     fields: [{ k: 'from', label: 'From', type: 'select', options: opts }, { k: 'to', label: 'To', type: 'select', options: [...opts, ['payee', 'Someone else (payee / PayID)']] }, { k: 'payee', label: 'Payee name, BSB & account, or PayID', ph: 'Only if paying someone else' }, { k: 'amount', label: 'Amount', type: 'number', step: '0.01', min: 0, req: true, im: 'decimal' }, { k: 'desc', label: 'Description', ph: 'e.g. Rent' }],
     onSave: async v => {
       if (!(v.amount > 0)) { toast('Enter an amount'); return false; } if (v.from === v.to) { toast('Choose different accounts'); return false; } if (v.to === 'payee' && !v.payee) { toast('Enter payee details'); return false; }
       const from = acctById(v.from); const toA = v.to === 'payee' ? null : acctById(v.to);
-      closeSheet(true); const ok = await authorize(`Transfer ${money(v.amount)} from ${from.name} to ${toA ? toA.name : v.payee}`); if (!ok) { toast('Transfer cancelled'); return false; }
-      from.balance -= v.amount; S.transactions.push({ id: uid(), accountId: from.id, date: todayISO(), desc: `Transfer to ${toA ? toA.name : v.payee}${v.desc ? ' · ' + v.desc : ''}`, amount: -v.amount, cat: 'Transfer' });
-      if (toA) { toA.balance += v.amount; S.transactions.push({ id: uid(), accountId: toA.id, date: todayISO(), desc: `Transfer from ${from.name}`, amount: v.amount, cat: 'Transfer' }); }
-      toast(`Sent ${money(v.amount)} (demo)`);
+      if (toA && acctCurrency(from) !== acctCurrency(toA)) { toast('Those accounts use different currencies. LifeHub does not convert between them.'); return false; }
+      closeSheet(true); const ok = await authorize(`Transfer ${money(v.amount, from.currency)} from ${from.name} to ${toA ? toA.name : v.payee}`); if (!ok) { toast('Transfer cancelled'); return false; }
+      from.balance -= v.amount; S.transactions.push({ id: uid(), accountId: from.id, date: todayISO(), desc: `Transfer to ${toA ? toA.name : v.payee}${v.desc ? ' · ' + v.desc : ''}`, amount: -v.amount, currency: acctCurrency(from), cat: 'Transfer' });
+      if (toA) { toA.balance += v.amount; S.transactions.push({ id: uid(), accountId: toA.id, date: todayISO(), desc: `Transfer from ${from.name}`, amount: v.amount, currency: acctCurrency(toA), cat: 'Transfer' }); }
+      toast(`Sent ${money(v.amount, from.currency)} (demo)`);
     } });
 }
 async function importTx() {
   const f = await pickFile('.csv,text/csv'); if (!f) return; if (!S.accounts.length) return toast('Add an account first');
   const rows = parseCSV(await readText(f)); let n = 0;
-  rows.forEach(r => { const amt = parseFloat(String(pick(r, 'amount', 'value', 'debit')).replace(/[^\d.-]/g, '')); if (isNaN(amt)) return; const dt = new Date(pick(r, 'date')); S.transactions.push({ id: uid(), accountId: S.accounts[0].id, date: isNaN(dt) ? todayISO() : dt.toISOString().slice(0, 10), desc: pick(r, 'desc', 'narrative', 'detail', 'payee') || 'Imported', amount: amt, cat: pick(r, 'cat') || 'Imported' }); n++; });
+  rows.forEach(r => { const amt = parseFloat(String(pick(r, 'amount', 'value', 'debit')).replace(/[^\d.-]/g, '')); if (isNaN(amt)) return; const dt = new Date(pick(r, 'date')); const code = String(pick(r, 'currency', 'ccy') || '').toUpperCase(); S.transactions.push({ id: uid(), accountId: S.accounts[0].id, date: isNaN(dt) ? todayISO() : dt.toISOString().slice(0, 10), desc: pick(r, 'desc', 'narrative', 'detail', 'payee') || 'Imported', amount: amt, currency: /^[A-Z]{3}$/.test(code) ? code : acctCurrency(S.accounts[0]), cat: pick(r, 'cat') || 'Imported' }); n++; });
   save(); render(); toast(`Imported ${n} transactions into ${S.accounts[0].name}`);
 }
 let pay = null;
 function renderPay() {
   const cards = S.accounts.filter(a => a.type !== 'savings' && a.type !== 'loan');
   if (!pay) pay = { step: 'setup', amount: 12.5, merchant: 'Demo Café, Launceston', accountId: (cards[0] || {}).id };
-  const a = acctById(pay.accountId) || cards[0]; const fee = 0.01;
+  const a = acctById(pay.accountId) || cards[0]; const fee = appFee(a && a.currency);
   let body;
   if (!a) body = `<p class="empty">Add a transaction or credit account to use Tap to pay.</p><a class="btn primary full" href="#/banking/link">Link a bank</a>`;
-  else if (pay.step === 'setup') body = `<div class="paycard" style="background:${a.color}"><div class="row between"><b>${esc(a.bank)}</b>${ic('nfc', 30)}</div><div><small style="opacity:.85">${esc(a.name)} · ${esc(a.number)}</small><div style="font-size:1.4rem;font-weight:800;margin-top:4px">${money(a.balance)}</div></div></div>
+  else if (pay.step === 'setup') body = `<div class="paycard" style="background:${a.color}"><div class="row between"><b>${esc(a.bank)}</b>${ic('nfc', 30)}</div><div><small style="opacity:.85">${esc(a.name)} · ${esc(a.number)}</small><div style="font-size:1.4rem;font-weight:800;margin-top:4px">${money(a.balance, a.currency)}</div></div></div>
     ${cards.length > 1 ? `<label class="fld"><span>Pay with</span><select id="payAcct">${cards.map(c => `<option value="${c.id}" ${c.id === a.id ? 'selected' : ''}>${esc(c.bank)} · ${esc(c.name)}</option>`).join('')}</select></label>` : ''}
-    <label class="fld"><span>Amount (${region().currency})</span><input id="payAmt" class="amount-in" type="number" step="0.01" min="0.01" inputmode="decimal" value="${pay.amount.toFixed(2)}"></label>
-    <div class="feebox"><div><span>Merchant</span><b>${esc(pay.merchant)}</b></div><div><span>Purchase</span><span id="fPur">${money(pay.amount)}</span></div><div><span>LifeHub app fee</span><span>${money(fee)}</span></div><div class="tot"><span>Total</span><span id="fTot">${money(pay.amount + fee)}</span></div></div>
+    <label class="fld"><span>Amount (${esc(acctCurrency(a))})</span><input id="payAmt" class="amount-in" type="number" step="${currencyDigits(acctCurrency(a)) ? '0.01' : '1'}" min="${currencyDigits(acctCurrency(a)) ? '0.01' : '1'}" inputmode="decimal" value="${pay.amount}"></label>
+    <div class="feebox"><div><span>Merchant</span><b>${esc(pay.merchant)}</b></div><div><span>Purchase</span><span id="fPur">${money(pay.amount, a.currency)}</span></div><div><span>LifeHub app fee</span><span>${money(fee, a.currency)}</span></div><div class="tot"><span>Total</span><span id="fTot">${money(pay.amount + fee, a.currency)}</span></div></div>
     <button class="btn primary full" data-act="payAuth">${ic('lock', 18)} Authorise & pay</button>
-    <p class="footnote">The ${money(fee)} line is part of the demo. No money is taken.</p>`;
-  else if (pay.step === 'tap') body = `<div class="nfc">${ic('nfc', 80, 1.6)}</div><h2 style="text-align:center">Hold near the reader</h2><p class="muted" style="text-align:center">${money(pay.amount + fee)} to ${esc(pay.merchant)}</p><button class="btn primary full" data-act="payTap" style="margin-top:20px">Simulate tap</button><button class="btn ghost full" data-act="payCancel" style="margin-top:8px">Cancel</button>`;
-  else body = `<div class="okc">${ic('check', 60, 3)}</div><h2 style="text-align:center">Payment approved</h2><p class="muted" style="text-align:center">${money(pay.amount)} + ${money(fee)} app fee<br>${esc(pay.merchant)} · ${esc(a.name)}</p><a class="btn primary full" href="#/banking" data-act="payDone">Done</a>`;
+    <p class="footnote">The ${money(fee, a.currency)} line is part of the demo. No money is taken.</p>`;
+  else if (pay.step === 'tap') body = `<div class="nfc">${ic('nfc', 80, 1.6)}</div><h2 style="text-align:center">Hold near the reader</h2><p class="muted" style="text-align:center">${money(pay.amount + fee, a.currency)} to ${esc(pay.merchant)}</p><button class="btn primary full" data-act="payTap" style="margin-top:20px">Simulate tap</button><button class="btn ghost full" data-act="payCancel" style="margin-top:8px">Cancel</button>`;
+  else body = `<div class="okc">${ic('check', 60, 3)}</div><h2 style="text-align:center">Payment approved</h2><p class="muted" style="text-align:center">${money(pay.amount, a.currency)} + ${money(fee, a.currency)} app fee<br>${esc(pay.merchant)} · ${esc(a.name)}</p><a class="btn primary full" href="#/banking" data-act="payDone">Done</a>`;
   return { html: screen({ title: 'Tap to pay', back: '#/banking', demo: 'No real payment is made. This does not use NFC or charge a card.', body }), after: () => {
-    const amt = $('#payAmt'); if (amt) amt.oninput = () => { const v = parseFloat(amt.value) || 0; pay.amount = v; $('#fPur').textContent = money(v); $('#fTot').textContent = money(v + fee); };
+    const amt = $('#payAmt'); if (amt) amt.oninput = () => { const v = parseFloat(amt.value) || 0; pay.amount = v; const cur = a && a.currency; $('#fPur').textContent = money(v, cur); $('#fTot').textContent = money(v + fee, cur); };
     const sel = $('#payAcct'); if (sel) sel.onchange = () => { pay.accountId = sel.value; render(); };
     if (pay.step === 'tap') { const t = setTimeout(() => { if (pay && pay.step === 'tap') completePay(); }, 3500); cleanupFn = () => clearTimeout(t); }
   } };
 }
 async function payAuth() {
   if (!(pay.amount > 0)) return toast('Enter an amount');
-  const ok = await authorize(`Pay ${money(pay.amount + 0.01)} to ${pay.merchant} (includes ${money(0.01)} app fee)`);
+  const a = acctById(pay.accountId);
+  const cur = acctCurrency(a);
+  const fee = appFee(cur);
+  const ok = await authorize(`Pay ${money(pay.amount + fee, cur)} to ${pay.merchant} (includes ${money(fee, cur)} app fee)`);
   if (!ok) return toast('Payment cancelled');
   pay.step = 'tap'; render();
 }
 function completePay() {
   const a = acctById(pay.accountId); if (!a) return;
-  a.balance -= pay.amount + 0.01;
-  S.transactions.push({ id: uid(), accountId: a.id, date: todayISO(), desc: pay.merchant + ' (tap to pay)', amount: -pay.amount, cat: 'Purchase' }, { id: uid(), accountId: a.id, date: todayISO(), desc: 'LifeHub app fee', amount: -0.01, cat: 'App fee' });
+  const cur = acctCurrency(a);
+  const fee = appFee(cur);
+  a.balance -= pay.amount + fee;
+  S.transactions.push({ id: uid(), accountId: a.id, date: todayISO(), desc: pay.merchant + ' (tap to pay)', amount: -pay.amount, currency: cur, cat: 'Purchase' }, { id: uid(), accountId: a.id, date: todayISO(), desc: 'LifeHub app fee', amount: -fee, currency: cur, cat: 'App fee' });
   save(); pay.step = 'done'; if (navigator.vibrate) navigator.vibrate([60, 40, 60]); render();
 }
 let linkQ = '';
@@ -664,7 +819,7 @@ function linkBank(b) {
   <div class="list"><div class="li">${ic('card')}<span class="grow"><b>Account name, type & balance</b></span></div><div class="li">${ic('file')}<span class="grow"><b>Transaction details</b></span></div><div class="li">${ic('clock')}<span class="grow"><b>For 12 months</b><span>You can withdraw consent at any time</span></span></div></div>
   <p class="small muted">Next you'd be sent to ${esc(b)} to log in. LifeHub never sees your banking password.</p>
   <div class="row gap"><button class="btn" data-close>Cancel</button><button class="btn primary" id="lbOk">Connect (demo)</button></div>`, el => {
-    $('#lbOk', el).onclick = () => { const bal = Math.round(Math.random() * 500000) / 100; S.accounts.push({ id: uid(), bank: b, name: 'Everyday', number: '•••• ' + String(Math.floor(1000 + Math.random() * 9000)), balance: bal, type: 'transaction', color: `linear-gradient(135deg,${avColor(b)},#0f172a)` }); save(); closeSheet(true); toast(`${b} linked (demo)`); location.hash = '#/banking'; };
+    $('#lbOk', el).onclick = () => { const bal = Math.round(Math.random() * 500000) / 100; S.accounts.push({ id: uid(), bank: b, name: 'Everyday', number: '•••• ' + String(Math.floor(1000 + Math.random() * 9000)), balance: bal, currency: homeCurrency(), type: 'transaction', color: `linear-gradient(135deg,${avColor(b)},#0f172a)` }); save(); closeSheet(true); toast(`${b} linked (demo)`); location.hash = '#/banking'; };
   });
 }
 
@@ -775,7 +930,7 @@ async function pickContacts() {
 }
 
 /* ---------- plans: Free vs Premium ---------- */
-const PRICE = 0.99; // AUD per month, GST inclusive
+/* Premium price is filled by a store later (Play Billing, Digital Goods API, or Microsoft Store) via S.plan.storePrice = { amount, currency, period, source }. */
 const RECEIPT_KEY = 'lifehub.receipt';
 const ACCENTS = { blue: ['Blue', '#2557d6', false], ocean: ['Ocean', '#0e7490', true], emerald: ['Emerald', '#047857', true], sunset: ['Sunset', '#c2410c', true], grape: ['Grape', '#7c3aed', true], rose: ['Rose', '#be185d', true] };
 const SKINS = { midnight: 'Midnight (OLED)', forest: 'Tassie Forest' };
@@ -796,7 +951,7 @@ const fmtLong = t => new Date(t).toLocaleDateString(region().locale, { day: 'num
 const AD_CONFIG = { provider: 'house', adsense: { client: 'ca-pub-XXXXXXXXXXXXXXXX', slot: '0000000000' } };
 const AD_PLACEMENTS = ['home-bottom'];
 const HOUSE_ADS = [
-  { title: 'LifeHub Premium: no ads', body: `Sharper photos, live refresh · ${'$'}0.99/mo`, cta: 'Go Premium', href: '#/plan' },
+  { title: 'LifeHub Premium: no ads', body: 'Sharper photos, live refresh · price from the store', cta: 'Go Premium', href: '#/plan' },
   { title: 'Example ad: Tamar Bike Hire', body: 'Sample only, not a real offer', cta: null },
   { title: 'Example ad: Farmers Market', body: 'Sample only, not a real offer', cta: null },
 ];
@@ -838,7 +993,7 @@ function renderPlan() {
   const body = `${demoNote('<b>Demo billing.</b> No money is charged in this prototype.')}
   <div class="plan-hero ${prem ? 'on' : ''}"><div class="row between"><b style="font-size:1.25rem">${prem ? 'LifeHub Premium' : 'LifeHub Free'}</b>${prem ? premBadge(p.status === 'cancelled' ? 'Ends soon' : 'Active') : ''}</div>${status}</div>
   <div class="cmp"><div class="cmp-h"><span></span><b>Free</b><b class="pc">Premium</b></div>${rows.map(r => `<div class="cmp-r"><span>${r[0]}</span><span>${r[1]}</span><span class="pc">${r[2]}</span></div>`).join('')}</div>
-  <div class="price"><b>${money(PRICE, 'AUD')}</b><span>/month · AUD incl. GST · cancel anytime</span></div>
+  <div class="price ${premiumPrice().source === 'placeholder' ? 'placeholder' : ''}"><b>${esc(premiumPrice().source === 'store' ? money(premiumPrice().amount, premiumPrice().currency) : premiumPrice().label)}</b><span>${premiumPrice().source === 'store' ? '/' + esc(premiumPrice().period) + ' · from the store · cancel anytime' : 'Shown until a store price is available. Nothing is charged now.'}</span></div>
   ${!prem ? `<button class="btn primary full" data-act="upgrade">★ Upgrade to Premium</button>`
     : p.status === 'cancelled' ? `<button class="btn primary full" data-act="resume">Resume subscription</button>`
     : `<button class="btn full danger" data-act="cancelSub">Cancel subscription</button>`}
@@ -849,12 +1004,12 @@ function renderPlan() {
 }
 function upgrade() {
   openSheet(`<h2>Checkout</h2><div class="notice">${ic('alert', 18)}<div><b>Demo checkout.</b> No card is charged and no real subscription is created.</div></div>
-  <div class="feebox"><div><span>LifeHub Premium (monthly)</span><b>${money(PRICE, 'AUD')}</b></div><div><span>Includes GST</span><span>${money(PRICE / 11, 'AUD')}</span></div><div class="tot"><span>Due today</span><span>${money(PRICE, 'AUD')}</span></div></div>
+  <div class="feebox"><div><span>LifeHub Premium (monthly)</span><b>${esc(premiumPrice().label)}</b></div><div class="tot"><span>Charged today</span><span>Nothing · demo</span></div></div>
   <label class="fld"><span>Pay with</span><select id="coPm"><option>Demo card •••• 4242</option><option>Apple Pay (demo)</option><option>Google Pay (demo)</option></select></label>
   <label class="fld chk"><input type="checkbox" id="coOk"><span>I understand this is a demo and renews monthly until cancelled</span></label>
   <div class="row gap"><button class="btn" data-close>Cancel</button><button class="btn primary" id="coGo" disabled>Continue</button></div>`, el => {
     const ok = $('#coOk', el), go = $('#coGo', el); ok.onchange = () => go.disabled = !ok.checked;
-    go.onclick = async () => { closeSheet(true); if (!(await authorize(`Subscribe to LifeHub Premium for ${money(PRICE, 'AUD')}/month (demo)`))) return toast('Checkout cancelled');
+    go.onclick = async () => { closeSheet(true); if (!(await authorize('Subscribe to LifeHub Premium (demo, no charge)'))) return toast('Checkout cancelled');
       const now = Date.now(); S.plan = { tier: 'premium', status: 'active', since: now, renews: now + 30 * 86400000, receipt: 'demo_' + uid() };
       localStorage.setItem(RECEIPT_KEY, JSON.stringify(S.plan)); save(); invalidateCache(); scheduleRefresh(); render(); toast('Welcome to Premium ★ Ads removed');
     };
@@ -963,9 +1118,10 @@ function doPost() {
 
 /* ---------- utilities ---------- */
 function billTotals() {
-  let owed = 0, credit = 0, overdue = 0;
-  S.bills.forEach(b => { if (b.type === 'credit') credit += b.amount; else if (!b.paid) { owed += b.amount; if (b.due && daysUntil(b.due) < 0) overdue++; } });
-  return { owed, credit, overdue };
+  const owedItems = [], creditItems = [];
+  let overdue = 0;
+  S.bills.forEach(b => { if (b.type === 'credit') creditItems.push(b); else if (!b.paid) { owedItems.push(b); if (b.due && daysUntil(b.due) < 0) overdue++; } });
+  return { owed: groupSum(owedItems, b => b.amount, b => b.currency), credit: groupSum(creditItems, b => b.amount, b => b.currency), overdue };
 }
 let billSort = 'due';
 function renderUtilities() {
@@ -973,8 +1129,8 @@ function renderUtilities() {
   const arr = [...S.bills].sort((a, b) => billSort === 'amount' ? b.amount - a.amount : (a.paid - b.paid) || ((a.type === 'credit') - (b.type === 'credit')) || (a.due || '9').localeCompare(b.due || '9'));
   const row = b => { const d = b.due ? daysUntil(b.due) : null; const od = !b.paid && b.type !== 'credit' && d != null && d < 0;
     const dueTxt = b.type === 'credit' ? '<span class="green">In credit</span>' : b.paid ? '<span class="green">Paid ✓</span>' : d == null ? 'No due date' : d < 0 ? `<span class="red">Overdue by ${-d} day${d === -1 ? '' : 's'}</span>` : d === 0 ? '<span class="amber">Due today</span>' : d <= 7 ? `<span class="amber">Due in ${d} day${d === 1 ? '' : 's'} · ${fmtDate(b.due)}</span>` : `Due ${fmtDate(b.due)}`;
-    return `<div class="li bill ${od ? 'overdue' : ''} ${b.paid ? 'paid' : ''}"><button style="flex:1;min-width:0;background:none;border:0;padding:0;text-align:left" data-act="editBill" data-id="${b.id}"><span class="grow" style="display:block"><b>${esc(b.provider)}</b><span>${esc(b.category)}</span><div class="due">${dueTxt}${b.reminder && !b.paid && b.type !== 'credit' ? ' · 🔔' : ''}${b.file || b.imageId ? ' · 📎' : ''}</div></span></button><span style="text-align:right"><span class="amt ${b.type === 'credit' ? 'green' : b.paid ? '' : 'red'}">${b.type === 'credit' ? '+' : ''}${money(b.amount)}</span><br>${!b.paid && b.type !== 'credit' ? `<button class="btn sm" style="margin-top:4px" data-act="payBill" data-id="${b.id}">Mark paid</button>` : ''}</span></div>`; };
-  const body = `<div class="sumgrid"><div class="sum owed"><small>Total owed</small><b>${money(owed)}</b><div class="small">${overdue ? `${overdue} overdue` : 'Nothing overdue'}</div></div><div class="sum cred"><small>Total in credit</small><b>${money(credit)}</b><div class="small">${S.bills.filter(b => b.type === 'credit').length} account(s)</div></div></div>
+    return `<div class="li bill ${od ? 'overdue' : ''} ${b.paid ? 'paid' : ''}"><button style="flex:1;min-width:0;background:none;border:0;padding:0;text-align:left" data-act="editBill" data-id="${b.id}"><span class="grow" style="display:block"><b>${esc(b.provider)}</b><span>${esc(b.category)}</span><div class="due">${dueTxt}${b.reminder && !b.paid && b.type !== 'credit' ? ' · 🔔' : ''}${b.file || b.imageId ? ' · 📎' : ''}</div></span></button><span style="text-align:right"><span class="amt ${b.type === 'credit' ? 'green' : b.paid ? '' : 'red'}">${b.type === 'credit' ? '+' : ''}${money(b.amount, b.currency)}</span><br>${!b.paid && b.type !== 'credit' ? `<button class="btn sm" style="margin-top:4px" data-act="payBill" data-id="${b.id}">Mark paid</button>` : ''}</span></div>`; };
+  const body = `<div class="sumgrid"><div class="sum owed"><small>Total owed</small><b>${moneyList(owed)}</b><div class="small">${overdue ? `${overdue} overdue` : 'Nothing overdue'}</div></div><div class="sum cred"><small>Total in credit</small><b>${moneyList(credit)}</b><div class="small">${S.bills.filter(b => b.type === 'credit').length} account(s)</div></div></div>
   <div class="row gap" style="margin-bottom:12px"><button class="btn sm primary" data-act="addBill">${ic('plus', 16)} Add bill</button><button class="btn sm" data-act="uploadBill">${ic('camera', 16)} Upload</button><button class="btn sm" data-act="importBills">${ic('upload', 16)} Import</button></div>
   <div class="seg" style="margin-bottom:12px" role="tablist"><button class="${billSort === 'due' ? 'on' : ''}" data-act="billSort" data-s="due">By due date</button><button class="${billSort === 'amount' ? 'on' : ''}" data-act="billSort" data-s="amount">By amount</button></div>
   <div class="list">${arr.length ? arr.map(row).join('') : '<p class="empty">No bills yet. Add one manually, upload a photo/PDF, or import a CSV.</p>'}</div>
@@ -986,8 +1142,10 @@ const BILL_FIELDS = [{ k: 'provider', label: 'Provider', req: true, ph: 'e.g. Au
   { k: 'reminder', label: 'Remind me before it\'s due', type: 'checkbox', default: true }, { k: 'remindDays', label: 'Days before', type: 'number', min: 0, default: 3, im: 'numeric' }, { k: 'paid', label: 'Paid', type: 'checkbox' }];
 function editBill(id, preset) {
   const b = id && S.bills.find(x => x.id === id);
-  formSheet({ title: b ? 'Edit bill' : 'Add bill', intro: preset?.file ? `Attached: ${esc(preset.file)}. Demo: a live version would read the amount and due date automatically (OCR).` : '', fields: BILL_FIELDS, values: b || preset || {},
-    onSave: v => { v.amount = Math.abs(v.amount); v.remindDays = isNaN(v.remindDays) ? 3 : v.remindDays; if (v.reminder) askNotify(); if (b) Object.assign(b, v); else S.bills.push({ id: uid(), file: preset?.file, imageId: preset?.imageId || null, ...v }); toast('Bill saved'); },
+  const fields = [];
+  BILL_FIELDS.forEach(f => { fields.push(f); if (f.k === 'amount') fields.push({ k: 'currency', label: 'Currency', type: 'select', options: currencyChoices() }); });
+  formSheet({ title: b ? 'Edit bill' : 'Add bill', intro: preset?.file ? `Attached: ${esc(preset.file)}. Demo: a live version would read the amount and due date automatically (OCR).` : '', fields, values: { currency: homeCurrency(), ...(b || preset || {}) },
+    onSave: v => { v.amount = Math.abs(v.amount); v.currency = v.currency || homeCurrency(); v.remindDays = isNaN(v.remindDays) ? 3 : v.remindDays; if (v.reminder) askNotify(); if (b) Object.assign(b, v); else S.bills.push({ id: uid(), file: preset?.file, imageId: preset?.imageId || null, ...v }); toast('Bill saved'); },
     danger: b ? { label: 'Delete bill', fn: () => { if (b.imageId) delImage(b.imageId); S.bills = S.bills.filter(x => x.id !== id); } } : null });
   const imgId = b?.imageId || preset?.imageId; if (imgId) getImage(imgId).then(bl => { const f = $('#sheetForm'); if (!bl || !f) return; const d = document.createElement('div'); d.className = 'preview'; d.innerHTML = `<img alt="Bill image" src="${URL.createObjectURL(bl)}"><div class="small muted">${esc(preset?.note || (isPremium() ? 'Full quality' : 'Standard quality'))}</div>`; f.prepend(d); });
 }
@@ -999,7 +1157,8 @@ async function importBills() {
   try { rows = /\.json$/i.test(f.name) ? JSON.parse(txt) : parseCSV(txt); if (!Array.isArray(rows)) rows = rows.bills || []; } catch (e) { return toast('Could not read that file'); }
   let n = 0; rows.forEach(r => { const amt = parseFloat(String(r.amount ?? pick(r, 'amount', 'total')).replace(/[^\d.-]/g, '')); const prov = r.provider || pick(r, 'provider', 'biller', 'name'); if (!prov || isNaN(amt)) return;
     const due = r.due || pick(r, 'due'); const dd = due ? new Date(due) : null; const type = /credit/i.test(r.type || pick(r, 'type', 'status')) || amt < 0 ? 'credit' : 'owed';
-    S.bills.push({ id: uid(), provider: prov, category: r.category || pick(r, 'categ') || 'Other', amount: Math.abs(amt), due: dd && !isNaN(dd) ? dd.toISOString().slice(0, 10) : '', type, paid: /paid/i.test(r.status || ''), reminder: true, remindDays: 3 }); n++; });
+    const code = String(r.currency || pick(r, 'currency', 'ccy') || '').toUpperCase();
+    S.bills.push({ id: uid(), provider: prov, category: r.category || pick(r, 'categ') || 'Other', amount: Math.abs(amt), currency: /^[A-Z]{3}$/.test(code) ? code : homeCurrency(), due: dd && !isNaN(dd) ? dd.toISOString().slice(0, 10) : '', type, paid: /paid/i.test(r.status || ''), reminder: true, remindDays: 3 }); n++; });
   save(); render(); toast(`Imported ${n} bill${n === 1 ? '' : 's'}`);
 }
 function askNotify() { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {}); }
@@ -1008,7 +1167,7 @@ function checkReminders() {
   if (!due.length) return; const od = due.filter(b => daysUntil(b.due) < 0).length;
   const msg = `${due.length} bill${due.length > 1 ? 's' : ''} due soon${od ? ` (${od} overdue)` : ''}`;
   setTimeout(() => toast('🔔 ' + msg), 600);
-  try { if ('Notification' in window && Notification.permission === 'granted' && !sessionStorage.getItem('lh.notified')) { new Notification('LifeHub bill reminder', { body: due.map(b => `${b.provider}: ${money(b.amount)}`).join('\n'), icon: 'icons/icon-192.png' }); sessionStorage.setItem('lh.notified', '1'); } } catch (e) {}
+  try { if ('Notification' in window && Notification.permission === 'granted' && !sessionStorage.getItem('lh.notified')) { new Notification('LifeHub bill reminder', { body: due.map(b => `${b.provider}: ${money(b.amount, b.currency)}`).join('\n'), icon: 'icons/icon-192.png' }); sessionStorage.setItem('lh.notified', '1'); } } catch (e) {}
 }
 
 /* ---------- add new / groups ---------- */
@@ -1057,8 +1216,9 @@ function editGroup(id) {
 function renderSettings() {
   const s = S.settings; const bs = s.banners;
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button class="${String(s[key]) === String(v) ? 'on' : ''}" data-act="setPref" data-k="${key}" data-v="${v}">${l}</button>`).join('')}</div>`;
-  const body = `<div class="list"><button class="li" data-act="editProfile">${av(S.profile.name)}<span class="grow"><b>${esc(S.profile.name)}</b><span>${region().flag} ${region().name} · ${region().currency}</span></span>${ic('edit', 18)}</button>
-  <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>Plan: ${isPremium() ? 'Premium ' + premBadge(S.plan.status === 'cancelled' ? 'Ends soon' : 'Active') : 'Free'}</b><span>${isPremium() ? 'No ads · location · budget tools · themes' : `Go ad-free for ${money(PRICE, 'AUD')}/month`}</span></span>${ic('chev')}</a>
+  const body = `<div class="list"><button class="li" data-act="editProfile">${av(S.profile.name)}<span class="grow"><b>${esc(S.profile.name)}</b><span>${region().flag} ${region().name} · emergency numbers</span></span>${ic('edit', 18)}</button>
+  <button class="li" data-act="editMoney">${ic('bank')}<span class="grow"><b>Region & currency</b><span>${esc(homeLocale())} · ${esc(homeCurrency())} · ${esc(money(1234.56))}</span></span>${ic('edit', 18)}</button>
+  <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>Plan: ${isPremium() ? 'Premium ' + premBadge(S.plan.status === 'cancelled' ? 'Ends soon' : 'Active') : 'Free'}</b><span>${isPremium() ? 'No ads · location · budget tools · themes' : `Go ad-free · ${esc(premiumPrice().label)}`}</span></span>${ic('chev')}</a>
   <a class="li" href="#/location">${ic('pin')}<span class="grow"><b>Location ${isPremium() ? premBadge() : '<span class="tag">Premium</span>'}</b><span>${S.loc && S.loc.on ? 'Sharing is on' : 'Off until you pick people'}</span></span>${ic('chev')}</a></div>
   <div class="sec-h"><h2>Security</h2></div>
   <div class="list"><button class="li" data-act="changeLogin">${ic('lock')}<span class="grow"><b>Sign-in method</b><span>${METHODS[S.auth.method].label}</span></span>${ic('chev')}</button>
@@ -1095,11 +1255,19 @@ function renderSettings() {
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>Support</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
   <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>Delete your data</b><span>How account deletion works</span></span>${ic('chev')}</a></div>
   <div class="card small"><h3>${ic('shield', 18)} Privacy</h3>What you enter stays in this browser on this device. LifeHub has no server and no analytics. The Home ad is a sample placeholder, not a tracking network. Banking, chat, social feeds and other people's map pins are demos. Export a backup before you delete your data.</div>
-  <p class="footnote">LifeHub prototype v1.4.3 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
+  <p class="footnote">LifeHub prototype v1.4.4 · ${navigator.onLine ? 'Online' : 'Offline'} · Installed copies update themselves. Dates use Australia/Hobart time.</p>`;
   return screen({ title: 'Settings', body });
 }
 function editProfile() {
-  formSheet({ title: 'Profile', fields: [{ k: 'name', label: 'Name', req: true }, { k: 'region', label: 'Region', type: 'select', options: Object.entries(REGIONS).map(([k, r]) => [k, `${r.flag} ${r.name}`]) }], values: S.profile, onSave: v => { Object.assign(S.profile, v); } });
+  formSheet({ title: 'Profile', fields: [{ k: 'name', label: 'Name', req: true }, { k: 'region', label: 'Emergency region', type: 'select', options: Object.entries(REGIONS).map(([k, r]) => [k, `${r.flag} ${r.name}`]) }], values: S.profile, onSave: v => { Object.assign(S.profile, v); } });
+}
+function editMoney() {
+  const locales = [...LOCALE_CHOICES];
+  if (!locales.includes(homeLocale())) locales.unshift(homeLocale());
+  formSheet({ title: 'Region & currency', intro: 'This changes labels and number format only. Existing amounts stay the same number. LifeHub does not convert them with an exchange rate. An account already in another currency stays in that currency.', fields: [
+    { k: 'locale', label: 'Number format', type: 'select', options: locales },
+    { k: 'currency', label: 'Home currency', type: 'select', options: currencyChoices() },
+  ], values: { locale: homeLocale(), currency: homeCurrency() }, onSave: v => { setHomeMoney(v.locale, v.currency); } });
 }
 function changeLogin() {
   openSheet(`<h2>Sign-in method</h2><p class="muted small">Confirm with your current method, then choose a new one.</p>${Object.entries(METHODS).map(([k, m]) => `<button class="method ${S.auth.method === k ? 'on' : ''}" data-m="${k}"><span class="mi">${m.icon}</span><span><b>${m.label}</b><span>${m.desc}</span></span></button>`).join('')}`, el => {
@@ -1115,7 +1283,7 @@ function changeLogin() {
 async function importData() {
   const f = await pickFile('.json,.vcf,.csv,application/json,text/vcard,text/csv'); if (!f) return;
   if (!/\.json$/i.test(f.name)) { const txt = await readText(f); const rows = txt.includes('BEGIN:VCARD') ? parseVCard(txt) : parseCSV(txt).map(r => ({ name: r.name || pick(r, 'name'), phone: pick(r, 'phone', 'mobile', 'tel'), email: pick(r, 'mail') })); return addImported(rows); }
-  try { const j = JSON.parse(await readText(f)); if (!j || !j.profile) throw 0; if (!(await confirmSheet('Restore backup?', 'This replaces your current LifeHub data (your sign-in method stays the same).', 'Restore', true))) return; const auth = S.auth; S = { ...seed(j.profile.name, j.profile.region, false), ...j, auth }; save(); render(); toast('Backup restored'); }
+  try { const j = JSON.parse(await readText(f)); if (!j || !j.profile) throw 0; if (!(await confirmSheet('Restore backup?', 'This replaces your current LifeHub data (your sign-in method stays the same).', 'Restore', true))) return; const auth = S.auth; S = { ...seed(j.profile.name, j.profile.region, false), ...j, auth }; ensureHub(); save(); render(); toast('Backup restored'); }
   catch (e) { toast('That file is not a LifeHub backup'); }
 }
 
@@ -1221,7 +1389,7 @@ function syncAutoEvents() {
     let d = p.next, guard = 0;
     while (d < addDays(today, -1) && guard++ < 36) d = everyStep(d, p.every);
     for (let i = 0; i < 6 && d <= addDays(today, 120); i++) {
-      pushAuto(out, 'pay_' + p.id + '_' + d, { title: `${p.name} · ${money(p.amount)}`, start: d + 'T00:00', end: addDays(d, 1) + 'T00:00', allDay: true, source: 'banking', sourceLabel: 'Banking', color: '#0f766e', reminderMin: 1440 });
+      pushAuto(out, 'pay_' + p.id + '_' + d, { title: `${p.name} · ${money(p.amount, p.currency)}`, start: d + 'T00:00', end: addDays(d, 1) + 'T00:00', allDay: true, source: 'banking', sourceLabel: 'Banking', color: '#0f766e', reminderMin: 1440 });
       d = everyStep(d, p.every);
     }
   });
@@ -1250,7 +1418,7 @@ function syncAutoEvents() {
     if (today.slice(8) > day) ym = shiftMonth(ym, 1);
     for (let i = 0; i < 4; i++) {
       const date = ym + '-' + day;
-      pushAuto(out, 'bbill_' + b.id + '_' + ym, { title: 'Budget bill: ' + b.name, start: date + 'T00:00', end: addDays(date, 1) + 'T00:00', allDay: true, source: 'budget', sourceLabel: 'Budget', color: '#0f766e', reminderMin: 1440, notes: money(b.amount, S.budget.currency) });
+      pushAuto(out, 'bbill_' + b.id + '_' + ym, { title: 'Budget bill: ' + b.name, start: date + 'T00:00', end: addDays(date, 1) + 'T00:00', allDay: true, source: 'budget', sourceLabel: 'Budget', color: '#0f766e', reminderMin: 1440, notes: money(b.amount, b.currency || S.budget.currency) });
       ym = shiftMonth(ym, 1);
     }
   });
@@ -1289,7 +1457,8 @@ function tidyLoc() {
   return changed;
 }
 function ensureHub() {
-  if (!S.medical) return;
+  const moneyChanged = migrateMoney();
+  if (!S || !S.medical) { if (moneyChanged) save(); return; }
   if (!Array.isArray(S.medical.appointments)) S.medical.appointments = [];
   if (!Array.isArray(S.events)) S.events = [];
   if (!Array.isArray(S.jobs)) S.jobs = [];
@@ -1306,7 +1475,7 @@ function ensureHub() {
   const safetyChanged = ensureSafety();
   const before = eventSig(S.events);
   syncAutoEvents();
-  if (bannersChanged || budgetChanged || docsChanged || safetyChanged || eventSig(S.events) !== before || tidyLoc()) save();
+  if (moneyChanged || bannersChanged || budgetChanged || docsChanged || safetyChanged || eventSig(S.events) !== before || tidyLoc()) save();
 }
 function announceConflicts() {
   if (!unlocked || !S || !S.cal) return;
@@ -1609,14 +1778,14 @@ function editAppt(id) {
     danger: a ? { label: 'Delete appointment', fn: () => { S.medical.appointments = S.medical.appointments.filter(x => x.id !== id); } } : null });
 }
 function schedSection() {
-  const rows = (S.scheduled || []).map(p => `<button class="li" data-act="editSched" data-id="${p.id}"><span class="grow"><b>${esc(p.name)}</b><span>${esc(p.every)} · next ${esc(fmtDay(p.next))}</span></span><span class="amt">${money(p.amount)}</span></button>`).join('');
+  const rows = (S.scheduled || []).map(p => `<button class="li" data-act="editSched" data-id="${p.id}"><span class="grow"><b>${esc(p.name)}</b><span>${esc(p.every)} · next ${esc(fmtDay(p.next))}</span></span><span class="amt">${money(p.amount, p.currency)}</span></button>`).join('');
   return `<div class="sec-h"><h2>Scheduled payments</h2><button class="btn sm" data-act="addSched">${ic('plus', 16)} Add</button></div><div class="list">${rows || '<p class="empty">Add rent, a loan or a transfer and it appears on your calendar. This does not move any money.</p>'}</div>`;
 }
 function editSched(id) {
   const p = id && (S.scheduled || []).find(x => x.id === id);
-  formSheet({ title: p ? 'Edit scheduled payment' : 'Scheduled payment', intro: 'Demo reminder only. No money leaves your account.', fields: [{ k: 'name', label: 'What is it?', req: true, ph: 'e.g. Rent' }, { k: 'amount', label: 'Amount', type: 'number', step: '0.01', req: true, im: 'decimal' }, { k: 'every', label: 'Repeats', type: 'select', options: [['weekly', 'Every week'], ['fortnight', 'Every fortnight'], ['monthly', 'Every month']] }, { k: 'next', label: 'Next date', type: 'date', req: true }],
-    values: p || { every: 'fortnight', next: hobartToday() },
-    onSave: v => { if (!(v.amount > 0) || !v.next) { toast('Add an amount and a date'); return false; } v.amount = Math.abs(v.amount); if (p) Object.assign(p, v); else S.scheduled.push({ id: uid(), ...v }); toast('Saved to your calendar'); },
+  formSheet({ title: p ? 'Edit scheduled payment' : 'Scheduled payment', intro: 'Demo reminder only. No money leaves your account.', fields: [{ k: 'name', label: 'What is it?', req: true, ph: 'e.g. Rent' }, { k: 'amount', label: 'Amount', type: 'number', step: '0.01', req: true, im: 'decimal' }, { k: 'currency', label: 'Currency', type: 'select', options: currencyChoices() }, { k: 'every', label: 'Repeats', type: 'select', options: [['weekly', 'Every week'], ['fortnight', 'Every fortnight'], ['monthly', 'Every month']] }, { k: 'next', label: 'Next date', type: 'date', req: true }],
+    values: { currency: homeCurrency(), every: 'fortnight', next: hobartToday(), ...(p || {}) },
+    onSave: v => { if (!(v.amount > 0) || !v.next) { toast('Add an amount and a date'); return false; } v.amount = Math.abs(v.amount); v.currency = v.currency || homeCurrency(); if (p) Object.assign(p, v); else S.scheduled.push({ id: uid(), ...v }); toast('Saved to your calendar'); },
     danger: p ? { label: 'Delete schedule', fn: () => { S.scheduled = S.scheduled.filter(x => x.id !== id); } } : null });
 }
 
@@ -1802,7 +1971,7 @@ function renderLocation() {
       <h2 style="font-size:1.35rem">Location is part of Premium</h2>
       <p class="muted">See where you are on a map. If you want, share that only with LifeHub Premium contacts you tick yourself. Sharing stays off until you start it.</p>
       <p class="small muted">On the Emergency screen, anyone can still show their location to read out to emergency services. That stays free.</p>
-      <a class="btn primary full" href="#/plan">${ic('star', 18)} See Premium · ${money(PRICE, 'AUD')}/month</a></div>`;
+      <a class="btn primary full" href="#/plan">${ic('star', 18)} See Premium · ${esc(premiumPrice().label)}</a></div>`;
     return screen({ title: 'Location', body });
   }
   const selected = shareNames();
@@ -1831,7 +2000,6 @@ function renderLocation() {
 }
 
 /* ---------- budget planner ---------- */
-const BUDGET_CURRENCIES = ['AUD', 'USD', 'EUR', 'GBP', 'NZD', 'CAD', 'SGD', 'INR', 'JPY'];
 const FREE_GOALS = 3;
 let budgetMonth = '';
 function bMonth() { return budgetMonth || hobartToday().slice(0, 7); }
@@ -1848,12 +2016,12 @@ function ymLabel(ym) {
 function ensureBudget() {
   let changed = false;
   if (!S.budget || typeof S.budget !== 'object') {
-    S.budget = { currency: 'AUD', alertAt: 80, rollover: false, extra: 0, strategy: 'snowball', categories: [], entries: [], goals: [], debts: [], bills: [], seen: {} };
+    S.budget = { currency: homeCurrency(), alertAt: 80, rollover: false, extra: 0, strategy: 'snowball', categories: [], entries: [], goals: [], debts: [], bills: [], seen: {} };
     changed = true;
   }
   ['categories', 'entries', 'goals', 'debts', 'bills'].forEach(k => { if (!Array.isArray(S.budget[k])) { S.budget[k] = []; changed = true; } });
   if (!S.budget.seen || typeof S.budget.seen !== 'object') { S.budget.seen = {}; changed = true; }
-  if (!S.budget.currency) { S.budget.currency = 'AUD'; changed = true; }
+  if (!S.budget.currency) { S.budget.currency = homeCurrency(); changed = true; }
   if (!S.budget.categories.length) {
     const defs = [['Pay', 'income', ''], ['Other income', 'income', ''], ['Housing', 'expense', 'needs'], ['Groceries', 'expense', 'needs'], ['Transport', 'expense', 'needs'], ['Bills & utilities', 'expense', 'needs'], ['Health', 'expense', 'needs'], ['Eating out', 'expense', 'wants'], ['Fun', 'expense', 'wants'], ['Shopping', 'expense', 'wants'], ['Savings', 'expense', 'save']];
     S.budget.categories = defs.map(([name, kind, group]) => ({ id: uid(), name, kind, group, limit: 0 }));
@@ -1862,7 +2030,7 @@ function ensureBudget() {
   return changed;
 }
 const catById = id => (S.budget.categories || []).find(c => c.id === id);
-function bm(n) { return money(n, (S.budget && S.budget.currency) || 'AUD'); }
+function bm(n, cur) { return money(n, cur || (S.budget && S.budget.currency) || homeCurrency()); }
 function alertLevel() { return isPremium() ? Math.min(100, Math.max(50, Number(S.budget.alertAt) || 80)) : 80; }
 function entriesIn(ym) { return (S.budget.entries || []).filter(e => String(e.date || '').slice(0, 7) === ym); }
 function billsIn(ym) { const dim = daysInMonth(ym); return (S.budget.bills || []).filter(b => (Number(b.day) || 1) <= dim); }
@@ -1913,7 +2081,7 @@ function renderBudget() {
   const left = cap > 0 ? cap - spent : income - spent;
   const goals = S.budget.goals;
   const shown = isPremium() ? goals : goals.slice(0, FREE_GOALS);
-  const curOpts = BUDGET_CURRENCIES.map(c => `<option value="${c}" ${c === S.budget.currency ? 'selected' : ''}>${c}</option>`).join('');
+  const curOpts = currencyChoices().map(c => `<option value="${c}" ${c === S.budget.currency ? 'selected' : ''}>${c}</option>`).join('');
   const alerts = exp.filter(c => { const lim = limitFor(c, ym); return lim > 0 && catAmount(c, ym) / lim * 100 >= alertLevel(); });
   const body = `<div class="monthnav"><button class="iconbtn" data-act="budMonth" data-d="-1" aria-label="Previous month">${ic('back')}</button><b>${esc(ymLabel(ym))}</b><button class="iconbtn" data-act="budMonth" data-d="1" aria-label="Next month">${ic('chev')}</button></div>
     <label class="fld"><span>Currency</span><select data-change="budCur" aria-label="Budget currency">${curOpts}</select></label>
@@ -1942,7 +2110,8 @@ function catSpendRow(c, ym) {
 }
 function goalRow(g) {
   const pct = g.target > 0 ? g.saved / g.target * 100 : 0;
-  return `<button class="li" data-act="budGoal" data-id="${g.id}"><span class="grow"><b>${esc(g.name)}</b><span>${bm(g.saved || 0)} saved of ${bm(g.target || 0)}${g.due ? ' · by ' + esc(fmtDay(g.due)) : ''}</span>${budgetBar(pct, 'blue')}</span></button>`;
+  const gc = g.currency || S.budget.currency;
+  return `<button class="li" data-act="budGoal" data-id="${g.id}"><span class="grow"><b>${esc(g.name)}</b><span>${money(g.saved || 0, gc)} saved of ${money(g.target || 0, gc)}${g.due ? ' · by ' + esc(fmtDay(g.due)) : ''}</span>${budgetBar(pct, 'blue')}</span></button>`;
 }
 function renderBudgetTools() {
   ensureBudget();
@@ -1969,7 +2138,7 @@ function renderBudgetTools() {
     trend = `<div class="card"><h3>Forecast</h3><p style="margin:0">On this pace you will spend about <b>${bm(pace)}</b> in ${esc(ymLabel(ym))}.</p><p class="small muted" style="margin:6px 0 0">Based on ${bm(spentNow)} over ${day} day${day === 1 ? '' : 's'}. A guide only.</p></div>
       <div class="sec-h"><h2>Last 6 months</h2></div><div class="list">${months.map(x => `<div class="li" style="display:block"><b>${esc(ymLabel(x.m))}</b><span class="small muted">${bm(x.spent)}</span>${budgetBar(x.spent / peak * 100, 'blue')}</div>`).join('')}</div>`;
   }
-  const bills = S.budget.bills.map(b => `<button class="li" data-act="budBill" data-id="${b.id}"><span class="grow"><b>${esc(b.name)}</b><span>Day ${b.day} · ${esc((catById(b.catId) || {}).name || 'Category')}</span></span><span class="amt">${bm(b.amount)}</span></button>`).join('');
+  const bills = S.budget.bills.map(b => `<button class="li" data-act="budBill" data-id="${b.id}"><span class="grow"><b>${esc(b.name)}</b><span>Day ${b.day} · ${esc((catById(b.catId) || {}).name || 'Category')}</span></span><span class="amt">${money(b.amount, b.currency || S.budget.currency)}</span></button>`).join('');
   const cats = S.budget.categories.map(c => `<button class="li" data-act="budCat" data-id="${c.id}">${ic('edit', 18)}<span class="grow"><b>${esc(c.name)}</b><span>${c.kind === 'income' ? 'Income' : 'Expense'}${c.kind === 'expense' && c.limit ? ' · ' + bm(c.limit) + ' / month' : ''}</span></span></button>`).join('');
   const roll = isPremium()
     ? `<label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>Rollover leftover</b><span>Add what you didn't spend last month onto this month's limit</span></span><span class="switch"><input type="checkbox" data-change="budRoll" ${S.budget.rollover ? 'checked' : ''}><i></i></span></label>`
@@ -2013,7 +2182,7 @@ function renderDebt() {
   const extra = Number(S.budget.extra) || 0;
   const list = S.budget.debts.map(d => ({ ...d, months: monthsToPay(d.balance, d.rate, (Number(d.minPay) || 0) + (d.id === focusDebtId() ? extra : 0)) }));
   const ordered = list.slice().sort((a, b) => S.budget.strategy === 'avalanche' ? (b.rate || 0) - (a.rate || 0) : (a.balance || 0) - (b.balance || 0));
-  const rows = ordered.map(d => `<button class="li" data-act="budDebt" data-id="${d.id}"><span class="grow"><b>${esc(d.name)}</b><span>${bm(d.balance)} · ${d.rate || 0}% · min ${bm(d.minPay || 0)}</span></span><span class="small">${d.months === Infinity ? 'Too small' : d.months + ' mo'}</span></button>`).join('');
+  const rows = ordered.map(d => { const dc = d.currency || S.budget.currency; return `<button class="li" data-act="budDebt" data-id="${d.id}"><span class="grow"><b>${esc(d.name)}</b><span>${money(d.balance, dc)} · ${d.rate || 0}% · min ${money(d.minPay || 0, dc)}</span></span><span class="small">${d.months === Infinity ? 'Too small' : d.months + ' mo'}</span></button>`; }).join('');
   const seg = (v, label) => `<button type="button" class="${S.budget.strategy === v ? 'on' : ''}" data-act="budStrategy" data-v="${v}">${label}</button>`;
   const body = `<p class="muted" style="margin-top:0">A guide only. LifeHub does not contact a bank or move any money.</p>
     <div class="seg" style="margin-bottom:12px">${seg('snowball', 'Smallest first')}${seg('avalanche', 'Highest rate')}</div>
@@ -2051,7 +2220,7 @@ function addBudgetEntry() {
     { k: 'date', label: 'Date', type: 'date', req: true },
   ], values: { date: spendDate(bMonth()), catId: cats[0] && cats[0][0] }, onSave: v => {
     if (!(v.amount > 0) || !v.date) { toast('Enter an amount and a date'); return false; }
-    S.budget.entries.push({ id: uid(), catId: v.catId, amount: Math.abs(v.amount), date: v.date, note: v.note || '' });
+    S.budget.entries.push({ id: uid(), catId: v.catId, amount: Math.abs(v.amount), date: v.date, note: v.note || '', currency: S.budget.currency });
     toast('Saved on this device');
   } });
 }
@@ -2064,7 +2233,7 @@ function budSpend(id) {
     { k: 'limit', label: c.kind === 'expense' ? 'Monthly budget (optional)' : 'Ignore for income', type: 'number', step: '0.01', im: 'decimal' },
   ], values: { date: spendDate(bMonth()), limit: c.limit || '' }, onSave: v => {
     if (c.kind === 'expense') c.limit = v.limit > 0 ? v.limit : 0;
-    if (v.amount > 0) S.budget.entries.push({ id: uid(), catId: c.id, amount: Math.abs(v.amount), date: v.date || spendDate(bMonth()), note: v.note || '' });
+    if (v.amount > 0) S.budget.entries.push({ id: uid(), catId: c.id, amount: Math.abs(v.amount), date: v.date || spendDate(bMonth()), note: v.note || '', currency: S.budget.currency });
     else if (!(v.amount > 0) && c.kind !== 'expense') { toast('Enter an amount'); return false; }
     toast('Saved');
   } });
@@ -2095,7 +2264,7 @@ function editGoal(id) {
   ], values: g || { saved: 0 }, onSave: v => {
     if (!(v.target > 0)) { toast('Enter a target'); return false; }
     v.saved = v.saved > 0 ? v.saved : 0;
-    if (g) Object.assign(g, v); else S.budget.goals.push({ id: uid(), ...v });
+    if (g) Object.assign(g, v); else S.budget.goals.push({ id: uid(), currency: S.budget.currency, ...v });
     toast('Goal saved');
   }, danger: g ? { label: 'Delete goal', fn: () => { S.budget.goals = S.budget.goals.filter(x => x.id !== id); } } : null });
 }
@@ -2112,7 +2281,7 @@ function editBBill(id) {
   ], values: b || { day: 1, catId: cats[0][0] }, onSave: v => {
     if (!(v.amount > 0)) { toast('Enter an amount'); return false; }
     v.amount = Math.abs(v.amount); v.day = Math.min(28, Math.max(1, parseInt(v.day, 10) || 1));
-    if (b) Object.assign(b, v); else S.budget.bills.push({ id: uid(), ...v });
+    if (b) Object.assign(b, v); else S.budget.bills.push({ id: uid(), currency: S.budget.currency, ...v });
     toast('It will show on your calendar');
   }, danger: b ? { label: 'Delete bill', fn: () => { S.budget.bills = S.budget.bills.filter(x => x.id !== id); } } : null });
 }
@@ -2127,7 +2296,7 @@ function editDebt(id) {
   ], values: d || { rate: 0 }, onSave: v => {
     if (!(v.balance > 0) || !(v.minPay > 0)) { toast('Enter the balance and a payment'); return false; }
     v.balance = Math.abs(v.balance); v.minPay = Math.abs(v.minPay); v.rate = v.rate > 0 ? v.rate : 0;
-    if (d) Object.assign(d, v); else S.budget.debts.push({ id: uid(), ...v });
+    if (d) Object.assign(d, v); else S.budget.debts.push({ id: uid(), currency: S.budget.currency, ...v });
     toast('Debt saved');
   }, danger: d ? { label: 'Delete debt', fn: () => { S.budget.debts = S.budget.debts.filter(x => x.id !== id); } } : null });
 }
@@ -2182,7 +2351,8 @@ async function importBudget() {
     let c = S.budget.categories.find(x => x.name.toLowerCase() === name.toLowerCase());
     if (!c) { c = { id: uid(), name, kind, group: '', limit: 0 }; S.budget.categories.push(c); }
     const dt = new Date(pick(r, 'date'));
-    S.budget.entries.push({ id: uid(), catId: c.id, amount: Math.abs(amount), date: isNaN(dt) ? todayISO() : dt.toISOString().slice(0, 10), note: pick(r, 'note', 'desc', 'description') || '' });
+    const code = String(pick(r, 'currency', 'ccy') || '').toUpperCase();
+    S.budget.entries.push({ id: uid(), catId: c.id, amount: Math.abs(amount), currency: /^[A-Z]{3}$/.test(code) ? code : S.budget.currency, date: isNaN(dt) ? todayISO() : dt.toISOString().slice(0, 10), note: pick(r, 'note', 'desc', 'description') || '' });
     n++;
   });
   save(); render(); toast('Imported ' + n + ' row' + (n === 1 ? '' : 's'));
@@ -2868,7 +3038,7 @@ const A = {
   docAdd: async () => addDocFiles(await pickFiles(DOC_ACCEPT)), docFolder: el => { docFolder = el.dataset.id || ''; render(); }, docNewFolder: () => newFolder(),
   docDl: el => downloadDoc(el.dataset.id), docTags: el => editDocTags(el.dataset.id), docMove: el => moveDoc(el.dataset.id), docDel: el => deleteDoc(el.dataset.id),
   gmapsHere: el => gmapsHere(el),
-  editProfile, changeLogin, lockNow: lock,
+  editProfile, editMoney, changeLogin, lockNow: lock,
   refreshNow: () => refreshAll(true),
   setRefresh: el => { const o = REFRESH.find(r => r[0] === el.dataset.v); if (o[2] && !isPremium()) { location.hash = '#/plan'; toast('That\'s a Premium perk'); return; } S.settings.refresh = o[0]; save(); scheduleRefresh(); render(); toast(o[0] === 'manual' ? 'Manual refresh only' : `Refreshing ${o[0] === 'live' ? 'live' : 'every ' + o[1]}`); },
   hideAd: el => { sessionStorage.setItem('lh.adHidden', '1'); const a = el.closest('.adslot'); if (a) a.remove(); },
@@ -2880,7 +3050,7 @@ const A = {
   hideBanner: el => { const b = S.settings.banners[+el.dataset.i]; b.hidden = !b.hidden; save(); render(); },
   exportData: () => { const { auth, ...rest } = S; download(`lifehub-backup-${todayISO()}.json`, JSON.stringify(rest, null, 2)); toast('Backup downloaded'); },
   importData,
-  loadSample: async () => { if (!(await confirmSheet('Load sample data?', 'This replaces your current data with demo data.', 'Replace', true))) return; const auth = S.auth, settings = S.settings; S = seed(S.profile.name, S.profile.region, true); S.auth = auth; S.settings = settings; ensureHub(); save(); render(); toast('Sample data loaded'); },
+  loadSample: async () => { if (!(await confirmSheet('Load sample data?', 'This replaces your current data with demo data.', 'Replace', true))) return; const auth = S.auth, settings = S.settings, cur = homeCurrency(), loc = homeLocale(); S = seed(S.profile.name, S.profile.region, true, { currency: cur, locale: loc }); S.auth = auth; S.settings = settings; ensureHub(); save(); render(); toast('Sample data loaded'); },
   addEvent: () => editManual(null), openEvent: el => openEvent(el.dataset.id),
   calView: el => { calView = el.dataset.v; render(); }, calNav, calDay: el => { calCursor = el.dataset.d; render(); },
   hideAuto: el => { const e = S.events.find(x => x.id === el.dataset.id); if (e) { e.hidden = true; save(); render(); toast('Hidden'); } },
@@ -2914,7 +3084,17 @@ document.addEventListener('change', e => {
   if (el.dataset.change === 'setRegion') { S.profile.region = el.value; save(); render(); toast(`Showing ${region().name} emergency numbers`); }
   if (el.dataset.change === 'preferWifi') { S.settings.preferWifi = el.checked; save(); render(); toast(el.checked ? 'Wi‑Fi preferred, mobile data as backup' : 'Using any available network'); }
   if (el.dataset.change === 'safetyStrict') { ensureSafety(); S.safety.strict = el.checked; save(); render(); toast(el.checked ? 'Strict mode on. A caution is blocked.' : 'Strict mode off. You can still add a caution.'); }
-  if (el.dataset.change === 'budCur') { ensureBudget(); S.budget.currency = el.value; save(); render(); }
+  if (el.dataset.change === 'budCur') {
+    ensureBudget();
+    const prev = S.budget.currency;
+    const next = el.value;
+    if (prev !== next) {
+      ['entries', 'bills', 'debts', 'goals'].forEach(k => (S.budget[k] || []).forEach(item => retagCurrency(item, prev, next)));
+      S.budget.currency = next;
+      toast('Budget currency updated. Amounts were not converted.');
+    }
+    save(); render();
+  }
   if (el.dataset.change === 'budRoll') { if (!isPremium()) { el.checked = false; premGo(); return; } ensureBudget(); S.budget.rollover = !!el.checked; save(); render(); toast(el.checked ? 'Leftover budget rolls into next month' : 'Rollover is off'); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
@@ -2938,5 +3118,5 @@ render();
 if (unlocked) { checkReminders(); absorbInbox(); absorbAddIntent(); openPendingDraft(); }
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.4.3', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
+window.LifeHub = { version: '1.4.4', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, cal: { parseRoster, parseICS, rangesOverlap, onDay } };
 })();
