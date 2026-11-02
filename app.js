@@ -223,7 +223,7 @@ function methodDesc(k) { return t((METHODS[k] || METHODS.pin).desc); }
 /* ---------- state ---------- */
 let S = null;
 try { S = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { S = null; }
-const save = () => { invalidateCache(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Storage full: export a backup'); } };
+const save = () => { invalidateCache(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast(t('toast.storage')); } };
 let unlocked = false;
 try { const u = JSON.parse(sessionStorage.getItem('lh.session') || 'null'); if (u && S && Date.now() - u.t < (S.settings.lockMinutes || 60) * 60000) unlocked = true; } catch (e) {}
 let lastAct = Date.now();
@@ -364,8 +364,8 @@ function setHomeMoney(locale, currency) {
       S.budget.currency = next;
     }
     S.profile.currency = next;
-    toast('Currency updated. Amounts were not converted.');
-  } else toast('Number format saved');
+    toast(t('toast.currency'));
+  } else toast(t('toast.format'));
 }
 const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w.replace(/[^\p{L}\p{N}]/gu, '')).filter(Boolean).map(w => w[0].toUpperCase()).join('') || '?';
 const avColor = s => AV_COLORS[[...String(s)].reduce((a, c) => a + c.charCodeAt(0), 0) % AV_COLORS.length];
@@ -560,9 +560,9 @@ function authorize(reason) {
     const fin = v => { if (done) return; done = true; if (unbind) unbind(); closeSheet(true); res(v); };
     const m = S.auth.method; const head = `<h2>Confirm it's you</h2><p class="muted">${esc(reason)}</p>`;
     if (m === 'pin') openSheet(head + keypadHTML() + '<button class="btn full" data-close>Cancel</button>', el => { unbind = bindKeypad(el, async (v, fail) => { if (await hash(v) === S.auth.pinHash) fin(true); else fail(); }); }, () => fin(false));
-    else if (m === 'password') openSheet(head + `<form id="pwF"><label class="fld"><span>Password</span><input type="password" name="pw" autocomplete="current-password"></label><div class="row gap"><button type="button" class="btn" data-close>Cancel</button><button class="btn primary">Confirm</button></div></form>`, el => { $('#pwF', el).onsubmit = async e => { e.preventDefault(); if (await hash(e.target.pw.value) === S.auth.pwHash) fin(true); else { toast('Incorrect password'); e.target.pw.select(); } }; }, () => fin(false));
+    else if (m === 'password') openSheet(head + `<form id="pwF"><label class="fld"><span>Password</span><input type="password" name="pw" autocomplete="current-password"></label><div class="row gap"><button type="button" class="btn" data-close>Cancel</button><button class="btn primary">Confirm</button></div></form>`, el => { $('#pwF', el).onsubmit = async e => { e.preventDefault(); if (await hash(e.target.pw.value) === S.auth.pwHash) fin(true); else { toast(t('auth.incorrect')); e.target.pw.select(); } }; }, () => fin(false));
     else if (m === 'passkey') openSheet(head + `<button class="bigbio" id="bio">${ic('finger', 56, 1.6)}<span>${S.auth.credId ? 'Use passkey / biometric' : 'Touch to verify (simulated)'}</span></button>${S.auth.credId ? '<button class="linkbtn" id="bioSim" style="width:100%">Device not available? Simulate (demo)</button>' : ''}<button class="btn full" data-close style="margin-top:8px">Cancel</button>`, el => {
-      $('#bio', el).onclick = async () => { if (!S.auth.credId) return fin(true); if (await verifyPasskey()) fin(true); else toast('Passkey not verified'); };
+      $('#bio', el).onclick = async () => { if (!S.auth.credId) return fin(true); if (await verifyPasskey()) fin(true); else toast(t('auth.passkeyFail')); };
       const sim = $('#bioSim', el); if (sim) sim.onclick = () => fin(true); }, () => fin(false));
     else openSheet(head + `<button class="btn primary full" id="ssoOk">Continue as ${esc(S.profile.name)} with ${m === 'apple' ? 'Apple' : 'Google'}</button><p class="small muted" style="margin-top:10px">Demo: a real build would re-authenticate with your ${m === 'apple' ? 'Apple ID (Face ID / Touch ID)' : 'Google account'}.</p><button class="btn full" data-close>Cancel</button>`, el => { $('#ssoOk', el).onclick = () => fin(true); }, () => fin(false));
   });
@@ -612,10 +612,10 @@ async function finishOnboarding(auth) {
   S = seed(ob.name, ob.region, ob.sample, { currency: ob.currency, locale: ob.locale, lang: LH.code }); S.auth = auth; save(); unlocked = true; touchSession(); ob.step = 0; location.hash = '#/home'; render(); toast(t('onb.welcome', { name: S.profile.name.split(' ')[0] }));
 }
 function afterOnboarding() {
-  const f = $('#obF'); if (f) f.onsubmit = e => { e.preventDefault(); const n = f.name.value.trim(); if (!n) { toast('Please enter your name'); f.name.focus(); return; } ob.name = n; ob.region = f.region.value; ob.currency = f.currency.value || ob.currency; ob.sample = f.sample.checked; ob.step = 2; render(); };
+  const f = $('#obF'); if (f) f.onsubmit = e => { e.preventDefault(); const n = f.name.value.trim(); if (!n) { toast(t('onb.needName')); f.name.focus(); return; } ob.name = n; ob.region = f.region.value; ob.currency = f.currency.value || ob.currency; ob.sample = f.sample.checked; ob.step = 2; render(); };
   const s = $('#setF'); if (s) s.onsubmit = async e => { e.preventDefault(); const a = s.a.value, b = s.b.value;
-    if (ob.method === 'pin') { if (!/^\d{4,6}$/.test(a)) return toast('PIN must be 4 to 6 digits'); if (a !== b) return toast('PINs do not match'); finishOnboarding({ method: 'pin', pinHash: await hash(a), pinLen: a.length }); }
-    else { if (a.length < 8) return toast('Use at least 8 characters'); if (a !== b) return toast('Passwords do not match'); finishOnboarding({ method: 'password', pwHash: await hash(a) }); } };
+    if (ob.method === 'pin') { if (!/^\d{4,6}$/.test(a)) return toast(t('onb.pinRule')); if (a !== b) return toast(t('onb.pinMatch')); finishOnboarding({ method: 'pin', pinHash: await hash(a), pinLen: a.length }); }
+    else { if (a.length < 8) return toast(t('onb.pwRule')); if (a !== b) return toast(t('onb.pwMatch')); finishOnboarding({ method: 'password', pwHash: await hash(a) }); } };
 }
 
 /* ---------- lock screen ---------- */
@@ -630,7 +630,7 @@ function renderLock() {
 }
 function afterLock() {
   if (S.auth.method === 'pin') lockUnbind = bindKeypad($('.lock'), async (v, fail) => { if (await hash(v) === S.auth.pinHash) unlock(); else fail(); });
-  const f = $('#lockPw'); if (f) f.onsubmit = async e => { e.preventDefault(); if (await hash(f.pw.value) === S.auth.pwHash) unlock(); else { toast('Incorrect password'); f.pw.select(); } };
+  const f = $('#lockPw'); if (f) f.onsubmit = async e => { e.preventDefault(); if (await hash(f.pw.value) === S.auth.pwHash) unlock(); else { toast(t('auth.incorrect')); f.pw.select(); } };
 }
 
 /* ---------- home ---------- */
@@ -705,13 +705,13 @@ function renderEmergency() {
   return screen({ title: t('emerg.title'), back: unlocked ? '#/home' : '#/lock', body, cls: 'red' });
 }
 function shareLocation() {
-  const box = $('#locBox'); if (!navigator.geolocation) { toast('Location not available on this device'); return; }
+  const box = $('#locBox'); if (!navigator.geolocation) { toast(t('emerg.noGeo')); return; }
   box.innerHTML = `<div class="card">${ic('pin', 18)} Finding your location…</div>`;
   navigator.geolocation.getCurrentPosition(async p => {
     const { latitude: la, longitude: lo, accuracy } = p.coords; const url = `https://maps.google.com/?q=${la.toFixed(6)},${lo.toFixed(6)}`;
     const text = `I need help. My location (±${Math.round(accuracy)}m): ${url}`;
     box.innerHTML = `<div class="card"><h3>${ic('pin', 18)} Your location</h3><p class="small muted" style="margin:0 0 10px">${la.toFixed(5)}, ${lo.toFixed(5)} (±${Math.round(accuracy)} m)</p><div class="row gap wrap"><a class="btn sm" href="${url}" target="_blank" rel="noopener">Open map</a><button class="btn sm primary" id="shareNow">Share</button><a class="btn sm" href="sms:?&body=${encodeURIComponent(text)}">Text</a></div></div>`;
-    $('#shareNow').onclick = async () => { if (navigator.share) { try { await navigator.share({ title: 'My location', text, url }); } catch (e) {} } else { try { await navigator.clipboard.writeText(text); toast('Location link copied'); } catch (e) { toast(url); } } };
+    $('#shareNow').onclick = async () => { if (navigator.share) { try { await navigator.share({ title: 'My location', text, url }); } catch (e) {} } else { try { await navigator.clipboard.writeText(text); toast(t('emerg.copied')); } catch (e) { toast(url); } } };
   }, err => { box.innerHTML = `<div class="card small">${ic('alert', 18)} Couldn't get location (${esc(err.message || 'permission denied')}). Tell the operator your address or nearest landmark.</div>`; }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
 }
 
@@ -754,7 +754,7 @@ function editMedItem(key, id) {
 }
 function renderMedicalID() {
   const m = S.medical, locked = !unlocked;
-  if (locked && !m.showOnLock) return screen({ title: 'Medical ID', back: '#/lock', cls: 'red', body: '<p class="empty">Medical ID is hidden on the lock screen. Unlock to view.</p>' });
+  if (locked && !m.showOnLock) return screen({ title: t('med.id'), back: '#/lock', cls: 'red', body: '<p class="empty">' + esc(t('med.hidden')) + '</p>' });
   const ice = S.contacts.filter(c => c.ice && !c.blocked);
   const mc = m.medicare.number ? (locked ? '•••• ' + m.medicare.number.replace(/\s/g, '').slice(-4) : m.medicare.number) : '';
   const body = `<div class="mid-hero"><small>Medical ID</small><h2>${esc(S.profile.name)}</h2><div class="row"><div><small>Blood</small><b>${esc(m.bloodType || '—')}</b></div><div><small>Organ donor</small><b>${m.organDonor ? 'Yes' : 'No'}</b></div>${mc ? `<div><small>${S.profile.region === 'AU' ? 'Medicare' : 'Health ID'}</small><b style="font-size:1rem">${esc(mc)}</b></div>` : ''}</div></div>
@@ -940,7 +940,7 @@ function renderContacts() {
 const CONTACT_FIELDS = [{ k: 'name', label: 'Name', req: true }, { k: 'phone', label: 'Phone', type: 'tel', im: 'tel' }, { k: 'email', label: 'Email', type: 'email' }, { k: 'relation', label: 'Relationship', ph: 'e.g. Partner, Friend' }, { k: 'birthday', label: 'Birthday', type: 'date' }, { k: 'notes', label: 'Notes', type: 'textarea' }, { k: 'ice', label: 'Emergency contact (ICE)', type: 'checkbox' }, { k: 'onLifeHub', label: 'Uses LifeHub (in-app chat & calls)', type: 'checkbox' }, { k: 'premium', label: 'LifeHub Premium (demo). Only Premium contacts can be picked for location sharing', type: 'checkbox' }];
 function editContact(id) {
   const c = id && contactById(id);
-  formSheet({ title: c ? 'Edit contact' : 'New contact', fields: CONTACT_FIELDS, values: c || { onLifeHub: false }, onSave: v => { if (c) Object.assign(c, v); else S.contacts.push({ id: uid(), blocked: false, ...v }); toast('Saved'); },
+  formSheet({ title: c ? 'Edit contact' : 'New contact', fields: CONTACT_FIELDS, values: c || { onLifeHub: false }, onSave: v => { if (c) Object.assign(c, v); else S.contacts.push({ id: uid(), blocked: false, ...v }); toast(t('common.saved')); },
     danger: c ? { label: 'Delete contact', fn: () => { S.contacts = S.contacts.filter(x => x.id !== id); S.chats = S.chats.filter(t => t.contactId !== id); if (S.loc) { S.loc.ids = (S.loc.ids || []).filter(x => x !== id); if (!S.loc.ids.length) S.loc.on = false; } location.hash = '#/contacts'; } } : null });
 }
 function renderContact(id) {
@@ -1732,7 +1732,7 @@ function commitEvent(ev) {
   const i = S.events.findIndex(x => x.id === ev.id);
   if (i >= 0) S.events[i] = ev; else S.events.push(ev);
   if (ev.reminderMin != null) askNotify();
-  save(); announceConflicts(); render(); toast('Saved');
+  save(); announceConflicts(); render(); toast(t('common.saved'));
 }
 function deleteEv(id) {
   const e = S.events.find(x => x.id === id); if (!e) return;
@@ -2300,7 +2300,7 @@ function budSpend(id) {
     if (c.kind === 'expense') c.limit = v.limit > 0 ? v.limit : 0;
     if (v.amount > 0) S.budget.entries.push({ id: uid(), catId: c.id, amount: Math.abs(v.amount), date: v.date || spendDate(bMonth()), note: v.note || '', currency: S.budget.currency });
     else if (!(v.amount > 0) && c.kind !== 'expense') { toast('Enter an amount'); return false; }
-    toast('Saved');
+    toast(t('common.saved'));
   } });
 }
 function editCategory(id) {
