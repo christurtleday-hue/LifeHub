@@ -6,7 +6,8 @@ These translations are machine-assisted. A native speaker should review them bef
 
 - Each language is one file in `lang/`, for example `lang/es.json` or `lang/pt-BR.json`.
 - Only the active language is fetched, plus English when the active language is not English. English fills any missing key.
-- Keys are stable ids such as `home.morning`. Do not rename a key unless you change `app.js` too.
+- Keys are stable ids such as `home.morning`. Some newer keys are the English sentence itself, for example `Add account manually`. Do not rename a key unless you change `app.js` too.
+- `node scripts/check-i18n.mjs` fails if a user-facing phrase in `app.js` or `safety.js` is not passed through `t()`, or if any language file is missing an English key or a `{placeholder}`.
 - `{name}` is a variable. Leave the braces and the name as they are.
 - Plurals use a small ICU-style pattern:
 
