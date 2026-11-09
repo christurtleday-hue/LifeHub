@@ -1283,7 +1283,7 @@ function renderSettings() {
   <div class="list"><div class="li" style="display:block"><b>${esc(t('cal.overlapMode'))}</b><div class="seg" style="margin-top:8px">${[['on', 'cal.overlapOn'], ['summary', 'cal.overlapSummary'], ['off', 'cal.overlapOff']].map(([v, key]) => `<button class="${(S.cal.overlap || 'on') === v ? 'on' : ''}" data-act="setOverlap" data-v="${v}">${esc(t(key))}</button>`).join('')}</div>
   <p class="small muted">${esc(t('cal.quietNote'))}</p>
   <label class="row between"><span>${esc(t('cal.includeAllDay'))}</span><span class="switch"><input type="checkbox" data-change="allDayOverlap" ${S.cal && S.cal.allDayOverlap ? 'checked' : ''}><i></i></span></label>
-  <p class="small" style="margin:8px 0 4px">${esc(t('cal.ignore'))}</p>
+  <p class="small" style="margin:8px 0 4px">${esc(t('cal.ignore'))}</p><p class="small muted">${esc(t('cal.ignoreOnly'))}</p>
   ${['event|work', 'event|appointment', 'event|budget', 'appointment|work', 'appointment|budget', 'work|budget'].map(pair => { const [a, b] = pair.split('|'); const on = ((S.cal && S.cal.ignore) || []).includes(pair); return `<label class="row between" style="margin:4px 0"><span>${esc(kindName(a))} + ${esc(kindName(b))}</span><span class="switch"><input type="checkbox" data-change="ignorePair" data-pair="${pair}" ${on ? 'checked' : ''}><i></i></span></label>`; }).join('')}
   </div></div>
   <div class="sec-h"><h2>${esc(t('set.banners'))}</h2></div><p class="small muted" style="margin:-4px 2px 8px">${esc(t('set.bannerNote'))}</p>
@@ -1310,7 +1310,7 @@ function renderSettings() {
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
   <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>${esc(t('set.delete'))}</b><span>${esc(t('set.deleteSub'))}</span></span>${ic('chev')}</a></div>
   <div class="card small"><h3>${ic('shield', 18)} ${esc(t('set.privacy'))}</h3>${esc(t('set.privacyCard'))}</div>
-  <p class="footnote">${esc(t('set.version', { v: '1.6.0', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
+  <p class="footnote">${esc(t('set.version', { v: '1.6.1', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
   return screen({ title: t('set.title'), body });
 }
 async function setLanguage(code) {
@@ -1416,18 +1416,28 @@ function fmtWhen(ev) {
 }
 function rangesOverlap(a, b) { return !!(a && b && a.start < b.end && b.start < a.end); }
 function ignoreKey(a, b) { return [itemKind(a), itemKind(b)].sort().join('|'); }
-function realOverlap(a, b) {
+function visualOverlap(a, b) {
   if (!a || !b || a.id === b.id || a.hidden || b.hidden) return false;
   const includeAllDay = !!(S && S.cal && S.cal.allDayOverlap);
   if (!includeAllDay && (a.allDay || b.allDay)) return false;
-  if (!rangesOverlap(a, b)) return false;
-  const skip = (S && S.cal && S.cal.ignore) || [];
-  if (skip.includes(ignoreKey(a, b))) return false;
-  return true;
+  return rangesOverlap(a, b);
 }
+function silencedByType(a, b) {
+  const skip = (S && S.cal && S.cal.ignore) || [];
+  return skip.includes(ignoreKey(a, b));
+}
+function realOverlap(a, b) { return visualOverlap(a, b); }
 function clashSig(a, b) {
   const [x, y] = a.id < b.id ? [a, b] : [b, a];
   return [x.id, x.start, x.end, x.title, y.id, y.start, y.end, y.title].join('\u001f');
+}
+function timeSig(a, b) {
+  const [x, y] = a.id < b.id ? [a, b] : [b, a];
+  return [x.id, x.start, x.end, y.id, y.start, y.end].join('\u001f');
+}
+function pairIgnored(a, b) {
+  const gone = (S && S.cal && S.cal.dismissed) || [];
+  return gone.includes(timeSig(a, b)) || gone.includes(clashSig(a, b)) || gone.includes(pairKey(a, b));
 }
 function localDay() {
   const d = new Date();
@@ -1439,14 +1449,20 @@ function pairKey(a, b) { const ka = a.id + '@' + a.start, kb = b.id + '@' + b.st
 function findConflicts() {
   const ev = (S.events || []).filter(e => !e.hidden);
   const pairs = [];
-  for (let i = 0; i < ev.length; i++) for (let j = i + 1; j < ev.length; j++) if (realOverlap(ev[i], ev[j])) pairs.push([ev[i], ev[j]]);
+  for (let i = 0; i < ev.length; i++) for (let j = i + 1; j < ev.length; j++) if (visualOverlap(ev[i], ev[j])) pairs.push([ev[i], ev[j]]);
   return pairs;
 }
-function activePairs() {
-  const gone = new Set((S && S.cal && S.cal.dismissed) || []);
-  return findConflicts().filter(([a, b]) => !gone.has(clashSig(a, b)) && !gone.has(pairKey(a, b)));
+function activePairs() { return findConflicts().filter(([a, b]) => !pairIgnored(a, b) && !silencedByType(a, b)); }
+function clashState(e) {
+  let state = '';
+  findConflicts().forEach(([a, b]) => {
+    if (a.id !== e.id && b.id !== e.id) return;
+    if (!pairIgnored(a, b)) state = 'open';
+    else if (state !== 'open') state = 'ignored';
+  });
+  return state;
 }
-function eventClashes(e) { return activePairs().some(([a, b]) => a.id === e.id || b.id === e.id); }
+function eventClashes(e) { return clashState(e) === 'open'; }
 function plusMinutes(hm, mins) {
   const [h, m] = hm.split(':').map(Number);
   const t = Math.min(h * 60 + m + mins, 23 * 60 + 59);
@@ -1621,8 +1637,8 @@ function announceConflicts() {
   if (!Array.isArray(S.cal.alerted)) S.cal.alerted = [];
   const fresh = [];
   activePairs().forEach(([a, b]) => {
-    const sig = clashSig(a, b);
-    if (S.cal.alerted.includes(sig)) return;
+    const sig = timeSig(a, b);
+    if (S.cal.alerted.includes(sig) || S.cal.alerted.includes(clashSig(a, b))) return;
     fresh.push({ a, b, sig, synced: !!(a.auto && b.auto) });
   });
   if (!fresh.length) return;
@@ -1726,19 +1742,27 @@ function parseICS(text) {
   return out;
 }
 function cursor() { if (!calCursor) calCursor = hobartToday(); return calCursor; }
+function clashMark(e) {
+  const state = clashState(e);
+  if (state === 'open') return `<span class="clash-dot" title="${esc(t('cal.clashMark'))}">!</span>`;
+  if (state === 'ignored') return `<span class="clash-dot soft" title="${esc(t('cal.ignoredMark'))}">!</span>`;
+  return '';
+}
 function eventRow(e) {
-  const clash = eventClashes(e) ? `<span class="clash-dot" title="${esc(t('cal.clashMark'))}">!</span>` : '';
-  return `<button class="li" data-act="openEvent" data-id="${e.id}"><span class="evdot" style="background:${esc(kindColor(e))}"></span><span class="grow"><b>${esc(e.title)}</b><span>${esc(fmtWhen(e))}${e.loc ? ' · ' + esc(e.loc) : ''}</span></span>${clash}<span class="tag">${ic(kindIcon(e), 14)} ${esc(kindName(itemKind(e)))}</span></button>`;
+  return `<button class="li" data-act="openEvent" data-id="${e.id}"><span class="evdot" style="background:${esc(kindColor(e))}"></span><span class="grow"><b>${esc(e.title)}</b><span>${esc(fmtWhen(e))}${e.loc ? ' · ' + esc(e.loc) : ''}</span></span>${clashMark(e)}<span class="tag">${ic(kindIcon(e), 14)} ${esc(kindName(itemKind(e)))}</span></button>`;
 }
 function dayEvents(day, budgetOnly) {
   return S.events.filter(e => !e.hidden && onDay(e, day) && (!budgetOnly || itemKind(e) === 'budget') && (budgetOnly || typeOn(itemKind(e)))).sort((a, b) => a.start.localeCompare(b.start));
 }
 function clashBlock(pairs) {
   if (!pairs.length) return '';
-  const victim = (a, b) => (a.auto ? 2 : a.source === 'shift' ? 0 : 1) <= (b.auto ? 2 : b.source === 'shift' ? 0 : 1) ? a : b;
+  const ordered = pairs.slice().sort((a, b) => (pairIgnored(a[0], a[1]) ? 1 : 0) - (pairIgnored(b[0], b[1]) ? 1 : 0));
   return `<section class="clash" id="clashes" data-role="clash"><h3>${ic('alert', 18)} ${esc(t('cal.overlaps', { n: pairs.length }))}</h3>
-    ${pairs.slice(0, 8).map(([a, b]) => { const del = victim(a, b); return `<div class="clash-row"><b>${esc(a.title)}</b> ${esc(t('cal.overlapsWord'))} <b>${esc(b.title)}</b><div class="small">${esc(fmtWhen(a))}</div>
-      <div class="row gap wrap" style="margin-top:8px"><button class="btn sm" data-act="keepPair" data-a="${a.id}" data-b="${b.id}">${esc(t('cal.keep'))}</button><button class="btn sm" data-act="movePair" data-a="${a.id}" data-b="${b.id}">${esc(t('cal.move'))}</button><button class="btn sm danger" data-act="deleteEv" data-id="${del.id}">${esc(del.auto ? t('cal.hide') : t('common.delete'))} ${esc(del.title)}</button></div></div>`; }).join('')}
+    ${ordered.slice(0, 8).map(([a, b]) => {
+      const ignored = pairIgnored(a, b);
+      return `<div class="clash-row${ignored ? ' ignored' : ''}"><b>${esc(a.title)}</b> ${esc(t('cal.overlapsWord'))} <b>${esc(b.title)}</b><div class="small">${esc(fmtWhen(a))}${ignored ? ' · ' + esc(t('cal.ignoredNote')) : ''}</div>
+      <div class="row gap wrap" style="margin-top:8px"><button class="btn sm" data-act="editClash" data-id="${a.id}">${esc(t('cal.editNamed', { name: a.title }))}</button><button class="btn sm" data-act="editClash" data-id="${b.id}">${esc(t('cal.editNamed', { name: b.title }))}</button><button class="btn sm" data-act="${ignored ? 'unignorePair' : 'ignorePair'}" data-a="${a.id}" data-b="${b.id}">${esc(t(ignored ? 'cal.unignore' : 'cal.ignoreClash'))}</button></div></div>`;
+    }).join('')}
     ${pairs.length > 8 ? `<p class="small">${esc(t('cal.moreClashes', { n: pairs.length - 8 }))}</p>` : ''}
     <button class="btn sm" data-act="askClashNotify" style="margin-top:8px">${ic('bell', 16)} ${esc(t('cal.notify'))}</button></section>`;
 }
@@ -1766,8 +1790,9 @@ function navRow(label, mode) {
 function dayCell(d, day, today, budgetOnly) {
   if (!d) return '<span class="cal-day" style="visibility:hidden"></span>';
   const ev = dayEvents(d, budgetOnly).slice(0, 3);
-  const clash = dayEvents(d, budgetOnly).some(eventClashes);
-  return `<button class="cal-day ${d === today ? 'today' : ''} ${d === day ? 'on' : ''}" data-act="calDay" data-d="${d}" aria-current="${d === today ? 'date' : 'false'}" aria-label="${esc(fmtDay(d))}"><span class="n">${Number(d.slice(8))}${clash ? '<i class="clash-dot">!</i>' : ''}</span><span class="dots">${ev.map(e => `<i class="dot" style="background:${esc(kindColor(e))}"></i>`).join('')}</span></button>`;
+  const states = dayEvents(d, budgetOnly).map(clashState);
+  const mark = states.includes('open') ? '<i class="clash-dot">!</i>' : states.includes('ignored') ? '<i class="clash-dot soft">!</i>' : '';
+  return `<button class="cal-day ${d === today ? 'today' : ''} ${d === day ? 'on' : ''}" data-act="calDay" data-d="${d}" aria-current="${d === today ? 'date' : 'false'}" aria-label="${esc(fmtDay(d))}"><span class="n">${Number(d.slice(8))}${mark}</span><span class="dots">${ev.map(e => `<i class="dot" style="background:${esc(kindColor(e))}"></i>`).join('')}</span></button>`;
 }
 function monthView(day, budgetOnly) {
   const cells = monthCells(day);
@@ -1794,7 +1819,9 @@ function weekView(day, budgetOnly) {
   const cols = weekDayOrder().map((wd, idx) => {
     const d = addDays(start, idx);
     const ev = dayEvents(d, budgetOnly);
-    return `<button class="week-col ${d === today ? 'today' : ''} ${d === day ? 'on' : ''}" data-act="calDay" data-d="${d}"><b>${esc(weekdayName(wd, 'narrow'))}</b><span>${Number(d.slice(8))}</span>${ev.slice(0, 4).map(e => `<i style="background:${esc(kindColor(e))}">${esc(e.title)}</i>`).join('')}${ev.some(eventClashes) ? '<em>!</em>' : ''}</button>`;
+    const states = ev.map(clashState);
+    const mark = states.includes('open') ? '<em>!</em>' : states.includes('ignored') ? '<em class="soft">!</em>' : '';
+    return `<button class="week-col ${d === today ? 'today' : ''} ${d === day ? 'on' : ''}" data-act="calDay" data-d="${d}"><b>${esc(weekdayName(wd, 'narrow'))}</b><span>${Number(d.slice(8))}</span>${ev.slice(0, 4).map(e => `<i style="background:${esc(kindColor(e))}">${esc(e.title)}</i>`).join('')}${mark}</button>`;
   }).join('');
   const list = dayEvents(day, budgetOnly);
   return `${navRow(t('cal.weekOf', { day: fmtDay(start) }), 'week')}<div class="week-board">${cols}</div>
@@ -1857,10 +1884,11 @@ function bindCalSwipe(budgetOnly) {
 }
 function renderCalendar() {
   const day = cursor();
-  const pairs = activePairs();
+  const pairs = findConflicts();
+  const openPairs = pairs.filter(([a, b]) => !pairIgnored(a, b));
   const hidden = S.events.filter(e => e.hidden);
   const body = `<div data-screen="calendar">${viewSwitcher()}${typeFilters(false)}
-    ${pairs.length ? `<button class="clash-banner" data-act="jumpClashes">${ic('alert', 18)} ${esc(t('cal.overlaps', { n: pairs.length }))}</button>` : ''}${calBody(day, false)}
+    ${openPairs.length ? `<button class="clash-banner" data-act="jumpClashes">${ic('alert', 18)} ${esc(t('cal.overlaps', { n: openPairs.length }))}</button>` : ''}${calBody(day, false)}
     ${clashBlock(pairs)}${noticesBlock()}
     ${importBlock()}${hidden.length ? `<div class="sec-h"><h2>${esc(t('cal.hidden'))}</h2></div><div class="list">${hidden.map(e => `<div class="li"><span class="grow"><b>${esc(e.title)}</b><span>${esc(kindName(itemKind(e)))}</span></span><button class="btn sm" data-act="showAuto" data-id="${e.id}">${esc(t('cal.show'))}</button></div>`).join('')}</div>` : ''}</div>`;
   return { html: screen({ title: t('cal.title'), body, right: `<button class="iconbtn" data-act="addEvent" aria-label="${esc(t('cal.add'))}">${ic('plus')}</button>` }), after: () => bindCalSwipe(false) };
@@ -1894,10 +1922,18 @@ function deleteEv(id) {
   if (e.auto) { e.hidden = true; toast(t("Hidden from the calendar")); } else { S.events = S.events.filter(x => x.id !== id); toast('Deleted'); }
   save(); render();
 }
-function keepPair(aId, bId) {
+function ignorePair(aId, bId) {
   const a = S.events.find(x => x.id === aId), b = S.events.find(x => x.id === bId); if (!a || !b) return;
-  const k = clashSig(a, b); if (!S.cal.dismissed.includes(k)) S.cal.dismissed.push(k);
-  save(); render(); toast(t("Kept both"));
+  const k = timeSig(a, b);
+  if (!S.cal.dismissed.includes(k)) S.cal.dismissed.push(k);
+  if (!S.cal.alerted.includes(k)) S.cal.alerted.push(k);
+  save(); render(); toast(t('cal.ignoredNote'));
+}
+function unignorePair(aId, bId) {
+  const a = S.events.find(x => x.id === aId), b = S.events.find(x => x.id === bId); if (!a || !b) return;
+  const drop = new Set([timeSig(a, b), clashSig(a, b), pairKey(a, b)]);
+  S.cal.dismissed = S.cal.dismissed.filter(x => !drop.has(x));
+  save(); render();
 }
 function movePair(aId, bId) {
   const a = S.events.find(x => x.id === aId), b = S.events.find(x => x.id === bId);
@@ -1970,11 +2006,12 @@ function editManual(existing, draft) {
       const back = { title, date: day, startTime: form.startTime.value, endTime: form.endTime.value, allDay: isAll, loc: ev.loc, notes: ev.notes, reminderMin: ev.reminderMin, kind };
       const hits = S.events.filter(o => realOverlap(ev, o));
       if (!hits.length) { closeSheet(true); commitEvent(ev); return; }
-      openSheet(`<h2>${esc(t("These overlap"))}</h2><p><b>${esc(ev.title)}</b> ${esc(t("overlaps something already on your calendar."))}</p><div class="list">${hits.slice(0, 6).map(h => `<div class="li"><span class="grow"><b>${esc(h.title)}</b><span>${esc(fmtWhen(h))}</span></span></div>`).join('')}</div>
-        <button class="btn primary full" id="keepBoth">${esc(t("Keep both"))}</button><button class="btn full" id="changeTime" style="margin-top:8px">${esc(t("Change the time"))}</button><button class="btn ghost full" id="dropEv" style="margin-top:8px">${esc(t("Don't save"))}</button>`, el2 => {
-        $('#keepBoth', el2).onclick = () => { closeSheet(true); commitEvent(ev); };
-        $('#changeTime', el2).onclick = () => { closeSheet(true); editManual(existing, back); };
-        $('#dropEv', el2).onclick = () => closeSheet();
+      openSheet(`<h2>${esc(t('cal.overlapWarn'))}</h2><p>${esc(t('cal.overlapSaveBody', { name: ev.title }))}</p>
+        <button class="btn primary full" id="saveAnyway">${esc(t('cal.saveAnyway'))}</button><button class="btn full" id="editBack" style="margin-top:8px">${esc(t('common.edit'))}</button>
+        <div class="list" style="margin-top:12px">${hits.slice(0, 6).map(h => `<div class="li"><span class="grow"><b>${esc(h.title)}</b><span>${esc(fmtWhen(h))}</span></span><button class="btn sm" data-act="editHit" data-id="${h.id}">${esc(t('common.edit'))}</button></div>`).join('')}</div>`, el2 => {
+        $('#saveAnyway', el2).onclick = () => { closeSheet(true); commitEvent(ev); };
+        $('#editBack', el2).onclick = () => { closeSheet(true); editManual(existing, back); };
+        el2.querySelectorAll('[data-act="editHit"]').forEach(btn => { btn.onclick = () => { closeSheet(true); commitEvent(ev); openEvent(btn.dataset.id); }; });
       });
     };
     const del = $('#evDel', el); if (del) del.onclick = () => { closeSheet(true); deleteEv(existing.id); };
@@ -2061,10 +2098,10 @@ function confirmDrafts(drafts) {
   const clashes = drafts.map(d => ({ d, hits: S.events.filter(e => !e.hidden && rangesOverlap(d, e)) })).filter(x => x.hits.length);
   const go = () => { drafts.forEach(d => S.events.push(d)); save(); announceConflicts(); workState().step = 'menu'; location.hash = '#/calendar'; toast(`${esc(t("Added"))} ${drafts.length} shift${drafts.length === 1 ? '' : 's'}`); };
   if (!clashes.length) return go();
-  openSheet(`<h2>${esc(t("Some shifts overlap"))}</h2><p>${clashes.length} of ${drafts.length} ${esc(t("overlap something already on your calendar."))}</p><div class="list">${clashes.slice(0, 6).map(c => `<div class="li"><span class="grow"><b>${esc(c.d.title)}</b><span>${esc(fmtWhen(c.d))} overlaps ${esc(c.hits[0].title)}</span></span></div>`).join('')}</div>
-    <div class="row gap"><button class="btn" id="noAdd">${esc(t("Go back"))}</button><button class="btn primary" id="yesAdd">${esc(t("Keep both"))}</button></div>`, el => {
-    $('#noAdd', el).onclick = () => closeSheet();
+  openSheet(`<h2>${esc(t('cal.overlapWarn'))}</h2><p>${esc(t('cal.shiftOverlap', { clashes: clashes.length, total: drafts.length }))}</p><div class="list">${clashes.slice(0, 6).map(c => `<div class="li"><span class="grow"><b>${esc(c.d.title)}</b><span>${esc(fmtWhen(c.d))} ${esc(t('cal.overlapsWord'))} ${esc(c.hits[0].title)}</span></span></div>`).join('')}</div>
+    <button class="btn primary full" id="yesAdd">${esc(t('cal.saveAnyway'))}</button><button class="btn full" id="editShifts" style="margin-top:8px">${esc(t('common.edit'))}</button>`, el => {
     $('#yesAdd', el).onclick = () => { closeSheet(true); go(); };
+    $('#editShifts', el).onclick = () => closeSheet();
   });
 }
 function readWorkFields() {
@@ -3301,7 +3338,8 @@ const A = {
   hideAuto: el => { const e = S.events.find(x => x.id === el.dataset.id); if (e) { e.hidden = true; save(); render(); toast('Hidden'); } },
   showAuto: el => { const e = S.events.find(x => x.id === el.dataset.id); if (e) { e.hidden = false; save(); render(); } },
   convertAuto: el => convertAuto(el.dataset.id),
-  keepPair: el => keepPair(el.dataset.a, el.dataset.b), movePair: el => movePair(el.dataset.a, el.dataset.b),
+  ignorePair: el => ignorePair(el.dataset.a, el.dataset.b), unignorePair: el => unignorePair(el.dataset.a, el.dataset.b),
+  editClash: el => openEvent(el.dataset.id),
   deleteEv: el => deleteEv(el.dataset.id), dismissNotice: el => { S.cal.notices = S.cal.notices.filter(n => n.id !== el.dataset.id); save(); render(); },
   askClashNotify: () => { askNotify(); toast(t("If you allow notifications, LifeHub will ping you about overlaps and reminders")); },
   importIcs, linkCal: el => linkExternal(el.dataset.name),
@@ -3377,5 +3415,5 @@ async function boot() {
 boot();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.6.0', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
+window.LifeHub = { version: '1.6.1', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
 })();

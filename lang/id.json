@@ -1256,5 +1256,15 @@
   "Map": "Peta",
   "How long to share": "Berapa lama berbagi",
   "Previous month": "Bulan sebelumnya",
-  "Next month": "Bulan berikutnya"
+  "Next month": "Bulan berikutnya",
+  "cal.ignoreClash": "Abaikan",
+  "cal.unignore": "Batalkan abaikan",
+  "cal.ignoredNote": "Diabaikan. Keduanya tetap di kalender.",
+  "cal.ignoredMark": "Tumpang tindih yang diabaikan",
+  "cal.saveAnyway": "Tetap simpan",
+  "cal.overlapWarn": "Waktu ini bertumpuk",
+  "cal.overlapSaveBody": "{name} bertumpuk dengan sesuatu yang sudah ada di kalender. Menyimpan mempertahankan setiap item.",
+  "cal.ignoreOnly": "Ini hanya menghentikan pemberitahuan. Item tetap di kalender.",
+  "cal.editNamed": "Ubah {name}",
+  "cal.shiftOverlap": "{clashes} dari {total} sif bertumpuk dengan sesuatu di kalender. Menyimpan mempertahankan setiap item."
 }

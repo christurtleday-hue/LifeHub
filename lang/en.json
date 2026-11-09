@@ -1256,5 +1256,15 @@
   "Map": "Map",
   "How long to share": "How long to share",
   "Previous month": "Previous month",
-  "Next month": "Next month"
+  "Next month": "Next month",
+  "cal.ignoreClash": "Ignore",
+  "cal.unignore": "Un-ignore",
+  "cal.ignoredNote": "Ignored. Both items stay on your calendar.",
+  "cal.ignoredMark": "Ignored overlap",
+  "cal.saveAnyway": "Save anyway",
+  "cal.overlapWarn": "These times overlap",
+  "cal.overlapSaveBody": "{name} overlaps something already on your calendar. Saving keeps every item.",
+  "cal.ignoreOnly": "This only stops the notification. Items stay on the calendar.",
+  "cal.editNamed": "Edit {name}",
+  "cal.shiftOverlap": "{clashes} of {total} shifts overlap something already on your calendar. Saving keeps every item."
 }

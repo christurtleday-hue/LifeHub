@@ -337,7 +337,10 @@ html.fast img{image-rendering:high-quality}
 .day-board{display:flex;flex-direction:column;gap:2px}
 .day-hour{display:grid;grid-template-columns:4.5rem 1fr;gap:6px;align-items:start}
 .day-hour>span{font-size:.75rem;color:var(--muted);padding-top:8px}
+.clash-row.ignored{opacity:.72}
+.clash-row.ignored b{font-weight:600}
 .clash-dot{display:inline-grid;place-items:center;min-width:16px;height:16px;border-radius:99px;background:var(--amber);color:#3b2600;font-size:.7rem;font-weight:800;font-style:normal}
+.clash-dot.soft,.week-col em.soft{background:transparent;color:var(--muted);border:1px solid var(--line);box-shadow:none}
 .cal-day .n{display:flex;align-items:center;gap:2px}
 .days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:8px 0 12px}
 .days button{min-height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:800}

@@ -1256,5 +1256,15 @@
   "Map": "Harita",
   "How long to share": "Ne kadar paylaşılacak",
   "Previous month": "Önceki ay",
-  "Next month": "Sonraki ay"
+  "Next month": "Sonraki ay",
+  "cal.ignoreClash": "Yoksay",
+  "cal.unignore": "Yoksaymayı kaldır",
+  "cal.ignoredNote": "Yoksayıldı. İkisi de takvimde kalır.",
+  "cal.ignoredMark": "Yoksayılan çakışma",
+  "cal.saveAnyway": "Yine de kaydet",
+  "cal.overlapWarn": "Bu saatler çakışıyor",
+  "cal.overlapSaveBody": "{name} takvimde zaten olan bir şeyle çakışıyor. Kaydetmek her öğeyi tutar.",
+  "cal.ignoreOnly": "Bu yalnızca bildirimi durdurur. Öğeler takvimde kalır.",
+  "cal.editNamed": "{name} öğesini düzenle",
+  "cal.shiftOverlap": "{total} vardiyadan {clashes} tanesi takvimdeki bir şeyle çakışıyor. Kaydetmek her öğeyi tutar."
 }

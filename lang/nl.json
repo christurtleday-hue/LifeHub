@@ -1256,5 +1256,15 @@
   "Map": "Kaart",
   "How long to share": "Hoelang delen",
   "Previous month": "Vorige maand",
-  "Next month": "Volgende maand"
+  "Next month": "Volgende maand",
+  "cal.ignoreClash": "Negeren",
+  "cal.unignore": "Niet meer negeren",
+  "cal.ignoredNote": "Genegeerd. Beide blijven in de agenda.",
+  "cal.ignoredMark": "Genegeerde overlap",
+  "cal.saveAnyway": "Toch opslaan",
+  "cal.overlapWarn": "Deze tijden overlappen",
+  "cal.overlapSaveBody": "{name} overlapt iets dat al in de agenda staat. Opslaan houdt elk item.",
+  "cal.ignoreOnly": "Dit stopt alleen de melding. De items blijven in de agenda.",
+  "cal.editNamed": "{name} bewerken",
+  "cal.shiftOverlap": "{clashes} van {total} diensten overlappen iets in de agenda. Opslaan houdt elk item."
 }

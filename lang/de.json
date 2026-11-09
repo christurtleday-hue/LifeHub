@@ -1256,5 +1256,15 @@
   "Map": "Karte",
   "How long to share": "Wie lange teilen",
   "Previous month": "Vorheriger Monat",
-  "Next month": "Nächster Monat"
+  "Next month": "Nächster Monat",
+  "cal.ignoreClash": "Ignorieren",
+  "cal.unignore": "Nicht mehr ignorieren",
+  "cal.ignoredNote": "Ignoriert. Beide bleiben im Kalender.",
+  "cal.ignoredMark": "Ignorierte Überschneidung",
+  "cal.saveAnyway": "Trotzdem speichern",
+  "cal.overlapWarn": "Diese Zeiten überschneiden sich",
+  "cal.overlapSaveBody": "{name} überschneidet sich mit etwas, das schon im Kalender steht. Beim Speichern bleiben alle Einträge.",
+  "cal.ignoreOnly": "Das stoppt nur die Meldung. Die Einträge bleiben im Kalender.",
+  "cal.editNamed": "{name} bearbeiten",
+  "cal.shiftOverlap": "{clashes} von {total} Schichten überschneiden sich mit etwas im Kalender. Beim Speichern bleiben alle Einträge."
 }

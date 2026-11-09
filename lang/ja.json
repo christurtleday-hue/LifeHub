@@ -1256,5 +1256,15 @@
   "Map": "地図",
   "How long to share": "共有する時間",
   "Previous month": "前の月",
-  "Next month": "次の月"
+  "Next month": "次の月",
+  "cal.ignoreClash": "無視",
+  "cal.unignore": "無視をやめる",
+  "cal.ignoredNote": "無視しました。どちらもカレンダーに残ります。",
+  "cal.ignoredMark": "無視した重なり",
+  "cal.saveAnyway": "それでも保存",
+  "cal.overlapWarn": "この時間は重なっています",
+  "cal.overlapSaveBody": "{name} はカレンダーにある予定と重なります。保存しても項目はすべて残ります。",
+  "cal.ignoreOnly": "通知を止めるだけです。予定はカレンダーに残ります。",
+  "cal.editNamed": "{name} を編集",
+  "cal.shiftOverlap": "{total} 件のシフトのうち {clashes} 件がカレンダーの予定と重なります。保存しても項目はすべて残ります。"
 }

@@ -1256,5 +1256,15 @@
   "Map": "الخريطة",
   "How long to share": "مدة المشاركة",
   "Previous month": "الشهر السابق",
-  "Next month": "الشهر التالي"
+  "Next month": "الشهر التالي",
+  "cal.ignoreClash": "تجاهل",
+  "cal.unignore": "إلغاء التجاهل",
+  "cal.ignoredNote": "تم التجاهل. يبقي العنصران في التقويم.",
+  "cal.ignoredMark": "تداخل متجاهَل",
+  "cal.saveAnyway": "احفظ على أي حال",
+  "cal.overlapWarn": "هذه الأوقات تتداخل",
+  "cal.overlapSaveBody": "يتداخل {name} مع شيء موجود في التقويم. الحفظ يبقي كل العناصر.",
+  "cal.ignoreOnly": "هذا يوقف التنبيه فقط. تبقى العناصر في التقويم.",
+  "cal.editNamed": "تعديل {name}",
+  "cal.shiftOverlap": "{clashes} من {total} ورديات تتداخل مع شيء في التقويم. الحفظ يبقي كل العناصر."
 }

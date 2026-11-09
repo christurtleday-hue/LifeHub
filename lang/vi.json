@@ -1256,5 +1256,15 @@
   "Map": "Bản đồ",
   "How long to share": "Chia sẻ bao lâu",
   "Previous month": "Tháng trước",
-  "Next month": "Tháng sau"
+  "Next month": "Tháng sau",
+  "cal.ignoreClash": "Bỏ qua",
+  "cal.unignore": "Bỏ bỏ qua",
+  "cal.ignoredNote": "Đã bỏ qua. Cả hai vẫn ở trên lịch.",
+  "cal.ignoredMark": "Trùng giờ đã bỏ qua",
+  "cal.saveAnyway": "Vẫn lưu",
+  "cal.overlapWarn": "Các giờ này trùng nhau",
+  "cal.overlapSaveBody": "{name} trùng với việc đã có trên lịch. Lưu sẽ giữ mọi mục.",
+  "cal.ignoreOnly": "Việc này chỉ tắt thông báo. Các mục vẫn ở trên lịch.",
+  "cal.editNamed": "Sửa {name}",
+  "cal.shiftOverlap": "{clashes} trong {total} ca trùng với việc trên lịch. Lưu sẽ giữ mọi mục."
 }

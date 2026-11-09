@@ -1256,5 +1256,15 @@
   "Map": "Carte",
   "How long to share": "Pendant combien de temps partager",
   "Previous month": "Mois précédent",
-  "Next month": "Mois suivant"
+  "Next month": "Mois suivant",
+  "cal.ignoreClash": "Ignorer",
+  "cal.unignore": "Ne plus ignorer",
+  "cal.ignoredNote": "Ignoré. Les deux restent dans le calendrier.",
+  "cal.ignoredMark": "Chevauchement ignoré",
+  "cal.saveAnyway": "Enregistrer quand même",
+  "cal.overlapWarn": "Ces horaires se chevauchent",
+  "cal.overlapSaveBody": "{name} chevauche quelque chose déjà dans le calendrier. L'enregistrement garde chaque élément.",
+  "cal.ignoreOnly": "Cela arrête seulement la notification. Les éléments restent dans le calendrier.",
+  "cal.editNamed": "Modifier {name}",
+  "cal.shiftOverlap": "{clashes} des {total} services chevauchent quelque chose du calendrier. L'enregistrement garde chaque élément."
 }

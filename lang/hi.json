@@ -1256,5 +1256,15 @@
   "Map": "नक्शा",
   "How long to share": "कितनी देर साझा करें",
   "Previous month": "पिछला महीना",
-  "Next month": "अगला महीना"
+  "Next month": "अगला महीना",
+  "cal.ignoreClash": "अनदेखा करें",
+  "cal.unignore": "अनदेखा हटाएँ",
+  "cal.ignoredNote": "अनदेखा किया गया। दोनों कैलेंडर पर रहते हैं।",
+  "cal.ignoredMark": "अनदेखी गई टक्कर",
+  "cal.saveAnyway": "फिर भी सहेजें",
+  "cal.overlapWarn": "ये समय टकराते हैं",
+  "cal.overlapSaveBody": "{name} उस चीज़ से टकराता है जो कैलेंडर में पहले से है। सहेजने पर हर चीज़ रहती है।",
+  "cal.ignoreOnly": "यह केवल सूचना रोकता है। चीज़ें कैलेंडर पर रहती हैं।",
+  "cal.editNamed": "{name} बदलें",
+  "cal.shiftOverlap": "{total} में से {clashes} शिफ्ट कैलेंडर की किसी चीज़ से टकराती हैं। सहेजने पर हर चीज़ रहती है।"
 }

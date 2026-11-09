@@ -1256,5 +1256,15 @@
   "Map": "Mapa",
   "How long to share": "Durante quanto tempo partilhar",
   "Previous month": "Mês anterior",
-  "Next month": "Mês seguinte"
+  "Next month": "Mês seguinte",
+  "cal.ignoreClash": "Ignorar",
+  "cal.unignore": "Deixar de ignorar",
+  "cal.ignoredNote": "Ignorado. Os dois ficam no calendário.",
+  "cal.ignoredMark": "Sobreposição ignorada",
+  "cal.saveAnyway": "Guardar mesmo assim",
+  "cal.overlapWarn": "Estes horários sobrepõem-se",
+  "cal.overlapSaveBody": "{name} sobrepõe-se a algo que já está no calendário. Guardar mantém todos os itens.",
+  "cal.ignoreOnly": "Isto só para o aviso. Os itens ficam no calendário.",
+  "cal.editNamed": "Editar {name}",
+  "cal.shiftOverlap": "{clashes} de {total} turnos sobrepõem-se a algo no calendário. Guardar mantém todos os itens."
 }

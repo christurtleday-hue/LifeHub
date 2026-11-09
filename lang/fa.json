@@ -1256,5 +1256,15 @@
   "Map": "نقشه",
   "How long to share": "مدت اشتراک",
   "Previous month": "ماه قبل",
-  "Next month": "ماه بعد"
+  "Next month": "ماه بعد",
+  "cal.ignoreClash": "نادیده بگیر",
+  "cal.unignore": "لغو نادیده‌گرفتن",
+  "cal.ignoredNote": "نادیده گرفته شد. هر دو در تقویم می‌مانند.",
+  "cal.ignoredMark": "تداخل نادیده گرفته‌شده",
+  "cal.saveAnyway": "در هر صورت ذخیره کن",
+  "cal.overlapWarn": "این زمان‌ها تداخل دارند",
+  "cal.overlapSaveBody": "{name} با چیزی که از قبل در تقویم است تداخل دارد. ذخیره کردن همه را نگه می‌دارد.",
+  "cal.ignoreOnly": "این فقط اعلان را متوقف می‌کند. موردها در تقویم می‌مانند.",
+  "cal.editNamed": "ویرایش {name}",
+  "cal.shiftOverlap": "{clashes} از {total} شیفت با چیزی در تقویم تداخل دارد. ذخیره کردن همه را نگه می‌دارد."
 }

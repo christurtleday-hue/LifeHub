@@ -1256,5 +1256,15 @@
   "Map": "地圖",
   "How long to share": "分享多久",
   "Previous month": "上個月",
-  "Next month": "下個月"
+  "Next month": "下個月",
+  "cal.ignoreClash": "忽略",
+  "cal.unignore": "取消忽略",
+  "cal.ignoredNote": "已忽略。兩項都會留在日曆上。",
+  "cal.ignoredMark": "已忽略的重疊",
+  "cal.saveAnyway": "仍然儲存",
+  "cal.overlapWarn": "這些時間有重疊",
+  "cal.overlapSaveBody": "{name} 與日曆上已有的事項重疊。儲存後每一項都會留下。",
+  "cal.ignoreOnly": "這只會停止通知。事項仍留在日曆上。",
+  "cal.editNamed": "編輯{name}",
+  "cal.shiftOverlap": "{total} 個班次中有 {clashes} 個與日曆上的事項重疊。儲存後每一項都會留下。"
 }

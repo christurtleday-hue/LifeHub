@@ -1256,5 +1256,15 @@
   "Map": "แผนที่",
   "How long to share": "แชร์นานแค่ไหน",
   "Previous month": "เดือนก่อน",
-  "Next month": "เดือนถัดไป"
+  "Next month": "เดือนถัดไป",
+  "cal.ignoreClash": "ข้าม",
+  "cal.unignore": "เลิกข้าม",
+  "cal.ignoredNote": "ข้ามแล้ว ทั้งสองรายการยังอยู่ในปฏิทิน",
+  "cal.ignoredMark": "เวลาซ้อนที่ข้ามแล้ว",
+  "cal.saveAnyway": "บันทึกต่อไป",
+  "cal.overlapWarn": "เวลานี้ซ้อนกัน",
+  "cal.overlapSaveBody": "{name} ซ้อนกับรายการที่มีในปฏิทินแล้ว การบันทึกจะเก็บทุกรายการไว้",
+  "cal.ignoreOnly": "สิ่งนี้หยุดเฉพาะการแจ้งเตือน รายการยังอยู่ในปฏิทิน",
+  "cal.editNamed": "แก้ไข {name}",
+  "cal.shiftOverlap": "{clashes} จาก {total} กะซ้อนกับรายการในปฏิทิน การบันทึกจะเก็บทุกรายการไว้"
 }

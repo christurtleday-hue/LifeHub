@@ -1256,5 +1256,15 @@
   "Map": "מפה",
   "How long to share": "לכמה זמן לשתף",
   "Previous month": "החודש הקודם",
-  "Next month": "החודש הבא"
+  "Next month": "החודש הבא",
+  "cal.ignoreClash": "התעלם",
+  "cal.unignore": "בטל התעלמות",
+  "cal.ignoredNote": "ההתנגשות בהתעלמות. שני הפריטים נשארים ביומן.",
+  "cal.ignoredMark": "חפיפה שהתעלמו ממנה",
+  "cal.saveAnyway": "שמור בכל זאת",
+  "cal.overlapWarn": "הזמנים האלה חופפים",
+  "cal.overlapSaveBody": "{name} חופף למשהו שכבר ביומן. השמירה משאירה כל פריט.",
+  "cal.ignoreOnly": "זה רק עוצר את ההתראה. הפריטים נשארים ביומן.",
+  "cal.editNamed": "עריכת {name}",
+  "cal.shiftOverlap": "{clashes} מתוך {total} משמרות חופפות למשהו ביומן. השמירה משאירה כל פריט."
 }
