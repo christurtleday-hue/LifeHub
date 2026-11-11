@@ -26,7 +26,7 @@ User-facing words live in `lang/*.json` and load only for the active language, w
 - `.nojekyll`: so Pages serves dot paths such as `.well-known`
 
 ## Website
-The same files are served at `https://christurtleday-hue.github.io/LifeHub/` and, once DNS and Pages are pointed, at `https://lifehubapp.app/`. Paths in the app, manifest and service worker are relative, so both addresses work. Support: support@lifehubapp.app (Chris Day, Launceston TAS).
+The app is served at `https://lifehubapp.app/`. Paths in the app, manifest and service worker are relative. Support: support@lifehubapp.app, Launceston TAS.
 
 ## Import formats
 - Contacts: `.vcf` (vCard, including `BDAY`), `.csv` (Google/Outlook exports: name, phone, email), `.json` array; Contact Picker API on Android Chrome. Birthday and a demo "LifeHub Premium" flag are on each contact.
