@@ -1368,4 +1368,10 @@
   "rec.unlock": "Abrir",
   "rec.none": "Este perfil não tem chave de recuperação. Só o PIN pode abri-lo.",
   "rec.bad": "Essa chave de recuperação não corresponde a este perfil."
+,
+  "set.about": "Sobre",
+  "set.checkUpdates": "Buscar atualizações",
+  "set.upToDate": "Você está na versão mais recente",
+  "upd.ready": "Uma nova versão do LifeHub está pronta.",
+  "upd.now": "Atualizar agora"
 }

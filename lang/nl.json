@@ -1368,4 +1368,10 @@
   "rec.unlock": "Openen",
   "rec.none": "Dit profiel heeft geen herstelsleutel. Alleen de PIN kan het openen.",
   "rec.bad": "Die herstelsleutel hoort niet bij dit profiel."
+,
+  "set.about": "Over",
+  "set.checkUpdates": "Zoeken naar updates",
+  "set.upToDate": "Je hebt de nieuwste versie",
+  "upd.ready": "Er is een nieuwe versie van LifeHub.",
+  "upd.now": "Nu bijwerken"
 }

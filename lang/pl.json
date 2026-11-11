@@ -1368,4 +1368,10 @@
   "rec.unlock": "Otwórz",
   "rec.none": "Ten profil nie ma klucza odzyskiwania. Otwiera go tylko PIN.",
   "rec.bad": "Ten klucz odzyskiwania nie pasuje do tego profilu."
+,
+  "set.about": "O aplikacji",
+  "set.checkUpdates": "Sprawdź aktualizacje",
+  "set.upToDate": "Masz najnowszą wersję",
+  "upd.ready": "Nowa wersja LifeHub jest gotowa.",
+  "upd.now": "Aktualizuj"
 }

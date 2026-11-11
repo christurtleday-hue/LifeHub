@@ -1368,4 +1368,10 @@
   "rec.unlock": "解除鎖定",
   "rec.none": "這個資料沒有復原金鑰。只有 PIN 能打開它。",
   "rec.bad": "這個復原金鑰與該資料不相符。"
+,
+  "set.about": "關於",
+  "set.checkUpdates": "檢查更新",
+  "set.upToDate": "已是最新版本",
+  "upd.ready": "LifeHub 的新版本已準備好。",
+  "upd.now": "立即更新"
 }

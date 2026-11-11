@@ -1368,4 +1368,10 @@
   "rec.unlock": "열기",
   "rec.none": "이 프로필에는 복구 키가 없습니다. PIN만 열 수 있습니다.",
   "rec.bad": "이 복구 키는 이 프로필과 맞지 않습니다."
+,
+  "set.about": "정보",
+  "set.checkUpdates": "업데이트 확인",
+  "set.upToDate": "최신 버전입니다",
+  "upd.ready": "새 LifeHub 버전이 준비되었습니다.",
+  "upd.now": "지금 업데이트"
 }

@@ -1368,4 +1368,10 @@
   "rec.unlock": "Aç",
   "rec.none": "Bu profilin kurtarma anahtarı yok. Yalnızca PIN açabilir.",
   "rec.bad": "Bu kurtarma anahtarı bu profille eşleşmiyor."
+,
+  "set.about": "Hakkında",
+  "set.checkUpdates": "Güncellemeleri denetle",
+  "set.upToDate": "En son sürümdesin",
+  "upd.ready": "LifeHub’ın yeni bir sürümü hazır.",
+  "upd.now": "Şimdi güncelle"
 }

@@ -1,7 +1,7 @@
-const CACHE = 'lifehub-v18';
+const CACHE = 'lifehub-v19';
 const SHARE_CACHE = 'lifehub-share';
 const BG_CACHE = 'lifehub-bg';
-const ASSETS = ['./', './index.html', './styles.css', './app.js', './i18n.js', './safety.js', './lang/en.json', './manifest.webmanifest', './privacy.html', './terms.html', './support.html', './delete-account.html', './delete.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
+const ASSETS = ['./', './index.html', './styles.css', './app.js', './i18n.js', './safety.js', './lang/en.json', './manifest.webmanifest', './version.json', './privacy.html', './terms.html', './support.html', './delete-account.html', './delete.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
 
 let profileId = '';
 async function currentProfile() {
@@ -28,8 +28,16 @@ function openDb() {
 }
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await Promise.all(ASSETS.map(async path => {
+      try {
+        const res = await fetch(new URL(path, self.registration.scope), { cache: 'no-store' });
+        if (res && res.ok) await cache.put(path, res);
+      } catch (err) {}
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', e => {
@@ -37,6 +45,8 @@ self.addEventListener('activate', e => {
     const ks = await caches.keys();
     await Promise.all(ks.filter(k => k !== CACHE && k !== SHARE_CACHE && k !== BG_CACHE).map(k => caches.delete(k)));
     await self.clients.claim();
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    open.forEach(c => { try { c.postMessage({ type: 'lh-update' }); } catch (err) {} });
   })());
 });
 
@@ -157,6 +167,11 @@ async function handleShare(req) {
   return Response.redirect(new URL('./#/documents', self.registration.scope).href, 303);
 }
 
+function isAppShell(url, request) {
+  if (request.mode === 'navigate') return true;
+  const path = url.pathname;
+  return /\/(index\.html|sw\.js|app\.js|styles\.css|i18n\.js|safety\.js|version\.json|manifest\.webmanifest)$/.test(path) || /\/sw\.js$/.test(path);
+}
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
@@ -165,6 +180,23 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (e.request.method !== 'GET') return;
+  if (isAppShell(url, e.request)) {
+    e.respondWith((async () => {
+      try {
+        const fresh = await fetch(e.request, { cache: 'no-store' });
+        if (fresh && fresh.ok && !/\/sw\.js$/.test(url.pathname)) {
+          const cache = await caches.open(CACHE);
+          cache.put(e.request, fresh.clone());
+        }
+        return fresh;
+      } catch (err) {
+        const cached = await caches.match(e.request) || (e.request.mode === 'navigate' ? caches.match('./index.html') : null);
+        if (cached) return cached;
+        return new Response('', { status: 504 });
+      }
+    })());
+    return;
+  }
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
     const copy = res.clone();
     caches.open(CACHE).then(c => c.put(e.request, copy));

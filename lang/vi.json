@@ -1368,4 +1368,10 @@
   "rec.unlock": "Mở khóa",
   "rec.none": "Hồ sơ này không có khóa khôi phục. Chỉ PIN mới mở được.",
   "rec.bad": "Khóa khôi phục đó không khớp với hồ sơ này."
+,
+  "set.about": "Giới thiệu",
+  "set.checkUpdates": "Kiểm tra bản cập nhật",
+  "set.upToDate": "Bạn đang dùng bản mới nhất",
+  "upd.ready": "Đã có bản LifeHub mới.",
+  "upd.now": "Cập nhật ngay"
 }

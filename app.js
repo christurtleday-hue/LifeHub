@@ -1840,7 +1840,9 @@ function renderSettings() {
   <div class="list"><a class="li" href="privacy.html">${ic('shield')}<span class="grow"><b>${esc(t('set.privacy'))}</b><span>${esc(t('set.privacySub'))}</span></span>${ic('chev')}</a>
   <a class="li" href="terms.html">${ic('file')}<span class="grow"><b>${esc(t('set.terms'))}</b></span>${ic('chev')}</a>
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a></div>
-  <p class="footnote">${esc(t('set.version', { v: '1.6.7', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
+  <div class="sec-h"><h2>${esc(t('set.about'))}</h2></div>
+  <div class="list"><div class="li" style="display:block"><b>${esc(t('set.version', { v: APP_VERSION, net: navigator.onLine ? t('common.online') : t('common.offline') }))}</b>
+  <button class="btn full" style="margin-top:10px" data-act="checkUpdates">${esc(t('set.checkUpdates'))}</button></div></div>`;
   return screen({ title: t('set.title'), body });
 }
 async function setLanguage(code) {
@@ -3746,6 +3748,7 @@ function fillMapsYou() {
 }
 
 /* ---------- installed-copy updates ---------- */
+const APP_VERSION = '1.6.8';
 let updateReady = false, updateReloading = false;
 function safeToReload() {
   if (document.querySelector('.sheet-wrap')) return false;
@@ -3761,7 +3764,7 @@ function showUpdateBanner() {
   if (document.getElementById('updBanner')) return;
   const b = document.createElement('div');
   b.id = 'updBanner'; b.className = 'update-banner'; b.setAttribute('role', 'status');
-  b.innerHTML = '<span>A new version of LifeHub is ready.</span><button type="button" id="updNow">Update now</button>';
+  b.innerHTML = '<span>' + esc(t('upd.ready')) + '</span><button type="button" id="updNow">' + esc(t('upd.now')) + '</button>';
   document.body.appendChild(b);
   $('#updNow', b).onclick = () => { sessionStorage.setItem('lh.updated', '1'); location.reload(); };
 }
@@ -3771,13 +3774,18 @@ function maybeApplyUpdate() {
   sessionStorage.setItem('lh.updated', '1');
   location.reload();
 }
-function setupUpdates() {
-  if (!('serviceWorker' in navigator)) return;
+function noteUpdate() {
+  updateReady = true;
+  if (safeToReload()) maybeApplyUpdate(); else showUpdateBanner();
+}
+let updateWatchArmed = false;
+function armUpdateWatch() {
+  if (updateWatchArmed || !('serviceWorker' in navigator)) return;
+  updateWatchArmed = true;
   let had = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!had) { had = true; return; }
-    updateReady = true;
-    if (safeToReload()) maybeApplyUpdate(); else showUpdateBanner();
+    noteUpdate();
   });
   navigator.serviceWorker.addEventListener('message', ev => {
     if (!ev.data) return;
@@ -3785,15 +3793,37 @@ function setupUpdates() {
     if (ev.data.type === 'lh-add-app') absorbAddIntent();
     if (ev.data.type === 'lh-refresh') refreshAll(false, true);
     if (ev.data.type === 'lh-open' && ev.data.url) { try { const u = new URL(ev.data.url); if (u.hash) location.hash = u.hash; } catch (err) {} }
+    if (ev.data.type === 'lh-update') noteUpdate();
   });
-  const tick = () => navigator.serviceWorker.getRegistration().then(reg => {
-    if (!reg) return;
-    reg.update().catch(() => {});
+}
+async function checkForUpdate(manual) {
+  if (!('serviceWorker' in navigator)) { if (manual) toast(t('set.upToDate')); return; }
+  let reg = null;
+  try { reg = await navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }); } catch (e) {
+    try { reg = await navigator.serviceWorker.getRegistration('./'); } catch (e2) {}
+  }
+  let remote = '';
+  try {
+    const res = await fetch('./version.json', { cache: 'no-store' });
+    if (res.ok) { const data = await res.json(); remote = data && data.version || ''; }
+  } catch (e) {}
+  if (reg) {
+    try { await reg.update(); } catch (e) {}
     if (reg.waiting && navigator.serviceWorker.controller) reg.waiting.postMessage({ type: 'skipWaiting' });
-  }).catch(() => {});
-  tick();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); absorbInbox(); absorbAddIntent(); maybeApplyUpdate(); } });
-  setInterval(tick, 30 * 60 * 1000);
+  }
+  if ((remote && remote !== APP_VERSION) || (reg && reg.waiting)) {
+    noteUpdate();
+    return;
+  }
+  if (manual) toast(t('set.upToDate'));
+}
+armUpdateWatch();
+function setupUpdates() {
+  armUpdateWatch();
+  checkForUpdate(false);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkForUpdate(false); absorbInbox(); absorbAddIntent(); maybeApplyUpdate(); } });
+  window.addEventListener('focus', () => checkForUpdate(false));
+  setInterval(() => checkForUpdate(false), 60 * 1000);
   setInterval(maybeApplyUpdate, 3000);
   if ('launchQueue' in window) {
     try { launchQueue.setConsumer(async params => { const files = []; for (const h of params.files || []) { try { files.push(await h.getFile()); } catch (e) {} } if (files.length) { await addDocFiles(files); if (!(location.hash || '').startsWith('#/doc')) location.hash = '#/documents'; } }); } catch (e) {}
@@ -3988,6 +4018,7 @@ const A = {
   obColor: el => { ob.color = el.dataset.c || ob.color; render(); },
   obSkipPin: () => finishOnboarding(''),
   profiles: () => openProfiles(),
+  checkUpdates: () => checkForUpdate(true),
   useRecovery: () => openRecovery(),
   newRecovery: () => askPinThen(async pin => { recoveryGate = { code: await installPin(pin, (metaOf(activeId) || {}).lock && (metaOf(activeId) || {}).lock.pinWrap ? profileKey : null) }; render(); }),
   obDemo: () => { ob.sample = true; if (!ob.name) ob.name = demoPersona().full; ob.step = 1; render(); },
@@ -4141,5 +4172,5 @@ async function boot() {
 boot();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.6.7', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
+window.LifeHub = { version: APP_VERSION, isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
 })();

@@ -1368,4 +1368,10 @@
   "rec.unlock": "開く",
   "rec.none": "このプロフィールには復旧キーがありません。PINだけが開けます。",
   "rec.bad": "この復旧キーはこのプロフィールと一致しません。"
+,
+  "set.about": "情報",
+  "set.checkUpdates": "更新を確認",
+  "set.upToDate": "最新版です",
+  "upd.ready": "LifeHubの新しいバージョンの準備ができました。",
+  "upd.now": "今すぐ更新"
 }

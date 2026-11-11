@@ -1368,4 +1368,10 @@
   "rec.unlock": "Unlock",
   "rec.none": "This profile has no recovery key. Only the PIN can open it.",
   "rec.bad": "That recovery key does not match this profile."
+,
+  "set.about": "About",
+  "set.checkUpdates": "Check for updates",
+  "set.upToDate": "You're on the latest version",
+  "upd.ready": "A new version of LifeHub is ready.",
+  "upd.now": "Update now"
 }

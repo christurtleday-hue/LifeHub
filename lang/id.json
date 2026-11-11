@@ -1368,4 +1368,10 @@
   "rec.unlock": "Buka",
   "rec.none": "Profil ini tidak punya kunci pemulihan. Hanya PIN yang bisa membukanya.",
   "rec.bad": "Kunci pemulihan itu tidak cocok dengan profil ini."
+,
+  "set.about": "Tentang",
+  "set.checkUpdates": "Periksa pembaruan",
+  "set.upToDate": "Kamu sudah di versi terbaru",
+  "upd.ready": "Versi baru LifeHub sudah siap.",
+  "upd.now": "Perbarui sekarang"
 }
