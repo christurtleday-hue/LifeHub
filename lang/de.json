@@ -72,7 +72,7 @@
   "onb.about": "Über dich",
   "onb.aboutLead": "Notrufnummern richten sich nach der Region. Beim Geld gilt deine Währung. Die Sprache ist extra. Alles kannst du später ändern.",
   "onb.name": "Dein Name",
-  "onb.namePh": "z. B. Chris Day",
+  "onb.namePh": "z. B. {name}",
   "onb.region": "Notfallregion",
   "onb.currency": "Währung",
   "onb.sample": "Mit Beispieldaten starten, damit ich mich umsehen kann",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Steht das Fußballspiel am Samstag im UTAS Stadium noch?",
   "Call you tonight Mum": "Ich ruf dich heute Abend an, Mama",
   "Lovely, talk then x": "Schön, bis dann x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day hat dich in 3 Fotos von Cataract Gorge markiert",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: „Hey, schau in deine Direktnachrichten wegen Samstag“",
   "Priya Shah wants to connect (1 new request)": "Priya Shah möchte sich vernetzen (1 neue Anfrage)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} überschneidet sich mit etwas, das schon im Kalender steht. Beim Speichern bleiben alle Einträge.",
   "cal.ignoreOnly": "Das stoppt nur die Meldung. Die Einträge bleiben im Kalender.",
   "cal.editNamed": "{name} bearbeiten",
-  "cal.shiftOverlap": "{clashes} von {total} Schichten überschneiden sich mit etwas im Kalender. Beim Speichern bleiben alle Einträge."
+  "cal.shiftOverlap": "{clashes} von {total} Schichten überschneiden sich mit etwas im Kalender. Beim Speichern bleiben alle Einträge.",
+  "demo.mum": "Mama ({name})",
+  "demo.tagged": "{name} hat dich in 3 Fotos von Cataract Gorge markiert"
 }

@@ -72,7 +72,7 @@
   "onb.about": "Over jou",
   "onb.aboutLead": "Noodnummers volgen de regio. Geld gebruikt jouw valuta. Taal staat apart. Je kunt elk ding later wijzigen.",
   "onb.name": "Je naam",
-  "onb.namePh": "bijv. Chris Day",
+  "onb.namePh": "bijv. {name}",
   "onb.region": "Noodregio",
   "onb.currency": "Valuta",
   "onb.sample": "Begin met voorbeeldgegevens zodat ik kan rondkijken",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Doen we zaterdag nog de footy in UTAS Stadium?",
   "Call you tonight Mum": "Ik bel je vanavond mam",
   "Lovely, talk then x": "Fijn, tot dan x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day heeft je getagd in 3 foto's van Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: „Maat, check je DM's over zaterdag”",
   "Priya Shah wants to connect (1 new request)": "Priya Shah wil verbinden (1 nieuw verzoek)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} overlapt iets dat al in de agenda staat. Opslaan houdt elk item.",
   "cal.ignoreOnly": "Dit stopt alleen de melding. De items blijven in de agenda.",
   "cal.editNamed": "{name} bewerken",
-  "cal.shiftOverlap": "{clashes} van {total} diensten overlappen iets in de agenda. Opslaan houdt elk item."
+  "cal.shiftOverlap": "{clashes} van {total} diensten overlappen iets in de agenda. Opslaan houdt elk item.",
+  "demo.mum": "Mam ({name})",
+  "demo.tagged": "{name} heeft je getagd in 3 foto's van Cataract Gorge"
 }

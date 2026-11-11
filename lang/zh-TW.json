@@ -72,7 +72,7 @@
   "onb.about": "關於你",
   "onb.aboutLead": "緊急電話跟著地區走。錢用你選的貨幣。語言另外算。每一項以後都能改。",
   "onb.name": "你的名字",
-  "onb.namePh": "例如 Chris Day",
+  "onb.namePh": "例如 {name}",
   "onb.region": "緊急地區",
   "onb.currency": "貨幣",
   "onb.sample": "先放入範例資料，方便我看看",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "週六 UTAS Stadium 看球還去嗎？",
   "Call you tonight Mum": "今晚打給你，媽媽",
   "Lovely, talk then x": "好呀，到時聊 x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day 在 Cataract Gorge 的 3 張照片裡標了你",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson：“老兄，看看關於週六的私信”",
   "Priya Shah wants to connect (1 new request)": "Priya Shah 想加你（1 條新請求）",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} 與日曆上已有的事項重疊。儲存後每一項都會留下。",
   "cal.ignoreOnly": "這只會停止通知。事項仍留在日曆上。",
   "cal.editNamed": "編輯{name}",
-  "cal.shiftOverlap": "{total} 個班次中有 {clashes} 個與日曆上的事項重疊。儲存後每一項都會留下。"
+  "cal.shiftOverlap": "{total} 個班次中有 {clashes} 個與日曆上的事項重疊。儲存後每一項都會留下。",
+  "demo.mum": "媽媽（{name}）",
+  "demo.tagged": "{name} 在 Cataract Gorge 的 3 張照片裡標了你"
 }

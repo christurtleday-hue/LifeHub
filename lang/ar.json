@@ -72,7 +72,7 @@
   "onb.about": "عنك",
   "onb.aboutLead": "أرقام الطوارئ تتبع المنطقة. المال يستخدم عملتك. اللغة منفصلة. يمكنك تغيير كل واحد لاحقًا.",
   "onb.name": "اسمك",
-  "onb.namePh": "مثلًا Chris Day",
+  "onb.namePh": "مثلًا {name}",
   "onb.region": "منطقة الطوارئ",
   "onb.currency": "العملة",
   "onb.sample": "ابدأ ببيانات تجريبية حتى أستكشف",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "ما زلنا على مباراة السبت في UTAS Stadium؟",
   "Call you tonight Mum": "أتصل بك الليلة يا أمي",
   "Lovely, talk then x": "حلو، نتكلم حينها",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "أشارت إليك Sarah Day في 3 صور من Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «يا صاح، شوف رسائلك الخاصة عن السبت»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah تريد التواصل (طلب جديد واحد)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "يتداخل {name} مع شيء موجود في التقويم. الحفظ يبقي كل العناصر.",
   "cal.ignoreOnly": "هذا يوقف التنبيه فقط. تبقى العناصر في التقويم.",
   "cal.editNamed": "تعديل {name}",
-  "cal.shiftOverlap": "{clashes} من {total} ورديات تتداخل مع شيء في التقويم. الحفظ يبقي كل العناصر."
+  "cal.shiftOverlap": "{clashes} من {total} ورديات تتداخل مع شيء في التقويم. الحفظ يبقي كل العناصر.",
+  "demo.mum": "أمي ({name})",
+  "demo.tagged": "أشار إليك {name} في 3 صور من Cataract Gorge"
 }

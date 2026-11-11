@@ -72,7 +72,7 @@
   "onb.about": "Sur toi",
   "onb.aboutLead": "Les numéros d'urgence suivent la région. L'argent utilise ta monnaie. La langue est à part. Tu peux changer chaque chose plus tard.",
   "onb.name": "Ton nom",
-  "onb.namePh": "p. ex. Chris Day",
+  "onb.namePh": "p. ex. {name}",
   "onb.region": "Région d'urgence",
   "onb.currency": "Monnaie",
   "onb.sample": "Commencer avec des données d'exemple pour que je puisse explorer",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "On est toujours pour le foot samedi à l'UTAS Stadium ?",
   "Call you tonight Mum": "Je t'appelle ce soir, maman",
   "Lovely, talk then x": "Super, on se parle à ce moment-là x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day t'a identifié sur 3 photos de Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson : « Mec, regarde tes messages privés pour samedi »",
   "Priya Shah wants to connect (1 new request)": "Priya Shah veut se connecter avec toi (1 nouvelle demande)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} chevauche quelque chose déjà dans le calendrier. L'enregistrement garde chaque élément.",
   "cal.ignoreOnly": "Cela arrête seulement la notification. Les éléments restent dans le calendrier.",
   "cal.editNamed": "Modifier {name}",
-  "cal.shiftOverlap": "{clashes} des {total} services chevauchent quelque chose du calendrier. L'enregistrement garde chaque élément."
+  "cal.shiftOverlap": "{clashes} des {total} services chevauchent quelque chose du calendrier. L'enregistrement garde chaque élément.",
+  "demo.mum": "Maman ({name})",
+  "demo.tagged": "{name} vous a identifié sur 3 photos de Cataract Gorge"
 }

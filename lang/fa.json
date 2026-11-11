@@ -72,7 +72,7 @@
   "onb.about": "درباره شما",
   "onb.aboutLead": "شماره‌های اضطراری با منطقه می‌آیند. پول با واحد پول شماست. زبان جداست. هر کدام را بعداً می‌توانید عوض کنید.",
   "onb.name": "نام شما",
-  "onb.namePh": "مثلاً Chris Day",
+  "onb.namePh": "مثلاً {name}",
   "onb.region": "منطقه اضطراری",
   "onb.currency": "واحد پول",
   "onb.sample": "با داده نمونه شروع شود تا بتوانم بگردم",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "هنوز برای فوتبال شنبه در UTAS Stadium هستیم؟",
   "Call you tonight Mum": "امشب زنگ می‌زنم مامان",
   "Lovely, talk then x": "خوبه، بعد حرف می‌زنیم",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day شما را در ۳ عکس از Cataract Gorge تگ کرد",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «رفیق، پیام‌های خصوصی شنبه را ببین»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah می‌خواهد وصل شود (۱ درخواست جدید)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} با چیزی که از قبل در تقویم است تداخل دارد. ذخیره کردن همه را نگه می‌دارد.",
   "cal.ignoreOnly": "این فقط اعلان را متوقف می‌کند. موردها در تقویم می‌مانند.",
   "cal.editNamed": "ویرایش {name}",
-  "cal.shiftOverlap": "{clashes} از {total} شیفت با چیزی در تقویم تداخل دارد. ذخیره کردن همه را نگه می‌دارد."
+  "cal.shiftOverlap": "{clashes} از {total} شیفت با چیزی در تقویم تداخل دارد. ذخیره کردن همه را نگه می‌دارد.",
+  "demo.mum": "مامان ({name})",
+  "demo.tagged": "{name} شما را در ۳ عکس از Cataract Gorge برچسب زد"
 }

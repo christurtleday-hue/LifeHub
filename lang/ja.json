@@ -72,7 +72,7 @@
   "onb.about": "あなたについて",
   "onb.aboutLead": "緊急番号は地域に合わせます。お金は選んだ通貨です。言語は別です。あとからそれぞれ変えられます。",
   "onb.name": "名前",
-  "onb.namePh": "例：Chris Day",
+  "onb.namePh": "例：{name}",
   "onb.region": "緊急時の地域",
   "onb.currency": "通貨",
   "onb.sample": "中を見られるように、サンプルデータで始める",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "土曜、UTAS Stadium の試合まだ行く？",
   "Call you tonight Mum": "今夜電話するね、お母さん",
   "Lovely, talk then x": "いいよ、そのとき話そう x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day さんが Cataract Gorge の写真3枚にあなたをタグしました",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson：「土曜のDM見て」",
   "Priya Shah wants to connect (1 new request)": "Priya Shah さんがつながりたがっています（新しいリクエスト1件）",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} はカレンダーにある予定と重なります。保存しても項目はすべて残ります。",
   "cal.ignoreOnly": "通知を止めるだけです。予定はカレンダーに残ります。",
   "cal.editNamed": "{name} を編集",
-  "cal.shiftOverlap": "{total} 件のシフトのうち {clashes} 件がカレンダーの予定と重なります。保存しても項目はすべて残ります。"
+  "cal.shiftOverlap": "{total} 件のシフトのうち {clashes} 件がカレンダーの予定と重なります。保存しても項目はすべて残ります。",
+  "demo.mum": "母（{name}）",
+  "demo.tagged": "{name} さんが Cataract Gorge の写真3枚にあなたをタグしました"
 }

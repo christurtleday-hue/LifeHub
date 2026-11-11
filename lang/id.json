@@ -72,7 +72,7 @@
   "onb.about": "Tentang kamu",
   "onb.aboutLead": "Nomor darurat mengikuti wilayah. Uang memakai mata uangmu. Bahasa terpisah. Masing-masing bisa diubah nanti.",
   "onb.name": "Namamu",
-  "onb.namePh": "mis. Chris Day",
+  "onb.namePh": "mis. {name}",
   "onb.region": "Wilayah darurat",
   "onb.currency": "Mata uang",
   "onb.sample": "Mulai dengan data contoh supaya aku bisa menjelajah",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Masih jadi nonton footy Sabtu di UTAS Stadium?",
   "Call you tonight Mum": "Nanti malam aku telepon, Bu",
   "Lovely, talk then x": "Asyik, nanti kita ngobrol x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day menandai kamu di 3 foto dari Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «Bro, cek DM soal Sabtu»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah ingin terhubung (1 permintaan baru)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} bertumpuk dengan sesuatu yang sudah ada di kalender. Menyimpan mempertahankan setiap item.",
   "cal.ignoreOnly": "Ini hanya menghentikan pemberitahuan. Item tetap di kalender.",
   "cal.editNamed": "Ubah {name}",
-  "cal.shiftOverlap": "{clashes} dari {total} sif bertumpuk dengan sesuatu di kalender. Menyimpan mempertahankan setiap item."
+  "cal.shiftOverlap": "{clashes} dari {total} sif bertumpuk dengan sesuatu di kalender. Menyimpan mempertahankan setiap item.",
+  "demo.mum": "Ibu ({name})",
+  "demo.tagged": "{name} menandai kamu di 3 foto dari Cataract Gorge"
 }

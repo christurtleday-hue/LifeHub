@@ -72,7 +72,7 @@
   "onb.about": "আপনার সম্পর্কে",
   "onb.aboutLead": "জরুরি নম্বর অঞ্চল অনুসারে আসে। টাকা আপনার মুদ্রায় দেখায়। ভাষা আলাদা। প্রতিটি পরে বদলাতে পারবেন।",
   "onb.name": "আপনার নাম",
-  "onb.namePh": "যেমন Chris Day",
+  "onb.namePh": "যেমন {name}",
   "onb.region": "জরুরি অঞ্চল",
   "onb.currency": "মুদ্রা",
   "onb.sample": "নমুনা তথ্য দিয়ে শুরু করুন, যাতে ঘুরে দেখতে পারি",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "শনিবার UTAS Stadium-এ ফুটবল এখনও আছে?",
   "Call you tonight Mum": "আজ রাতে ফোন করব মা",
   "Lovely, talk then x": "ভালো, তখন কথা হবে",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day আপনাকে Cataract Gorge-এর ৩ ছবিতে ট্যাগ করেছে",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «বন্ধু, শনিবারের ডিএম দেখে নাও»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah যুক্ত হতে চায় (১টি নতুন অনুরোধ)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} ক্যালেন্ডারে থাকা কোনো কিছুর সঙ্গে ওভারল্যাপ করে। সংরক্ষণ করলে সবকিছুই থাকে।",
   "cal.ignoreOnly": "এটি শুধু বিজ্ঞপ্তি বন্ধ করে। আইটেম ক্যালেন্ডারে থাকে।",
   "cal.editNamed": "{name} সম্পাদনা",
-  "cal.shiftOverlap": "{total}টির মধ্যে {clashes}টি শিফট ক্যালেন্ডারের কোনো কিছুর সঙ্গে ওভারল্যাপ করে। সংরক্ষণ করলে সবকিছুই থাকে।"
+  "cal.shiftOverlap": "{total}টির মধ্যে {clashes}টি শিফট ক্যালেন্ডারের কোনো কিছুর সঙ্গে ওভারল্যাপ করে। সংরক্ষণ করলে সবকিছুই থাকে।",
+  "demo.mum": "মা ({name})",
+  "demo.tagged": "{name} আপনাকে Cataract Gorge-এর 3টি ছবিতে ট্যাগ করেছে"
 }

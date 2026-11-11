@@ -72,7 +72,7 @@
   "onb.about": "עליכם",
   "onb.aboutLead": "מספרי החירום לפי האזור. הכסף לפי המטבע שלך. השפה בנפרד. אפשר לשנות כל אחד אחר כך.",
   "onb.name": "השם שלך",
-  "onb.namePh": "למשל Chris Day",
+  "onb.namePh": "למשל {name}",
   "onb.region": "אזור חירום",
   "onb.currency": "מטבע",
   "onb.sample": "התחלה עם נתוני דוגמה כדי שאוכל להסתכל",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "עדיין על המשחק בשבת ב-UTAS Stadium?",
   "Call you tonight Mum": "אתקשר אלייך הערב אמא",
   "Lovely, talk then x": "יופי, נדבר אז",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day תייגה אותך ב-3 תמונות מ-Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «אחי, תבדוק את ההודעות על שבת»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah רוצה להתחבר (בקשה חדשה אחת)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} חופף למשהו שכבר ביומן. השמירה משאירה כל פריט.",
   "cal.ignoreOnly": "זה רק עוצר את ההתראה. הפריטים נשארים ביומן.",
   "cal.editNamed": "עריכת {name}",
-  "cal.shiftOverlap": "{clashes} מתוך {total} משמרות חופפות למשהו ביומן. השמירה משאירה כל פריט."
+  "cal.shiftOverlap": "{clashes} מתוך {total} משמרות חופפות למשהו ביומן. השמירה משאירה כל פריט.",
+  "demo.mum": "אמא ({name})",
+  "demo.tagged": "{name} תייגה אותך ב-3 תמונות מ-Cataract Gorge"
 }

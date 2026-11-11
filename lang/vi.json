@@ -72,7 +72,7 @@
   "onb.about": "Về bạn",
   "onb.aboutLead": "Số khẩn cấp theo vùng. Tiền dùng loại tiền của bạn. Ngôn ngữ tách riêng. Bạn đổi từng mục sau cũng được.",
   "onb.name": "Tên của bạn",
-  "onb.namePh": "vd. Chris Day",
+  "onb.namePh": "vd. {name}",
   "onb.region": "Vùng khẩn cấp",
   "onb.currency": "Tiền tệ",
   "onb.sample": "Bắt đầu bằng dữ liệu mẫu để tôi xem thử",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Thứ Bảy xem bóng ở UTAS Stadium vẫn đi chứ?",
   "Call you tonight Mum": "Tối nay con gọi cho mẹ",
   "Lovely, talk then x": "Được, lúc đó nói chuyện x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day gắn thẻ bạn trong 3 ảnh ở Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: \"Xem tin nhắn riêng về thứ Bảy nhé\"",
   "Priya Shah wants to connect (1 new request)": "Priya Shah muốn kết nối (1 lời mời mới)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} trùng với việc đã có trên lịch. Lưu sẽ giữ mọi mục.",
   "cal.ignoreOnly": "Việc này chỉ tắt thông báo. Các mục vẫn ở trên lịch.",
   "cal.editNamed": "Sửa {name}",
-  "cal.shiftOverlap": "{clashes} trong {total} ca trùng với việc trên lịch. Lưu sẽ giữ mọi mục."
+  "cal.shiftOverlap": "{clashes} trong {total} ca trùng với việc trên lịch. Lưu sẽ giữ mọi mục.",
+  "demo.mum": "Mẹ ({name})",
+  "demo.tagged": "{name} gắn thẻ bạn trong 3 ảnh ở Cataract Gorge"
 }

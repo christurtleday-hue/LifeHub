@@ -72,7 +72,7 @@
   "onb.about": "Про вас",
   "onb.aboutLead": "Екстрені номери залежать від регіону. Гроші рахуються у вашій валюті. Мова окремо. Кожне з цього можна змінити пізніше.",
   "onb.name": "Ваше ім’я",
-  "onb.namePh": "наприклад, Chris Day",
+  "onb.namePh": "наприклад, {name}",
   "onb.region": "Регіон екстрених служб",
   "onb.currency": "Валюта",
   "onb.sample": "Почати зі зразків, щоб озирнутися",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "У суботу ще йдемо на футбол до UTAS Stadium?",
   "Call you tonight Mum": "Подзвоню ввечері, мамо",
   "Lovely, talk then x": "Добре, тоді поговоримо x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day позначила вас на 3 фото з Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «Друже, глянь особисті про суботу»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah хоче додати вас (1 новий запит)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} збігається з тим, що вже є в календарі. Під час збереження лишаються всі записи.",
   "cal.ignoreOnly": "Це лише вимикає сповіщення. Записи лишаються в календарі.",
   "cal.editNamed": "Змінити {name}",
-  "cal.shiftOverlap": "{clashes} із {total} змін збігаються з тим, що вже в календарі. Під час збереження лишаються всі записи."
+  "cal.shiftOverlap": "{clashes} із {total} змін збігаються з тим, що вже в календарі. Під час збереження лишаються всі записи.",
+  "demo.mum": "Мама ({name})",
+  "demo.tagged": "{name} позначила вас на 3 фото з Cataract Gorge"
 }

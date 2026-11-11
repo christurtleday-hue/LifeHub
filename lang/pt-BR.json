@@ -72,7 +72,7 @@
   "onb.about": "Sobre você",
   "onb.aboutLead": "Os números de emergência seguem a região. O dinheiro usa a sua moeda. O idioma fica separado. Dá para mudar cada um depois.",
   "onb.name": "Seu nome",
-  "onb.namePh": "ex.: Chris Day",
+  "onb.namePh": "ex.: {name}",
   "onb.region": "Região de emergência",
   "onb.currency": "Moeda",
   "onb.sample": "Começar com dados de exemplo para eu explorar",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Ainda vamos ver o futebol no sábado no UTAS Stadium?",
   "Call you tonight Mum": "Te ligo hoje à noite, mãe",
   "Lovely, talk then x": "Que bom, falamos depois x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day marcou você em 3 fotos de Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: \"Cara, olha suas mensagens sobre sábado\"",
   "Priya Shah wants to connect (1 new request)": "Priya Shah quer se conectar (1 pedido novo)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} se sobrepõe a algo que já está no calendário. Salvar mantém todos os itens.",
   "cal.ignoreOnly": "Isso só interrompe o aviso. Os itens continuam no calendário.",
   "cal.editNamed": "Editar {name}",
-  "cal.shiftOverlap": "{clashes} de {total} turnos se sobrepõem a algo no calendário. Salvar mantém todos os itens."
+  "cal.shiftOverlap": "{clashes} de {total} turnos se sobrepõem a algo no calendário. Salvar mantém todos os itens.",
+  "demo.mum": "Mãe ({name})",
+  "demo.tagged": "{name} marcou você em 3 fotos de Cataract Gorge"
 }

@@ -72,7 +72,7 @@
   "onb.about": "Su di te",
   "onb.aboutLead": "I numeri di emergenza seguono la regione. I soldi usano la tua valuta. La lingua è a parte. Puoi cambiare ogni cosa più tardi.",
   "onb.name": "Il tuo nome",
-  "onb.namePh": "es. Chris Day",
+  "onb.namePh": "es. {name}",
   "onb.region": "Regione di emergenza",
   "onb.currency": "Valuta",
   "onb.sample": "Inizia con dati di esempio così posso esplorare",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Confermiamo la partita sabato all'UTAS Stadium?",
   "Call you tonight Mum": "Ti chiamo stasera, mamma",
   "Lovely, talk then x": "Bene, ci sentiamo x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day ti ha taggato in 3 foto di Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: \"Ehi, controlla i messaggi su sabato\"",
   "Priya Shah wants to connect (1 new request)": "Priya Shah vuole collegarsi (1 nuova richiesta)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} si sovrappone a qualcosa già nel calendario. Salvare tiene ogni voce.",
   "cal.ignoreOnly": "Questo ferma solo l'avviso. Le voci restano nel calendario.",
   "cal.editNamed": "Modifica {name}",
-  "cal.shiftOverlap": "{clashes} di {total} turni si sovrappongono a qualcosa nel calendario. Salvare tiene ogni voce."
+  "cal.shiftOverlap": "{clashes} di {total} turni si sovrappongono a qualcosa nel calendario. Salvare tiene ogni voce.",
+  "demo.mum": "Mamma ({name})",
+  "demo.tagged": "{name} ti ha taggato in 3 foto di Cataract Gorge"
 }

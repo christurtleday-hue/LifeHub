@@ -72,7 +72,7 @@
   "onb.about": "O tobie",
   "onb.aboutLead": "Numery alarmowe zależą od regionu. Pieniądze liczymy w twojej walucie. Język jest osobno. Każde z nich zmienisz później.",
   "onb.name": "Twoje imię",
-  "onb.namePh": "np. Chris Day",
+  "onb.namePh": "np. {name}",
   "onb.region": "Region numerów alarmowych",
   "onb.currency": "Waluta",
   "onb.sample": "Zacznij od przykładowych danych, żeby się rozejrzeć",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Nadal gramy w footy w sobotę na UTAS Stadium?",
   "Call you tonight Mum": "Zadzwonię wieczorem, mamo",
   "Lovely, talk then x": "Super, to pogadamy x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day oznaczyła cię na 3 zdjęciach z Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «Stary, sprawdź DM-y o sobocie»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah chce się połączyć (1 nowe zaproszenie)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} nakłada się na coś, co już jest w kalendarzu. Zapis zostawia wszystkie pozycje.",
   "cal.ignoreOnly": "To tylko wyłącza powiadomienie. Pozycje zostają w kalendarzu.",
   "cal.editNamed": "Edytuj {name}",
-  "cal.shiftOverlap": "{clashes} z {total} zmian nakłada się na coś w kalendarzu. Zapis zostawia wszystkie pozycje."
+  "cal.shiftOverlap": "{clashes} z {total} zmian nakłada się na coś w kalendarzu. Zapis zostawia wszystkie pozycje.",
+  "demo.mum": "Mama ({name})",
+  "demo.tagged": "{name} oznaczyła cię na 3 zdjęciach z Cataract Gorge"
 }

@@ -72,7 +72,7 @@
   "onb.about": "Senin hakkında",
   "onb.aboutLead": "Acil numaralar bölgeye göre gelir. Para kendi para birimini kullanır. Dil ayrıdır. Her birini sonra değiştirebilirsin.",
   "onb.name": "Adın",
-  "onb.namePh": "ör. Chris Day",
+  "onb.namePh": "ör. {name}",
   "onb.region": "Acil durum bölgesi",
   "onb.currency": "Para birimi",
   "onb.sample": "Gezebilmem için örnek verilerle başla",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Cumartesi UTAS Stadium’da footy hâlâ var mı?",
   "Call you tonight Mum": "Bu akşam ararım anne",
   "Lovely, talk then x": "Tamam, o zaman konuşuruz x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day seni Cataract Gorge’dan 3 fotoğrafta etiketledi",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «Kanka, cumartesi için DM’lerine bak»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah bağlantı kurmak istiyor (1 yeni istek)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} takvimde zaten olan bir şeyle çakışıyor. Kaydetmek her öğeyi tutar.",
   "cal.ignoreOnly": "Bu yalnızca bildirimi durdurur. Öğeler takvimde kalır.",
   "cal.editNamed": "{name} öğesini düzenle",
-  "cal.shiftOverlap": "{total} vardiyadan {clashes} tanesi takvimdeki bir şeyle çakışıyor. Kaydetmek her öğeyi tutar."
+  "cal.shiftOverlap": "{total} vardiyadan {clashes} tanesi takvimdeki bir şeyle çakışıyor. Kaydetmek her öğeyi tutar.",
+  "demo.mum": "Annem ({name})",
+  "demo.tagged": "{name} seni Cataract Gorge’dan 3 fotoğrafta etiketledi"
 }

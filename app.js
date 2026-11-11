@@ -375,6 +375,36 @@ const fmtTime = ts => { const d = new Date(ts); const now = new Date(); const re
 const fmtDate = s => s ? new Date(s + 'T00:00:00').toLocaleDateString(homeLocale(), { weekday: 'short', day: 'numeric', month: 'short' }) : '';
 const daysUntil = s => Math.round((new Date(s + 'T00:00:00') - new Date(todayISO() + 'T00:00:00')) / 86400000);
 
+const DEMO_PEOPLE = [
+  { id: 'amara', first: 'Amara', last: 'Okonkwo', partner: 'Chidi', parent: 'Ngozi' },
+  { id: 'mei', first: 'Mei', last: 'Chen', partner: 'Wei', parent: 'Lin' },
+  { id: 'sofia', first: 'Sofia', last: 'Alvarez', partner: 'Mateo', parent: 'Lucia' },
+  { id: 'priya', first: 'Priya', last: 'Nair', partner: 'Arjun', parent: 'Lakshmi' },
+  { id: 'leila', first: 'Leila', last: 'Haddad', partner: 'Omar', parent: 'Hana' },
+  { id: 'soren', first: 'Soren', last: 'Lindqvist', partner: 'Freja', parent: 'Ingrid' },
+  { id: 'aisha', first: 'Aisha', last: 'Rahman', partner: 'Yusuf', parent: 'Fatima' },
+  { id: 'hiro', first: 'Hiro', last: 'Tanaka', partner: 'Yuki', parent: 'Keiko' },
+  { id: 'elena', first: 'Elena', last: 'Popescu', partner: 'Andrei', parent: 'Ioana' },
+  { id: 'kwame', first: 'Kwame', last: 'Mensah', partner: 'Ama', parent: 'Akua' },
+  { id: 'diego', first: 'Diego', last: 'Morales', partner: 'Camila', parent: 'Rosa' },
+  { id: 'hana', first: 'Hana', last: 'Kim', partner: 'Minjun', parent: 'Soojin' },
+  { id: 'imani', first: 'Imani', last: 'Brooks', partner: 'Malik', parent: 'Aaliyah' },
+  { id: 'ananya', first: 'Ananya', last: 'Reddy', partner: 'Vikram', parent: 'Padma' },
+  { id: 'noah', first: 'Noam', last: 'Benami', partner: 'Yael', parent: 'Rivka' },
+  { id: 'linh', first: 'Linh', last: 'Tran', partner: 'Minh', parent: 'Hoa' },
+];
+function demoPersona() {
+  let id = '';
+  try { id = localStorage.getItem('lifehub.demoPersona') || ''; } catch (e) {}
+  if (S && S.demoPersona && !id) id = S.demoPersona;
+  let person = DEMO_PEOPLE.find(p => p.id === id);
+  if (!person) {
+    person = DEMO_PEOPLE[Math.floor(Math.random() * DEMO_PEOPLE.length)];
+    try { localStorage.setItem('lifehub.demoPersona', person.id); } catch (e) {}
+  }
+  const plain = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return { ...person, full: person.first + ' ' + person.last, slug: plain(person.first + person.last), handle: plain(person.first) + '_' + plain(person.last) };
+}
 function seed(name, regionCode, sample, moneyPrefs) {
   const cur = (moneyPrefs && moneyPrefs.currency) || 'AUD';
   const locale = (moneyPrefs && moneyPrefs.locale) || 'en-AU';
@@ -389,10 +419,15 @@ function seed(name, regionCode, sample, moneyPrefs) {
     loc: { on: false, mode: '', until: null, ids: [] },
   };
   if (!sample) return st;
-  const c = (n, phone, extra = {}) => ({ id: uid(), name: n, phone, email: '', relation: '', ice: false, blocked: false, onLifeHub: true, notes: '', birthday: '', premium: false, ...extra });
+  const who = demoPersona();
+  st.sample = true;
+  st.demoPersona = who.id;
+  const c = (n, phone, extra = {}) => ({ id: uid(), name: n, phone, email: '', relation: '', ice: false, blocked: false, onLifeHub: true, notes: '', birthday: '', premium: false, demo: true, ...extra });
   const thu = onWeekday(4), tue = onWeekday(2), fri = onWeekday(5), tomorrow = addDays(hobartToday(), 1);
-  const sarah = c(t("Sarah Day"), '0491 570 156', { relation: 'Partner', ice: true, email: 'sarah@example.com', premium: true, birthday: '1991-' + thu.slice(5) });
-  const mum = c(t("Mum (Linda Day)"), '0491 570 157', { relation: 'Mother', ice: true, birthday: '1964-03-12' });
+  const partnerName = who.partner + ' ' + who.last;
+  const parentName = who.parent + ' ' + who.last;
+  const sarah = c(partnerName, '0491 570 156', { relation: 'Partner', ice: true, email: who.slug + '@example.com', premium: true, birthday: '1991-' + thu.slice(5) });
+  const mum = c(t('demo.mum', { name: parentName }), '0491 570 157', { relation: 'Mother', ice: true, birthday: '1964-03-12' });
   const jake = c(t("Jake Wilson"), '0491 570 158', { relation: 'Friend', premium: true, birthday: '1990-06-15' });
   const emma = c(t("Emma Nguyen"), '0491 570 159', { relation: 'Work' });
   const gp = c(t("Dr Anika Patel (GP)"), '(03) 6000 0000', { relation: 'Doctor', onLifeHub: false });
@@ -418,9 +453,9 @@ function seed(name, regionCode, sample, moneyPrefs) {
     { id: uid(), contactId: jake.id, unread: 1, messages: [{ id: uid(), me: false, text: t("Still on for the footy Saturday at UTAS Stadium?"), t: minsAgo(180) }] },
     { id: uid(), contactId: mum.id, unread: 0, messages: [{ id: uid(), me: true, text: t("Call you tonight Mum"), t: minsAgo(1500) }, { id: uid(), me: false, text: t("Lovely, talk then x"), t: minsAgo(1490) }] },
   ];
-  st.platforms = [{ id: uid(), key: 'facebook', handle: t("Chris Day"), friendReq: 2, dms: 3 }, { id: uid(), key: 'instagram', handle: '@chrisday', friendReq: 0, dms: 5 }, { id: uid(), key: 'x', handle: '@chris_day', friendReq: 0, dms: 1 }, { id: uid(), key: 'linkedin', handle: t("Chris Day"), friendReq: 1, dms: 0 }];
+  st.platforms = [{ id: uid(), key: 'facebook', handle: who.full, friendReq: 2, dms: 3, demo: true }, { id: uid(), key: 'instagram', handle: '@' + who.slug, friendReq: 0, dms: 5, demo: true }, { id: uid(), key: 'x', handle: '@' + who.handle, friendReq: 0, dms: 1, demo: true }, { id: uid(), key: 'linkedin', handle: who.full, friendReq: 1, dms: 0, demo: true }];
   st.notifications = [
-    { id: uid(), key: 'facebook', text: t("Sarah Day tagged you in 3 photos from Cataract Gorge"), t: minsAgo(25) },
+    { id: uid(), key: 'facebook', text: t('demo.tagged', { name: partnerName }), t: minsAgo(25), demo: true },
     { id: uid(), key: 'instagram', text: t("Jake Wilson: \"Mate, check your DMs about Saturday\""), t: minsAgo(70) },
     { id: uid(), key: 'linkedin', text: t("Priya Shah wants to connect (1 new request)"), t: minsAgo(240) },
     { id: uid(), key: 'facebook', text: t("Event reminder: Launceston Show is tomorrow"), t: minsAgo(600), eventTitle: t("Launceston Show"), eventStart: tomorrow + 'T10:00', eventEnd: tomorrow + 'T16:00' },
@@ -591,7 +626,7 @@ function renderOnboarding() {
     <div class="spacer"></div><button class="btn primary full" data-act="obNext">${esc(t('onb.start'))}</button>
     <a class="btn ghost full red" style="margin-top:8px" href="tel:${(REGIONS[ob.region] || REGIONS.AU).primary}">${ic('phone', 18)} ${esc(t('onb.call', { num: (REGIONS[ob.region] || REGIONS.AU).primary }))}</a>`;
   if (ob.step === 1) body = `<h1>${esc(t('onb.about'))}</h1><p class="lead">${esc(t('onb.aboutLead'))}</p>
-    <form id="obF"><label class="fld"><span>${esc(t('onb.name'))}</span><input name="name" value="${esc(ob.name)}" placeholder="${esc(t('onb.namePh'))}" autocomplete="name" required></label>
+    <form id="obF"><label class="fld"><span>${esc(t('onb.name'))}</span><input name="name" value="${esc(ob.name || demoPersona().full)}" placeholder="${esc(t('onb.namePh', { name: demoPersona().full }))}" autocomplete="name" required></label>
     <label class="fld"><span>${esc(t('onb.region'))}</span><select name="region">${Object.entries(REGIONS).map(([k, r]) => `<option value="${k}" ${k === ob.region ? 'selected' : ''}>${r.flag} ${esc(regionLabel(k))}</option>`).join('')}</select></label>
     <label class="fld"><span>${esc(t('onb.currency'))}</span><select name="currency">${currencyOptionList(ob.currency).map(c => `<option value="${c}" ${c === ob.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
     <label class="fld chk"><input type="checkbox" name="sample" ${ob.sample ? 'checked' : ''}><span>${esc(t('onb.sample'))}</span></label>
@@ -1310,7 +1345,7 @@ function renderSettings() {
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
   <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>${esc(t('set.delete'))}</b><span>${esc(t('set.deleteSub'))}</span></span>${ic('chev')}</a></div>
   <div class="card small"><h3>${ic('shield', 18)} ${esc(t('set.privacy'))}</h3>${esc(t('set.privacyCard'))}</div>
-  <p class="footnote">${esc(t('set.version', { v: '1.6.1', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
+  <p class="footnote">${esc(t('set.version', { v: '1.6.2', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
   return screen({ title: t('set.title'), body });
 }
 async function setLanguage(code) {
@@ -1605,6 +1640,52 @@ function tidyLoc() {
   if (S.loc.on && S.loc.mode === '1h' && S.loc.until && Date.now() > S.loc.until) { S.loc.on = false; changed = true; }
   return changed;
 }
+function migrateDemoNames() {
+  if (!S) return false;
+  const who = demoPersona();
+  let changed = false;
+  const ch = (...codes) => String.fromCharCode(...codes);
+  const oldFull = ch(67, 104, 114, 105, 115, 32, 68, 97, 121);
+  const oldCompact = ch(64, 99, 104, 114, 105, 115, 100, 97, 121);
+  const oldSnake = ch(64, 99, 104, 114, 105, 115, 95, 100, 97, 121);
+  const oldGh = ch(99, 104, 114, 105, 115, 116, 117, 114, 116, 108, 101, 100, 97, 121);
+  const oldPartner = ch(83, 97, 114, 97, 104, 32, 68, 97, 121);
+  const oldParent = ch(76, 105, 110, 100, 97, 32, 68, 97, 121);
+  const swap = s => {
+    if (typeof s !== 'string' || !s) return s;
+    return s.split(oldSnake).join('@' + who.handle).split(oldCompact).join('@' + who.slug).split(oldFull).join(who.full).split(oldPartner).join(who.partner + ' ' + who.last).split(oldParent).join(who.parent + ' ' + who.last).split(oldGh).join(who.slug);
+  };
+  const touch = (obj, field) => {
+    if (!obj || typeof obj[field] !== 'string') return;
+    const next = swap(obj[field]);
+    if (next !== obj[field]) { obj[field] = next; changed = true; }
+  };
+  const phones = new Set(['0491570156', '0491570157', '0491570158', '0491570159', '0491570110', '0360000000']);
+  (S.contacts || []).forEach(c => {
+    const digits = String(c.phone || '').replace(/\D/g, '');
+    if (c.demo || phones.has(digits)) {
+      if (!c.demo) { c.demo = true; changed = true; }
+      touch(c, 'name');
+      touch(c, 'email');
+    }
+  });
+  (S.platforms || []).forEach(p => {
+    if (p.demo || p.handle === oldFull || p.handle === oldCompact || p.handle === oldSnake) {
+      if (!p.demo) { p.demo = true; changed = true; }
+      touch(p, 'handle');
+    }
+  });
+  (S.notifications || []).forEach(n => {
+    if (!n || typeof n.text !== 'string') return;
+    if (n.demo || [oldFull, oldPartner, oldParent, oldCompact, oldSnake, oldGh].some(needle => n.text.includes(needle))) {
+      if (!n.demo) { n.demo = true; changed = true; }
+      touch(n, 'text');
+      touch(n, 'eventTitle');
+    }
+  });
+  if (S.demoPersona !== who.id) { S.demoPersona = who.id; changed = true; }
+  return changed;
+}
 function ensureHub() {
   const moneyChanged = migrateMoney();
   if (!S || !S.medical) { if (moneyChanged) save(); return; }
@@ -1619,6 +1700,7 @@ function ensureHub() {
   if (!S.cal.overlap) S.cal.overlap = 'on';
   if (!Array.isArray(S.cal.ignore)) S.cal.ignore = [];
   if (!S.cal.types || typeof S.cal.types !== 'object') S.cal.types = { event: true, appointment: true, work: true, budget: true };
+  const namesChanged = migrateDemoNames();
   (S.events || []).forEach(e => { if (!e.auto) { const k = itemKind(e); if (e.kind !== k) e.kind = k; } });
   (S.contacts || []).forEach(c => { if (c.birthday == null) c.birthday = ''; if (typeof c.premium !== 'boolean') c.premium = false; });
   (S.apps || []).forEach(a => { if (a.nextOn == null) a.nextOn = ''; });
@@ -1628,7 +1710,7 @@ function ensureHub() {
   const safetyChanged = ensureSafety();
   const before = eventSig(S.events);
   syncAutoEvents();
-  if (moneyChanged || bannersChanged || budgetChanged || docsChanged || safetyChanged || eventSig(S.events) !== before || tidyLoc()) save();
+  if (moneyChanged || namesChanged || bannersChanged || budgetChanged || docsChanged || safetyChanged || eventSig(S.events) !== before || tidyLoc()) save();
 }
 function announceConflicts() {
   if (!unlocked || !S || !S.cal) return;
@@ -3415,5 +3497,5 @@ async function boot() {
 boot();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.6.1', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
+window.LifeHub = { version: '1.6.2', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
 })();

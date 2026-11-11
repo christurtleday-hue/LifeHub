@@ -72,7 +72,7 @@
   "onb.about": "آپ کے بارے میں",
   "onb.aboutLead": "ہنگامی نمبر علاقے کے مطابق ہوتے ہیں۔ پیسہ آپ کی کرنسی استعمال کرتا ہے۔ زبان الگ ہے۔ ہر ایک کو بعد میں بدل سکتے ہیں۔",
   "onb.name": "آپ کا نام",
-  "onb.namePh": "مثلاً Chris Day",
+  "onb.namePh": "مثلاً {name}",
   "onb.region": "ہنگامی علاقہ",
   "onb.currency": "کرنسی",
   "onb.sample": "نمونہ ڈیٹا سے شروع کریں تاکہ میں دیکھ سکوں",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "ہفتہ کو UTAS Stadium پر فٹبال اب بھی ہے؟",
   "Call you tonight Mum": "آج رات کال کروں گا امی",
   "Lovely, talk then x": "اچھا، پھر بات کرتے ہیں",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day نے آپ کو Cataract Gorge کی 3 تصاویر میں ٹیگ کیا",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «یار، ہفتے کے بارے میں اپنے ڈی ایم دیکھ لو»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah جڑنا چاہتی ہے (1 نئی درخواست)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} اس چیز سے ٹکراتا ہے جو پہلے سے کیلنڈر پر ہے۔ محفوظ کرنے سے ہر چیز رہتی ہے۔",
   "cal.ignoreOnly": "یہ صرف اطلاع روکتا ہے۔ چیزیں کیلنڈر پر رہتی ہیں۔",
   "cal.editNamed": "{name} میں ترمیم",
-  "cal.shiftOverlap": "{total} میں سے {clashes} شفٹیں کیلنڈر کی کسی چیز سے ٹکراتی ہیں۔ محفوظ کرنے سے ہر چیز رہتی ہے۔"
+  "cal.shiftOverlap": "{total} میں سے {clashes} شفٹیں کیلنڈر کی کسی چیز سے ٹکراتی ہیں۔ محفوظ کرنے سے ہر چیز رہتی ہے۔",
+  "demo.mum": "امی ({name})",
+  "demo.tagged": "{name} نے آپ کو Cataract Gorge کی 3 تصاویر میں ٹیگ کیا"
 }

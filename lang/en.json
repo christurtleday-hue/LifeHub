@@ -72,7 +72,7 @@
   "onb.about": "About you",
   "onb.aboutLead": "Emergency numbers follow the region. Money uses your currency. Language is separate. You can change each one later.",
   "onb.name": "Your name",
-  "onb.namePh": "e.g. Chris Day",
+  "onb.namePh": "e.g. {name}",
   "onb.region": "Emergency region",
   "onb.currency": "Currency",
   "onb.sample": "Start with sample data so I can explore",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "Still on for the footy Saturday at UTAS Stadium?",
   "Call you tonight Mum": "Call you tonight Mum",
   "Lovely, talk then x": "Lovely, talk then x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day tagged you in 3 photos from Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: \"Mate, check your DMs about Saturday\"",
   "Priya Shah wants to connect (1 new request)": "Priya Shah wants to connect (1 new request)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} overlaps something already on your calendar. Saving keeps every item.",
   "cal.ignoreOnly": "This only stops the notification. Items stay on the calendar.",
   "cal.editNamed": "Edit {name}",
-  "cal.shiftOverlap": "{clashes} of {total} shifts overlap something already on your calendar. Saving keeps every item."
+  "cal.shiftOverlap": "{clashes} of {total} shifts overlap something already on your calendar. Saving keeps every item.",
+  "demo.mum": "Mum ({name})",
+  "demo.tagged": "{name} tagged you in 3 photos from Cataract Gorge"
 }

@@ -72,7 +72,7 @@
   "onb.about": "आपके बारे में",
   "onb.aboutLead": "इमरजेंसी नंबर इलाके के हिसाब से होते हैं। पैसे आपकी मुद्रा में दिखते हैं। भाषा अलग है। हर एक बाद में बदल सकते हैं।",
   "onb.name": "आपका नाम",
-  "onb.namePh": "जैसे Chris Day",
+  "onb.namePh": "जैसे {name}",
   "onb.region": "इमरजेंसी क्षेत्र",
   "onb.currency": "मुद्रा",
   "onb.sample": "नमूना डेटा से शुरू करें, ताकि मैं देख सकूँ",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "शनिवार को UTAS Stadium पर फ़ुटबॉल अभी भी है?",
   "Call you tonight Mum": "आज रात कॉल करता हूँ माँ",
   "Lovely, talk then x": "अच्छा, फिर बात करते हैं",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day ने आपको Cataract Gorge की 3 फ़ोटो में टैग किया",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: «यार, शनिवार वाले डीएम देख लेना»",
   "Priya Shah wants to connect (1 new request)": "Priya Shah जुड़ना चाहती है (1 नया अनुरोध)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} उस चीज़ से टकराता है जो कैलेंडर में पहले से है। सहेजने पर हर चीज़ रहती है।",
   "cal.ignoreOnly": "यह केवल सूचना रोकता है। चीज़ें कैलेंडर पर रहती हैं।",
   "cal.editNamed": "{name} बदलें",
-  "cal.shiftOverlap": "{total} में से {clashes} शिफ्ट कैलेंडर की किसी चीज़ से टकराती हैं। सहेजने पर हर चीज़ रहती है।"
+  "cal.shiftOverlap": "{total} में से {clashes} शिफ्ट कैलेंडर की किसी चीज़ से टकराती हैं। सहेजने पर हर चीज़ रहती है।",
+  "demo.mum": "माँ ({name})",
+  "demo.tagged": "{name} ने आपको Cataract Gorge की 3 फ़ोटो में टैग किया"
 }

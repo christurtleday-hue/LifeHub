@@ -72,7 +72,7 @@
   "onb.about": "내 정보",
   "onb.aboutLead": "긴급 번호는 지역을 따릅니다. 돈은 고른 통화를 씁니다. 언어는 따로입니다. 각각 나중에 바꿀 수 있습니다.",
   "onb.name": "이름",
-  "onb.namePh": "예: Chris Day",
+  "onb.namePh": "예: {name}",
   "onb.region": "응급 지역",
   "onb.currency": "통화",
   "onb.sample": "둘러볼 수 있도록 샘플 데이터로 시작합니다",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "토요일 UTAS Stadium 경기, 그대로 갈까?",
   "Call you tonight Mum": "오늘 밤에 전화할게, 엄마",
   "Lovely, talk then x": "좋아, 그때 얘기하자 x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day 님이 Cataract Gorge 사진 3장에 회원님을 태그했습니다",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: \"토요일 DM 확인해\"",
   "Priya Shah wants to connect (1 new request)": "Priya Shah 님이 연결하고 싶어 합니다 (새 요청 1건)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name}이(가) 달력에 있는 일정과 겹칩니다. 저장해도 모든 항목이 남습니다.",
   "cal.ignoreOnly": "알림만 멈춥니다. 항목은 달력에 남습니다.",
   "cal.editNamed": "{name} 편집",
-  "cal.shiftOverlap": "근무 {total}개 중 {clashes}개가 달력의 일정과 겹칩니다. 저장해도 모든 항목이 남습니다."
+  "cal.shiftOverlap": "근무 {total}개 중 {clashes}개가 달력의 일정과 겹칩니다. 저장해도 모든 항목이 남습니다.",
+  "demo.mum": "엄마 ({name})",
+  "demo.tagged": "{name} 님이 Cataract Gorge 사진 3장에 회원님을 태그했습니다"
 }

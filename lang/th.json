@@ -72,7 +72,7 @@
   "onb.about": "เกี่ยวกับคุณ",
   "onb.aboutLead": "เบอร์ฉุกเฉินตามภูมิภาค เงินใช้สกุลของคุณ ภาษาแยกต่างหาก เปลี่ยนทีหลังได้ทีละอย่าง",
   "onb.name": "ชื่อของคุณ",
-  "onb.namePh": "เช่น Chris Day",
+  "onb.namePh": "เช่น {name}",
   "onb.region": "ภูมิภาคฉุกเฉิน",
   "onb.currency": "สกุลเงิน",
   "onb.sample": "เริ่มด้วยข้อมูลตัวอย่าง เพื่อให้ลองดูได้",
@@ -568,7 +568,6 @@
   "Still on for the footy Saturday at UTAS Stadium?": "เสาร์ไปดูบอลที่ UTAS Stadium ยังไปไหม",
   "Call you tonight Mum": "คืนนี้โทรหาแม่",
   "Lovely, talk then x": "ดีจ้า ไว้คุย x",
-  "Chris Day": "Chris Day",
   "Sarah Day tagged you in 3 photos from Cataract Gorge": "Sarah Day แท็กคุณใน 3 รูปจาก Cataract Gorge",
   "Jake Wilson: \"Mate, check your DMs about Saturday\"": "Jake Wilson: \"ดูข้อความส่วนตัวเรื่องเสาร์หน่อย\"",
   "Priya Shah wants to connect (1 new request)": "Priya Shah อยากเชื่อมต่อ (คำขอใหม่ 1 รายการ)",
@@ -1266,5 +1265,7 @@
   "cal.overlapSaveBody": "{name} ซ้อนกับรายการที่มีในปฏิทินแล้ว การบันทึกจะเก็บทุกรายการไว้",
   "cal.ignoreOnly": "สิ่งนี้หยุดเฉพาะการแจ้งเตือน รายการยังอยู่ในปฏิทิน",
   "cal.editNamed": "แก้ไข {name}",
-  "cal.shiftOverlap": "{clashes} จาก {total} กะซ้อนกับรายการในปฏิทิน การบันทึกจะเก็บทุกรายการไว้"
+  "cal.shiftOverlap": "{clashes} จาก {total} กะซ้อนกับรายการในปฏิทิน การบันทึกจะเก็บทุกรายการไว้",
+  "demo.mum": "แม่ ({name})",
+  "demo.tagged": "{name} แท็กคุณใน 3 รูปจาก Cataract Gorge"
 }
