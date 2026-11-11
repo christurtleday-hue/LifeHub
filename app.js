@@ -845,7 +845,7 @@ function lock() { invalidateCache(); unlocked = false; profileKey = null; if ((m
 
 /* ---------- layout ---------- */
 function legalFooter() {
-  return `<footer class="legalfoot"><a href="privacy.html">${esc(t("Privacy"))}</a><a href="terms.html">${esc(t("Terms"))}</a><a href="support.html">${esc(t("Support"))}</a><a href="delete-account.html">${esc(t("Delete data"))}</a></footer>`;
+  return `<footer class="legalfoot"><a href="privacy.html">${esc(t("Privacy"))}</a><a href="terms.html">${esc(t("Terms"))}</a><a href="support.html">${esc(t("Support"))}</a><a href="delete/">${esc(t("Delete data"))}</a></footer>`;
 }
 function screen({ title, back = '#/home', body, right = '', cls = '', demo = '' }) {
   const line = demo ? `<p class="demoline"><span class="tag amber">${esc(t("Demo"))}</span> ${demo}</p>` : '';
@@ -1795,7 +1795,7 @@ function renderSettings() {
   <div class="list"><a class="li" href="privacy.html">${ic('shield')}<span class="grow"><b>${esc(t('set.privacy'))}</b><span>${esc(t('set.privacySub'))}</span></span>${ic('chev')}</a>
   <a class="li" href="terms.html">${ic('file')}<span class="grow"><b>${esc(t('set.terms'))}</b></span>${ic('chev')}</a>
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a></div>
-  <p class="footnote">${esc(t('set.version', { v: '1.6.4', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
+  <p class="footnote">${esc(t('set.version', { v: '1.6.5', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
   return screen({ title: t('set.title'), body });
 }
 async function setLanguage(code) {
@@ -4039,5 +4039,5 @@ async function boot() {
 boot();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.6.4', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
+window.LifeHub = { version: '1.6.5', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
 })();

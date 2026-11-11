@@ -20,7 +20,7 @@ User-facing words live in `lang/*.json` and load only for the active language, w
 ## Files
 - `index.html`, `styles.css`, `app.js`, `i18n.js`, `lang/`: the app (hash router, lazy language files)
 - `manifest.webmanifest`, `sw.js`, `icons/`, `screenshots/`: PWA install, offline cache and store listing images
-- `privacy.html`, `terms.html`, `support.html`, `delete-account.html`: store and privacy pages
+- `privacy.html`, `terms.html`, `support.html`, `delete/` (and `delete-account.html`, which redirects there): store and privacy pages
 - `CNAME`: custom domain name `lifehubapp.app` (GitHub Actions Pages ignores this file for domain setup; set the domain in Settings > Pages)
 - `.well-known/assetlinks.json`: Android link placeholder (`[]` until a signing key exists)
 - `.nojekyll`: so Pages serves dot paths such as `.well-known`
