@@ -1,5 +1,6 @@
-const CACHE = 'lifehub-v13';
+const CACHE = 'lifehub-v14';
 const SHARE_CACHE = 'lifehub-share';
+const BG_CACHE = 'lifehub-bg';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './i18n.js', './safety.js', './lang/en.json', './manifest.webmanifest', './privacy.html', './terms.html', './support.html', './delete-account.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
 
 function openDb() {
@@ -24,13 +25,63 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const ks = await caches.keys();
-    await Promise.all(ks.filter(k => k !== CACHE && k !== SHARE_CACHE).map(k => caches.delete(k)));
+    await Promise.all(ks.filter(k => k !== CACHE && k !== SHARE_CACHE && k !== BG_CACHE).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
 
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'skipWaiting') self.skipWaiting();
+});
+
+async function backgroundRefresh() {
+  const at = Date.now();
+  try {
+    const cache = await caches.open(BG_CACHE);
+    await cache.put(new Request(new URL('./bg-refresh.json', self.registration.scope)), new Response(JSON.stringify({ at }), { headers: { 'Content-Type': 'application/json' } }));
+  } catch (err) {}
+  const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  open.forEach(c => { try { c.postMessage({ type: 'lh-refresh', at }); } catch (err) {} });
+}
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'lifehub-refresh') event.waitUntil(backgroundRefresh());
+});
+self.addEventListener('sync', event => {
+  if (event.tag === 'lifehub-refresh') event.waitUntil(backgroundRefresh());
+});
+
+function pushPayload(event) {
+  if (!event.data) return {};
+  try { return event.data.json(); } catch (e) {}
+  try { return { body: event.data.text() }; } catch (e) { return {}; }
+}
+self.addEventListener('push', event => {
+  const data = pushPayload(event);
+  const emergency = data.kind === 'emergency' || data.emergency === true;
+  const title = data.title || 'LifeHub';
+  const opts = {
+    body: data.body || '',
+    icon: 'icons/icon-192.png',
+    badge: 'icons/icon-192.png',
+    tag: emergency ? 'lifehub-emergency' : (data.tag || 'lifehub-push'),
+    renotify: true,
+    data: { url: data.url || './', kind: emergency ? 'emergency' : (data.kind || 'message') }
+  };
+  if (emergency) { opts.requireInteraction = true; opts.vibrate = [400, 120, 400, 120, 800]; }
+  else opts.vibrate = [80, 40, 80];
+  event.waitUntil(self.registration.showNotification(title, opts));
+});
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || './';
+  event.waitUntil((async () => {
+    const target = new URL(url, self.registration.scope).href;
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of open) {
+      if ('focus' in c) { await c.focus(); try { c.postMessage({ type: 'lh-open', url: target }); } catch (err) {} return; }
+    }
+    if (self.clients.openWindow) await self.clients.openWindow(target);
+  })());
 });
 
 function isSharePost(url) {

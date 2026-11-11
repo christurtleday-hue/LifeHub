@@ -412,11 +412,12 @@ function seed(name, regionCode, sample, moneyPrefs) {
     v: 1, created: Date.now(),
     profile: { name: name || 'Me', region: regionCode || 'AU', locale, currency: cur, lang: (moneyPrefs && moneyPrefs.lang) || (window.LH && LH.code) || 'en', location: '' },
     auth: { method: null },
-    settings: { theme: 'system', textSize: 'normal', lockMinutes: 5, preferWifi: true, banners: ['emergency', 'calendar', 'medical', 'banking', 'chat', 'contacts', 'social', 'utilities', 'documents', 'addnew'].map(id => ({ id, hidden: false })) },
+    settings: { theme: 'system', textSize: 'normal', lockMinutes: 5, preferWifi: true, notify: { messages: false, emergency: false }, banners: ['emergency', 'calendar', 'medical', 'banking', 'chat', 'contacts', 'social', 'utilities', 'documents', 'addnew'].map(id => ({ id, hidden: false })) },
     medical: { bloodType: '', organDonor: false, allergies: [], conditions: [], medications: [], appointments: [], family: [], doctor: { name: '', clinic: '', phone: '' }, medicare: { number: '', irn: '', expiry: '' }, notes: '', showOnLock: true },
     accounts: [], transactions: [], contacts: [], chats: [], platforms: [], notifications: [], posts: [], bills: [], apps: [], groups: [], reports: [], scheduled: [], events: [], jobs: [],
     cal: { dismissed: [], alerted: [], notices: [], skip: {}, linked: {}, fired: [] },
     loc: { on: false, mode: '', until: null, ids: [] },
+    sample: false,
   };
   if (!sample) return st;
   const who = demoPersona();
@@ -483,9 +484,70 @@ function seed(name, regionCode, sample, moneyPrefs) {
   for (let i = 0; i < 5; i++) {
     const d = addDays(weekMon, i);
     const sp = span(d, '09:00', '17:00');
-    st.events.push({ id: uid(), title: t("Day job"), start: sp.start, end: sp.end, allDay: false, source: 'shift', sourceLabel: 'Work', auto: false, hidden: false, color: job.color, jobId: job.id, loc: 'Launceston', notes: '', reminderMin: 60 });
+    st.events.push({ id: uid(), title: t("Day job"), start: sp.start, end: sp.end, allDay: false, source: 'shift', sourceLabel: 'Work', auto: false, hidden: false, color: job.color, jobId: job.id, loc: 'Launceston', notes: '', reminderMin: 60, demo: true });
   }
+  stampDemo(st);
   return st;
+}
+function stampDemo(st) {
+  const tag = o => { if (o && typeof o === 'object') o.demo = true; };
+  ['contacts', 'accounts', 'transactions', 'chats', 'platforms', 'notifications', 'bills', 'groups', 'apps', 'scheduled', 'jobs', 'events'].forEach(k => (st[k] || []).forEach(tag));
+  const m = st.medical || {};
+  ['allergies', 'conditions', 'medications', 'appointments', 'family'].forEach(k => (m[k] || []).forEach(tag));
+  if (m.doctor) m.doctor.demo = true;
+  if (m.medicare) m.medicare.demo = true;
+  m.demoBlood = m.bloodType || '';
+  m.demoOrgan = !!m.organDonor;
+  const b = st.budget || {};
+  ['categories', 'entries', 'goals', 'bills', 'debts'].forEach(k => (b[k] || []).forEach(tag));
+}
+function stripDemoData(state) {
+  const keep = arr => (arr || []).filter(x => x && !x.demo);
+  ['contacts', 'accounts', 'transactions', 'chats', 'platforms', 'notifications', 'bills', 'groups', 'apps', 'scheduled', 'jobs', 'events'].forEach(k => { state[k] = keep(state[k]); });
+  const m = state.medical;
+  if (m) {
+    ['allergies', 'conditions', 'medications', 'appointments', 'family'].forEach(k => { m[k] = keep(m[k]); });
+    if (m.doctor && m.doctor.demo) m.doctor = { name: '', clinic: '', phone: '' };
+    if (m.medicare && m.medicare.demo) m.medicare = { number: '', irn: '', expiry: '' };
+    if (m.demoBlood && m.bloodType === m.demoBlood) m.bloodType = '';
+    if (m.demoOrgan && m.organDonor === true) m.organDonor = false;
+    delete m.demoBlood; delete m.demoOrgan;
+  }
+  const b = state.budget;
+  if (b) {
+    ['categories', 'entries', 'goals', 'bills', 'debts'].forEach(k => { b[k] = keep(b[k]); });
+    const ids = new Set((b.categories || []).map(c => c.id));
+    b.entries = (b.entries || []).filter(e => !e.catId || ids.has(e.catId));
+    b.bills = (b.bills || []).filter(x => !x.catId || ids.has(x.catId));
+  }
+  const cids = new Set((state.contacts || []).map(c => c.id));
+  state.chats = (state.chats || []).filter(ch => cids.has(ch.contactId));
+  const aids = new Set((state.accounts || []).map(a => a.id));
+  state.transactions = (state.transactions || []).filter(tx => aids.has(tx.accountId));
+  const gids = new Set((state.groups || []).map(g => g.id));
+  (state.apps || []).forEach(a => { if (a.groupId && !gids.has(a.groupId)) a.groupId = ''; });
+  state.sample = false;
+}
+function applyKept(fresh, kept) {
+  if (!kept) return;
+  const add = (dest, src) => {
+    const have = new Set((dest || []).map(x => x && x.id));
+    (src || []).forEach(x => { if (x && !have.has(x.id)) dest.push(x); });
+  };
+  ['contacts', 'accounts', 'transactions', 'chats', 'platforms', 'notifications', 'bills', 'groups', 'apps', 'scheduled', 'jobs', 'events'].forEach(k => add(fresh[k], kept[k]));
+  const fm = fresh.medical || {}, km = kept.medical || {};
+  ['allergies', 'conditions', 'medications', 'appointments', 'family'].forEach(k => add(fm[k], km[k]));
+  if (!fm.bloodType && km.bloodType) fm.bloodType = km.bloodType;
+  if (fm.doctor && !fm.doctor.name && km.doctor && km.doctor.name) fm.doctor = km.doctor;
+  if (fm.medicare && !fm.medicare.number && km.medicare && km.medicare.number) fm.medicare = km.medicare;
+  if (!fm.notes && km.notes) fm.notes = km.notes;
+  const fb = fresh.budget || {}, kb = kept.budget || {};
+  ['categories', 'entries', 'goals', 'bills', 'debts'].forEach(k => { fb[k] = fb[k] || []; add(fb[k], kb[k]); });
+  if (kept.docs && kept.docs.items) {
+    fresh.docs = fresh.docs || { items: [] };
+    fresh.docs.items = fresh.docs.items || [];
+    add(fresh.docs.items, kept.docs.items);
+  }
 }
 
 /* ---------- helpers: toast, sheets, files ---------- */
@@ -611,9 +673,13 @@ function legalFooter() {
 }
 function screen({ title, back = '#/home', body, right = '', cls = '', demo = '' }) {
   const line = demo ? `<p class="demoline"><span class="tag amber">${esc(t("Demo"))}</span> ${demo}</p>` : '';
-  return `<header class="topbar ${cls}">${back ? `<a class="iconbtn" href="${back}" aria-label="${esc(t('common.back'))}">${ic('back')}</a>` : '<span class="iconbtn-sp"></span>'}<h1>${esc(title)}</h1><div class="tb-right">${right || '<span class="iconbtn-sp"></span>'}</div></header><main class="content">${line}${body}</main>${legalFooter()}`;
+  return `<header class="topbar ${cls}">${back ? `<a class="iconbtn" href="${back}" aria-label="${esc(t('common.back'))}">${ic('back')}</a>` : '<span class="iconbtn-sp"></span>'}<h1>${esc(title)}</h1><div class="tb-right">${right || '<span class="iconbtn-sp"></span>'}</div></header><main class="content">${demoBar()}${line}${body}</main>${legalFooter()}`;
 }
 const demoNote = txt => `<div class="notice">${ic('alert', 18)}<div>${txt}</div></div>`;
+function demoBar() {
+  if (!S || !S.sample) return '';
+  return `<button class="demobar" data-act="leaveDemo"><span>${esc(t('demo.using'))}</span><b>${esc(t('demo.startOwn'))}</b></button>`;
+}
 
 /* ---------- onboarding ---------- */
 let ob = { step: 0, name: '', region: 'AU', currency: 'AUD', locale: 'en-AU', method: 'pin', sample: true };
@@ -623,13 +689,13 @@ function renderOnboarding() {
   let body = '';
   if (ob.step === 0) body = `<div class="logo">${ic('cross', 40, 2.4)}</div><h1>${esc(t("LifeHub"))}</h1><p class="lead">${esc(t('onb.lead'))}</p>
     <div class="feat"><div>${ic('alert')}${esc(t('onb.f1'))}</div><div>${ic('bank')}${esc(t('onb.f2'))}</div><div>${ic('msg')}${esc(t('onb.f3'))}</div><div>${ic('shield')}${esc(t('onb.f4'))}</div></div>
-    <div class="spacer"></div><button class="btn primary full" data-act="obNext">${esc(t('onb.start'))}</button>
+    <div class="spacer"></div><div class="choice"><button class="btn primary full" data-act="obDemo">${esc(t('onb.tryDemo'))}</button><button class="btn full" data-act="obScratch">${esc(t('onb.scratch'))}</button></div>
     <a class="btn ghost full red" style="margin-top:8px" href="tel:${(REGIONS[ob.region] || REGIONS.AU).primary}">${ic('phone', 18)} ${esc(t('onb.call', { num: (REGIONS[ob.region] || REGIONS.AU).primary }))}</a>`;
   if (ob.step === 1) body = `<h1>${esc(t('onb.about'))}</h1><p class="lead">${esc(t('onb.aboutLead'))}</p>
-    <form id="obF"><label class="fld"><span>${esc(t('onb.name'))}</span><input name="name" value="${esc(ob.name || demoPersona().full)}" placeholder="${esc(t('onb.namePh', { name: demoPersona().full }))}" autocomplete="name" required></label>
+    <form id="obF"><label class="fld"><span>${esc(t('onb.name'))}</span><input name="name" value="${esc(ob.sample ? (ob.name || demoPersona().full) : ob.name)}" placeholder="${esc(t('onb.namePh', { name: demoPersona().full }))}" autocomplete="name" required></label>
     <label class="fld"><span>${esc(t('onb.region'))}</span><select name="region">${Object.entries(REGIONS).map(([k, r]) => `<option value="${k}" ${k === ob.region ? 'selected' : ''}>${r.flag} ${esc(regionLabel(k))}</option>`).join('')}</select></label>
     <label class="fld"><span>${esc(t('onb.currency'))}</span><select name="currency">${currencyOptionList(ob.currency).map(c => `<option value="${c}" ${c === ob.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
-    <label class="fld chk"><input type="checkbox" name="sample" ${ob.sample ? 'checked' : ''}><span>${esc(t('onb.sample'))}</span></label>
+    <p class="small muted">${esc(ob.sample ? t('onb.demoChosen') : t('onb.scratchChosen'))}</p>
     <div class="spacer"></div><div class="row gap"><button type="button" class="btn" data-act="obBack">${esc(t('common.back'))}</button><button class="btn primary">${esc(t('common.continue'))}</button></div></form>`;
   if (ob.step === 2) body = `<h1>${esc(t('onb.signIn'))}</h1><p class="lead">${esc(t('onb.signInLead'))}</p>
     ${Object.entries(METHODS).map(([k, m]) => `<button class="method ${ob.method === k ? 'on' : ''}" data-act="obMethod" data-m="${k}" aria-pressed="${ob.method === k}"><span class="mi">${m.icon}</span><span><b>${esc(methodLabel(k))}</b><span>${esc(methodDesc(k))}</span></span></button>`).join('')}
@@ -643,11 +709,16 @@ function renderOnboarding() {
   }
   return `<div class="onb">${dots}${body}</div>`;
 }
+let pendingKeep = null;
 async function finishOnboarding(auth) {
-  S = seed(ob.name, ob.region, ob.sample, { currency: ob.currency, locale: ob.locale, lang: LH.code }); S.auth = auth; save(); unlocked = true; touchSession(); ob.step = 0; location.hash = '#/home'; render(); toast(t('onb.welcome', { name: S.profile.name.split(' ')[0] }));
+  const keep = pendingKeep; pendingKeep = null;
+  const useSample = ob.sample && !(keep && keep.keepDemo);
+  S = seed(ob.name, ob.region, useSample, { currency: ob.currency, locale: ob.locale, lang: LH.code });
+  if (keep) { applyKept(S, keep.data); if (keep.keepDemo) S.sample = false; }
+  S.auth = auth; save(); unlocked = true; touchSession(); ob.step = 0; location.hash = '#/home'; render(); toast(t('onb.welcome', { name: S.profile.name.split(' ')[0] }));
 }
 function afterOnboarding() {
-  const f = $('#obF'); if (f) f.onsubmit = e => { e.preventDefault(); const n = f.name.value.trim(); if (!n) { toast(t('onb.needName')); f.name.focus(); return; } ob.name = n; ob.region = f.region.value; ob.currency = f.currency.value || ob.currency; ob.sample = f.sample.checked; ob.step = 2; render(); };
+  const f = $('#obF'); if (f) f.onsubmit = e => { e.preventDefault(); const n = f.name.value.trim(); if (!n) { toast(t('onb.needName')); f.name.focus(); return; } ob.name = n; ob.region = f.region.value; ob.currency = f.currency.value || ob.currency; ob.step = 2; render(); };
   const s = $('#setF'); if (s) s.onsubmit = async e => { e.preventDefault(); const a = s.a.value, b = s.b.value;
     if (ob.method === 'pin') { if (!/^\d{4,6}$/.test(a)) return toast(t('onb.pinRule')); if (a !== b) return toast(t('onb.pinMatch')); finishOnboarding({ method: 'pin', pinHash: await hash(a), pinLen: a.length }); }
     else { if (a.length < 8) return toast(t('onb.pwRule')); if (a !== b) return toast(t('onb.pwMatch')); finishOnboarding({ method: 'password', pwHash: await hash(a) }); } };
@@ -695,6 +766,7 @@ function renderHome() {
     return `<a class="banner ${b.id === 'emergency' ? 'emergency' : ''}" href="${B.href}"><span class="chip" style="${b.id === 'emergency' ? '' : `background:${B.color}`}">${ic(B.icon, b.id === 'emergency' ? 30 : 26, 2.2)}</span><span class="txt"><b>${esc(bannerTitle(b.id))}</b><span>${i.raw ? i.sub : esc(i.sub)}</span></span>${i.badge ? `<span class="badge">${i.badge}</span>` : ''}<span class="chev">${ic('chev')}</span></a>`; }).join('');
   const groups = S.groups.filter(g => g.onHome).map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="banner" href="#/group/${g.id}"><span class="chip" style="background:var(--card2);border:1px solid var(--line)">${esc(g.emoji || '📁')}</span><span class="txt"><b>${esc(g.name)}</b><span>${esc(t('home.groupApps', { n }))}</span></span><span class="chev">${ic('chev')}</span></a>`; }).join('');
   return `<header class="home-head"><div class="hello"><small>${esc(greet)}</small><b>${esc(S.profile.name.split(' ')[0])}</b>${isPremium() ? ' ' + premBadge() : ''}</div><a class="iconbtn" href="#/search" aria-label="${esc(t('common.search'))}">${ic('search')}</a><a class="iconbtn" href="#/settings" aria-label="${esc(t('common.settings'))}">${ic('settings')}</a></header>
+  ${demoBar()}
   <nav class="banners" data-screen="home" aria-label="${esc(t('Main sections'))}">${html}${groups}</nav>
   <div class="dropzone home-drop" data-drop="home"><b>${esc(t('home.dropTitle'))}</b><span>${esc(t('home.dropBody'))}</span></div>
   ${AdSlot('home-bottom')}`;
@@ -939,7 +1011,7 @@ function renderThread(id) {
     $('#cmp').onsubmit = e => { e.preventDefault(); const v = e.target.m.value.trim(); if (!v) return;
       if (!c.onLifeHub) { location.href = `sms:${c.phone.replace(/[^\d+]/g, '')}?&body=${encodeURIComponent(v)}`; }
       thread.messages.push({ id: uid(), me: true, text: v, t: Date.now() }); save(); render(); $('#cmp input').focus();
-      if (c.onLifeHub) setTimeout(() => { thread.messages.push({ id: uid(), me: false, text: REPLIES[Math.floor(Math.random() * REPLIES.length)], t: Date.now() }); if (!location.hash.endsWith(thread.id)) thread.unread++; save(); if (location.hash.endsWith(thread.id)) { const val = $('#cmp input')?.value; render(); const i = $('#cmp input'); if (i) { i.value = val || ''; i.focus(); } } }, 1600); };
+      if (c.onLifeHub) setTimeout(() => { const reply = REPLIES[Math.floor(Math.random() * REPLIES.length)]; thread.messages.push({ id: uid(), me: false, text: reply, t: Date.now() }); if (!location.hash.endsWith(thread.id)) thread.unread++; save(); incomingNotice(c, reply, thread.id); if (location.hash.endsWith(thread.id)) { const val = $('#cmp input')?.value; render(); const i = $('#cmp input'); if (i) { i.value = val || ''; i.focus(); } } }, 1600); };
   } };
 }
 let cleanupFn = null;
@@ -1032,7 +1104,7 @@ const fmtLong = ts => new Date(ts).toLocaleDateString(homeLocale(), { day: 'nume
 const AD_CONFIG = { provider: 'house', adsense: { client: 'ca-pub-XXXXXXXXXXXXXXXX', slot: '0000000000' } };
 const AD_PLACEMENTS = ['home-bottom'];
 const HOUSE_ADS = [
-  { title: t("LifeHub Premium: no ads"), body: t("Sharper photos, live refresh · price from the store"), cta: t("Go Premium"), href: '#/plan' },
+  { title: t("LifeHub Premium: no ads"), body: t('ad.premiumBody'), cta: t("Go Premium"), href: '#/plan' },
   { title: t("Example ad: Tamar Bike Hire"), body: t("Sample only, not a real offer"), cta: null },
   { title: t("Example ad: Farmers Market"), body: t("Sample only, not a real offer"), cta: null },
 ];
@@ -1066,7 +1138,7 @@ function renderPlan() {
   const p = S.plan, prem = isPremium();
   const rows = [[t("All sections & imports"), '✓', '✓'], [t("Emergency & Medical ID"), t("Always free"), t("Always free")], [t("Calendar, reminders & work schedule"), '✓', '✓'], [t("Budget planner"), 'Categories, month, 3 goals, chart', t("Unlimited goals, debt plan, CSV, trends")], [t("Share live location with contacts"), '–', t("Only people you tick")], ['Ads', t("1 small ad on Home"), t("No ads")],
     ['Themes', 'Light, Dark, Auto', t("+ Midnight & Tassie Forest")], [t("Accent colours"), 'Blue', t("+ 5 premium accents")], [t("Icon style"), 'Standard', t("+ Glass icons")],
-    [t("Photo & image quality"), t("Standard (up to 1080px)"), t("Full resolution, sharper")], [t("Auto-refresh (feeds, balances, chat)"), 'Manual, every 15 or 5 min', '+ every 1 min & Live'], [t("Pull to refresh"), '✓', '✓'],
+    [t("Photo & image quality"), t("Standard (up to 1080px)"), t("Full resolution, sharper")], [t('plan.updates'), t('plan.updatesFree'), t('plan.updatesPrem')],
     ['Animations', 'Smooth', t("Extra snappy")], [t("Opening sections"), 'Fast', t("Instant (preloaded)")], [t("Priority features & early access"), '–', '★']];
   const status = !prem ? `<p class="muted" style="margin:6px 0 0">${esc(t("You're on the"))} <b>${esc(t("Free"))}</b> plan.</p>`
     : p.status === 'cancelled' ? `<p style="margin:6px 0 0">${esc(t("Cancelled. Premium stays on until"))} <b>${fmtLong(p.renews)}</b>, then you'll move to Free.</p>`
@@ -1126,23 +1198,145 @@ async function putImage(id, blob) { const db = await idb(); return new Promise((
 async function getImage(id) { const db = await idb(); return new Promise(res => { const q = db.transaction('images').objectStore('images').get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
 async function delImage(id) { try { const db = await idb(); db.transaction('images', 'readwrite').objectStore('images').delete(id); } catch (e) {} }
 
-/* Refresh rate for feeds, balances, notifications and chat. Free: Manual, 15 min, 5 min. Premium adds 1 min and Live. */
-const REFRESH = [['manual', 'Manual', false], ['15', '15 min', false], ['5', '5 min', false], ['1', '1 min', true], ['live', 'Live', true]];
-const refreshSetting = () => { const v = String(S?.settings?.refresh ?? '15'); const o = REFRESH.find(r => r[0] === v); return o && (!o[2] || isPremium()) ? v : '5'; };
-const refreshMs = () => { const v = refreshSetting(); return v === 'manual' ? 0 : v === 'live' ? 10000 : Number(v) * 60000; };
+/* Free never waits longer than 5 minutes. Premium polls often while the app is open, and refreshes again when the tab is focused. A real feed would use its own push; nothing here calls a server. */
+const FREE_REFRESH_MS = 5 * 60 * 1000;
+const LIVE_REFRESH_MS = 15 * 1000;
+const refreshMs = () => (isPremium() ? LIVE_REFRESH_MS : FREE_REFRESH_MS);
+const refreshBlocked = () => document.hidden || navigator.onLine === false;
 let refreshTimer = null;
-function scheduleRefresh() { clearInterval(refreshTimer); const ms = refreshMs(); if (ms) refreshTimer = setInterval(() => { if (unlocked && !document.hidden) refreshAll(false); }, ms); }
+let wakeAt = 0;
+function scheduleRefresh() {
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => { if (unlocked && S && !refreshBlocked()) refreshAll(false); }, refreshMs());
+}
+function wakeRefresh() {
+  if (!unlocked || !S || refreshBlocked()) return;
+  const now = Date.now();
+  if (now - wakeAt < 1500) return;
+  wakeAt = now;
+  refreshAll(false);
+  scheduleRefresh();
+}
 const DEMO_NEW = [['instagram', t("Emma Nguyen liked your photo")], ['facebook', t("Jake Wilson commented: \"Great game!\"")], ['x', t("You have a new follower")], ['linkedin', t("Your post was viewed 24 times")]];
-function refreshAll(manual) {
-  /* Demo: a live build would call each provider (CDR bank feed, social APIs, chat server / push). */
+function refreshAll(manual, background) {
+  if (!S) return;
+  if (!manual && navigator.onLine === false) return;
+  if (!manual && !background && document.hidden) return;
   S.lastRefresh = Date.now();
-  if (Math.random() < 0.35 && S.platforms.length) { const [k, t] = DEMO_NEW[Math.floor(Math.random() * DEMO_NEW.length)]; const p = S.platforms.find(x => x.key === k); if (p) { S.notifications.push({ id: uid(), key: k, text: t, t: Date.now() }); p.dms += k === 'x' ? 0 : 1; } }
+  if (!S._demoPing || Date.now() - S._demoPing > FREE_REFRESH_MS) {
+    if (Math.random() < 0.35 && S.platforms && S.platforms.length) {
+      const [k, note] = DEMO_NEW[Math.floor(Math.random() * DEMO_NEW.length)];
+      const p = S.platforms.find(x => x.key === k);
+      if (p) { S.notifications.push({ id: uid(), key: k, text: note, t: Date.now() }); p.dms += k === 'x' ? 0 : 1; S._demoPing = Date.now(); }
+    }
+  }
   save();
   const h = location.hash; if (/^#\/(home|social|banking|chat|utilities|calendar|location)?$/.test(h) || h === '') { const y = scrollY; render(); scrollTo(0, y); }
-  if (manual) toast('Refreshed');
+  if (manual) toast(t('refresh.done'));
 }
-const updatedLine = () => { const when = S.lastRefresh; const v = refreshSetting(); const ago = !when ? t("not yet") : Date.now() - when < 60000 ? t("just now") : `${Math.round((Date.now() - when) / 60000)} ${esc(t("min ago"))}`;
-  return `<div class="updated small muted">${ic('clock', 14)} ${esc(t("Updated"))} ${ago} · ${v === 'manual' ? t("Manual refresh") : v === 'live' ? "<b class=\"green\">" + esc(t("Live")) + "</b>" : `Every ${v} min`}<button class="linkbtn small" data-act="refreshNow">${esc(t("Refresh"))}</button></div>`; };
+const updatedLine = () => {
+  const when = S.lastRefresh;
+  const ago = !when ? t('not yet') : Date.now() - when < 60000 ? t('just now') : `${Math.round((Date.now() - when) / 60000)} ${t('min ago')}`;
+  const mode = isPremium() ? t('refresh.live') : t('refresh.every5');
+  return `<div class="updated small muted">${ic('clock', 14)} ${esc(t('Updated'))} ${esc(ago)} · ${esc(mode)}<button class="linkbtn small" data-act="refreshNow">${esc(t('Refresh'))}</button></div>`;
+};
+/* Later: set provider to "vapid" or "fcm" and vapidPublicKey. enableWebPush() then subscribes. No server is contacted while this is empty. */
+const PUSH_CONFIG = { provider: '', vapidPublicKey: '' };
+function urlBase64ToUint8Array(base64) {
+  const pad = '='.repeat((4 - base64.length % 4) % 4);
+  const b64 = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(b64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function enableWebPush() {
+  if (!PUSH_CONFIG.provider || !PUSH_CONFIG.vapidPublicKey) return Promise.resolve({ ok: false, reason: 'unconfigured' });
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return Promise.resolve({ ok: false, reason: 'unsupported' });
+  return navigator.serviceWorker.ready.then(reg => reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(PUSH_CONFIG.vapidPublicKey) })).then(sub => ({ ok: true, subscription: sub.toJSON() })).catch(err => ({ ok: false, reason: String(err && err.message || err) }));
+}
+function showSwNotification(title, opts) {
+  const options = Object.assign({ icon: 'icons/icon-192.png', badge: 'icons/icon-192.png' }, opts || {});
+  const fallback = () => { if (typeof Notification === 'function' && Notification.permission === 'granted') new Notification(title, options); };
+  if (!('serviceWorker' in navigator)) { try { fallback(); } catch (e) {} return Promise.resolve(); }
+  return navigator.serviceWorker.getRegistration().then(reg => (reg && reg.showNotification ? reg.showNotification(title, options) : fallback())).catch(() => {});
+}
+function notifyOn(kind) { return !!(S && S.settings && S.settings.notify && S.settings.notify[kind]); }
+function ensureNotify() {
+  if (!S || !S.settings) return false;
+  let changed = false;
+  if (!S.settings.notify || typeof S.settings.notify !== 'object') { S.settings.notify = { messages: false, emergency: false }; changed = true; }
+  if (typeof S.settings.notify.messages !== 'boolean') { S.settings.notify.messages = false; changed = true; }
+  if (typeof S.settings.notify.emergency !== 'boolean') { S.settings.notify.emergency = false; changed = true; }
+  return changed;
+}
+function presentAlert(kind, title, body, url) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return Promise.resolve();
+  const emergency = kind === 'emergency';
+  if (emergency ? !notifyOn('emergency') : !notifyOn('messages')) return Promise.resolve();
+  return showSwNotification(title, {
+    body, tag: emergency ? 'lifehub-emergency' : 'lifehub-message', renotify: true, requireInteraction: emergency,
+    vibrate: emergency ? [400, 120, 400, 120, 800] : [80, 40, 80],
+    data: { kind, url: url || (emergency ? './#/emergency' : './#/chat') }
+  });
+}
+function incomingNotice(contact, text, threadId) {
+  const ice = !!(contact && contact.ice);
+  const title = contact && contact.name ? contact.name : t('notify.messages');
+  const url = './#/chat/' + (threadId || '');
+  if (ice && notifyOn('emergency')) presentAlert('emergency', title, text, url);
+  else if (notifyOn('messages')) presentAlert('message', title, text, url);
+}
+function bgStatus() {
+  const bg = S && S.settings && S.settings.notify && S.settings.notify.bg;
+  if (bg === 'periodic') return t('notify.bgPeriodic');
+  if (bg === 'fallback') return t('notify.bgFallback');
+  if (bg === 'blocked') return t('notify.bgBlocked');
+  return t('notify.bgOff');
+}
+async function registerBackgroundRefresh() {
+  if (!('serviceWorker' in navigator) || !('Notification' in window) || Notification.permission !== 'granted') return 'off';
+  let reg;
+  try { reg = await navigator.serviceWorker.ready; } catch (e) { return 'unsupported'; }
+  if (reg.periodicSync && reg.periodicSync.register) {
+    try { await reg.periodicSync.register('lifehub-refresh', { minInterval: FREE_REFRESH_MS }); return 'periodic'; } catch (e) { /* browser declined a timer */ }
+  }
+  if (reg.sync && reg.sync.register) {
+    try { await reg.sync.register('lifehub-refresh'); return 'fallback'; } catch (e) { return 'blocked'; }
+  }
+  return 'unsupported';
+}
+async function setNotify(kind, on) {
+  ensureNotify();
+  if (!on) { S.settings.notify[kind] = false; save(); render(); return; }
+  if (!('Notification' in window)) { toast(t('notify.unsupported')); render(); return; }
+  let perm = Notification.permission;
+  if (perm === 'default') { try { perm = await Notification.requestPermission(); } catch (e) { perm = 'denied'; } }
+  if (perm !== 'granted') { S.settings.notify[kind] = false; save(); toast(t('notify.denied')); render(); return; }
+  S.settings.notify[kind] = true;
+  S.settings.notify.bg = await registerBackgroundRefresh();
+  save(); render(); toast(t('notify.on'));
+}
+async function testNotify() {
+  ensureNotify();
+  const n = S.settings.notify;
+  if (!n.messages && !n.emergency) { toast(t('notify.pick')); return; }
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') { toast(t('notify.needOn')); return; }
+  if (n.messages) await presentAlert('message', t('notify.testMsgTitle'), t('notify.testMsgBody'), './#/chat');
+  if (n.emergency) await presentAlert('emergency', t('notify.testEmTitle'), t('notify.testEmBody'), './#/emergency');
+  toast(t('notify.sent'));
+}
+async function consumeBackgroundRefresh() {
+  if (!S || !unlocked || !('caches' in window)) return;
+  try {
+    const cache = await caches.open('lifehub-bg');
+    const res = await cache.match('./bg-refresh.json');
+    if (!res) return;
+    const data = await res.json();
+    await cache.delete('./bg-refresh.json');
+    if (data && data.at) refreshAll(false, true);
+  } catch (e) {}
+}
 /* pull-to-refresh (everyone) */
 (function () {
   let y0 = null, pulled = false; const ind = document.createElement('div'); ind.className = 'ptr'; ind.innerHTML = t("↓ Pull to refresh"); document.body.appendChild(ind);
@@ -1326,7 +1520,12 @@ function renderSettings() {
     <button class="mv" data-act="mvBanner" data-i="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="Move up">${ic('up', 18)}</button><button class="mv" data-act="mvBanner" data-i="${i}" data-d="1" ${i === bs.length - 1 ? 'disabled' : ''} aria-label="Move down">${ic('down', 18)}</button>
     ${b.id === 'emergency' ? '<span class="mv" style="border:0;background:none"></span>' : `<button class="mv" data-act="hideBanner" data-i="${i}" aria-label="${b.hidden ? 'Show' : 'Hide'}">${ic(b.hidden ? 'eyeoff' : 'eye', 18)}</button>`}</div>`).join('')}</div>
   <div class="sec-h"><h2>${esc(t('set.refresh'))}</h2></div>
-  <div class="list"><div class="li" style="display:block">${ic('clock')} <b>${esc(t('set.refreshTitle'))}</b><div class="seg" style="margin-top:8px">${REFRESH.map(([v, l, pr]) => `<button class="${refreshSetting() === v ? 'on' : ''}" data-act="setRefresh" data-v="${v}">${pr && !isPremium() ? ic('lock', 12) + ' ' : ''}${esc(t('set.refresh.' + v) === 'set.refresh.' + v ? l : t('set.refresh.' + v))}</button>`).join('')}</div><div class="small muted" style="margin-top:6px">${esc(t('set.pull'))}${isPremium() ? '' : esc(t('set.pullPrem'))}</div></div></div>
+  <div class="list"><div class="li" style="display:block">${ic('clock')} <b>${esc(t('plan.updatesFree'))}</b><p class="small" style="margin:6px 0 0">${esc(t('plan.updatesPrem'))}</p><p class="small muted">${esc(isPremium() ? t('set.refreshPrem') : t('set.refreshFree'))}</p><p class="small muted">${esc(t('set.refreshPause'))}</p></div></div>
+  <div class="sec-h"><h2>${esc(t('notify.title'))}</h2></div>
+  <div class="list"><label class="li"><span class="grow"><b>${esc(t('notify.messages'))}</b><span>${esc(t('notify.messagesSub'))}</span></span><span class="switch"><input type="checkbox" data-change="notifyMessages" ${notifyOn('messages') ? 'checked' : ''}><i></i></span></label>
+  <label class="li"><span class="grow"><b>${esc(t('notify.emergency'))}</b><span>${esc(t('notify.emergencySub'))}</span></span><span class="switch"><input type="checkbox" data-change="notifyEmergency" ${notifyOn('emergency') ? 'checked' : ''}><i></i></span></label>
+  <button class="li" data-act="testNotify">${ic('bell')}<span class="grow"><b>${esc(t('notify.test'))}</b><span>${esc(t('notify.testSub'))}</span></span></button></div>
+  <p class="small muted" style="margin:8px 2px 0">${esc(t('notify.honest'))} ${esc(bgStatus())}</p>
   <div class="sec-h"><h2>${esc(t('set.network'))}</h2></div>
   <label class="list li" style="border:1px solid var(--line)"><span class="grow"><b>${esc(t('set.wifi'))}</b><span>${esc(t('set.wifiSub'))}</span></span><span class="switch"><input type="checkbox" data-change="preferWifi" ${s.preferWifi ? 'checked' : ''}><i></i></span></label>
   <div class="sec-h"><h2>${esc(t('set.safety'))}</h2></div>
@@ -1337,15 +1536,13 @@ function renderSettings() {
   <div class="sec-h"><h2>${esc(t('set.data'))}</h2></div>
   <div class="list"><button class="li" data-act="exportData">${ic('download')}<span class="grow"><b>${esc(t('set.export'))}</b><span>${esc(t('set.exportSub'))}</span></span></button>
   <button class="li" data-act="importData">${ic('upload')}<span class="grow"><b>${esc(t('set.import'))}</b><span>${esc(t('set.importSub'))}</span></span></button>
-  <button class="li" data-act="loadSample">${ic('grid')}<span class="grow"><b>${esc(t('set.sample'))}</b><span>${esc(t('set.sampleSub'))}</span></span></button>
-  <button class="li" data-act="wipeData" style="color:var(--red)">${ic('trash')}<span class="grow"><b>${esc(t('set.wipe'))}</b><span>${esc(t('set.wipeSub'))}</span></span></button></div>
+  <button class="li" data-act="deleteProfile" style="color:var(--red)">${ic('trash')}<span class="grow"><b>${esc(t('set.deleteProfile'))}</b><span>${esc(t('set.deleteProfileSub'))}</span></span></button>
+  <button class="li" data-act="wipeData" style="color:var(--red)">${ic('trash')}<span class="grow"><b>${esc(t('set.deleteDevice'))}</b><span>${esc(t('set.deleteDeviceSub'))}</span></span></button></div>
   <div class="sec-h"><h2>${esc(t('set.policies'))}</h2></div>
   <div class="list"><a class="li" href="privacy.html">${ic('shield')}<span class="grow"><b>${esc(t('set.privacy'))}</b><span>${esc(t('set.privacySub'))}</span></span>${ic('chev')}</a>
   <a class="li" href="terms.html">${ic('file')}<span class="grow"><b>${esc(t('set.terms'))}</b></span>${ic('chev')}</a>
-  <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a>
-  <a class="li" href="delete-account.html">${ic('trash')}<span class="grow"><b>${esc(t('set.delete'))}</b><span>${esc(t('set.deleteSub'))}</span></span>${ic('chev')}</a></div>
-  <div class="card small"><h3>${ic('shield', 18)} ${esc(t('set.privacy'))}</h3>${esc(t('set.privacyCard'))}</div>
-  <p class="footnote">${esc(t('set.version', { v: '1.6.2', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
+  <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a></div>
+  <p class="footnote">${esc(t('set.version', { v: '1.6.3', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
   return screen({ title: t('set.title'), body });
 }
 async function setLanguage(code) {
@@ -1704,13 +1901,14 @@ function ensureHub() {
   (S.events || []).forEach(e => { if (!e.auto) { const k = itemKind(e); if (e.kind !== k) e.kind = k; } });
   (S.contacts || []).forEach(c => { if (c.birthday == null) c.birthday = ''; if (typeof c.premium !== 'boolean') c.premium = false; });
   (S.apps || []).forEach(a => { if (a.nextOn == null) a.nextOn = ''; });
+  const notifyChanged = ensureNotify();
   const bannersChanged = ensureBanners();
   const budgetChanged = ensureBudget();
   const docsChanged = ensureDocs();
   const safetyChanged = ensureSafety();
   const before = eventSig(S.events);
   syncAutoEvents();
-  if (moneyChanged || namesChanged || bannersChanged || budgetChanged || docsChanged || safetyChanged || eventSig(S.events) !== before || tidyLoc()) save();
+  if (moneyChanged || namesChanged || notifyChanged || bannersChanged || budgetChanged || docsChanged || safetyChanged || eventSig(S.events) !== before || tidyLoc()) save();
 }
 function announceConflicts() {
   if (!unlocked || !S || !S.cal) return;
@@ -1746,7 +1944,7 @@ function announceConflicts() {
   if (S.cal.notices.length > 30) S.cal.notices.length = 30;
   save();
   setTimeout(() => toast(shown.length === 1 ? t('cal.overlapsPair', { a: shown[0].a.title, b: shown[0].b.title }) : text), 350);
-  try { if ('Notification' in window && Notification.permission === 'granted') new Notification(t('cal.overlapTitle'), { body: detail || text, icon: 'icons/icon-192.png' }); } catch (e) {}
+  if ('Notification' in window && Notification.permission === 'granted') showSwNotification(t('cal.overlapTitle'), { body: detail || text, tag: 'lifehub-overlap' });
 }
 function checkEventReminders() {
   if (!S || !S.events || !S.cal) return;
@@ -1761,9 +1959,10 @@ function checkEventReminders() {
     if (now < fireAt || now > startMs + 15 * 60000) return;
     const key = e.id + '@' + e.start;
     if (S.cal.fired.includes(key)) return;
+    if (quietHours()) return;
     S.cal.fired.push(key); changed = true;
-    setTimeout(() => toast('Reminder: ' + e.title), 400);
-    try { if ('Notification' in window && Notification.permission === 'granted') new Notification(t("LifeHub reminder"), { body: e.title + '\n' + fmtWhen(e), icon: 'icons/icon-192.png' }); } catch (err) {}
+    setTimeout(() => { if (!document.hidden) toast(t('cal.reminder', { title: e.title })); }, 400);
+    if ('Notification' in window && Notification.permission === 'granted') showSwNotification(t('cal.reminderTitle'), { body: e.title + '\n' + fmtWhen(e), tag: 'lifehub-reminder-' + e.id });
   });
   if (S.cal.fired.length > 200) S.cal.fired.splice(0, S.cal.fired.length - 200);
   if (changed) save();
@@ -3285,6 +3484,8 @@ function setupUpdates() {
     if (!ev.data) return;
     if (ev.data.type === 'lh-shared') absorbInbox();
     if (ev.data.type === 'lh-add-app') absorbAddIntent();
+    if (ev.data.type === 'lh-refresh') refreshAll(false, true);
+    if (ev.data.type === 'lh-open' && ev.data.url) { try { const u = new URL(ev.data.url); if (u.hash) location.hash = u.hash; } catch (err) {} }
   });
   const tick = () => navigator.serviceWorker.getRegistration().then(reg => {
     if (!reg) return;
@@ -3316,10 +3517,26 @@ function applyPrefs() {
   const acc = prem && ACCENTS[s.accent] ? ACCENTS[s.accent][1] : ''; if (acc) root.style.setProperty('--primary', root.dataset.theme === 'dark' ? `color-mix(in srgb, ${acc} 65%, white)` : acc); else root.style.removeProperty('--primary');
   root.classList.toggle('fast', prem); root.classList.toggle('icons-glass', prem && s.iconStyle === 'glass');
 }
+let deletePrompted = '';
+function maybeDelete() {
+  const h = location.hash;
+  if (h !== '#/delete-all' && h !== '#/delete-profile') return;
+  if (S && S.auth && S.auth.method && !unlocked) return;
+  if (deletePrompted === h) return;
+  deletePrompted = h;
+  const fn = h === '#/delete-all' ? wipeAllData : deleteProfileData;
+  setTimeout(async () => {
+    try { await fn(); } finally {
+      deletePrompted = '';
+      if (location.hash === h) location.replace((S && S.auth && S.auth.method) ? '#/settings' : '#/');
+    }
+  }, 40);
+}
 function render() {
   if (cleanupFn) { try { cleanupFn(); } catch (e) {} cleanupFn = null; }
   if (lockUnbind) { lockUnbind(); lockUnbind = null; }
   ensurePlan(); if (S && S.auth && S.auth.method) ensureHub(); applyPrefs(); const app = $('#app');
+  maybeDelete();
   if (!S || !S.auth || !S.auth.method) { app.innerHTML = renderOnboarding(); afterOnboarding(); return; }
   const path = (location.hash || '#/home').slice(1) || '/home';
   if (path !== '/banking/pay' && pay && pay.step !== 'tap') pay = null;
@@ -3328,8 +3545,57 @@ function render() {
   location.replace('#/home');
 }
 
+function leaveDemo() {
+  openSheet(`<h2>${esc(t('demo.leaveTitle'))}</h2><p>${esc(t('demo.leaveLead'))}</p>
+    <label class="fld chk"><input type="checkbox" id="keepDemo"><span>${esc(t('demo.keepDemo'))}</span></label>
+    <p class="small muted">${esc(t('demo.keepNote'))}</p>
+    <button class="btn primary full" id="freshHere">${esc(t('demo.freshHere'))}</button>
+    <button class="btn full" id="newProfile" style="margin-top:8px">${esc(t('demo.newProfile'))}</button>`, el => {
+    const keep = () => !!el.querySelector('#keepDemo').checked;
+    el.querySelector('#freshHere').onclick = () => {
+      if (!keep()) stripDemoData(S); else S.sample = false;
+      closeSheet(true); save(); render(); toast(t('demo.started'));
+    };
+    el.querySelector('#newProfile').onclick = () => {
+      const data = JSON.parse(JSON.stringify(S));
+      const keepDemo = keep();
+      if (!keepDemo) stripDemoData(data); else data.sample = false;
+      delete data.auth;
+      pendingKeep = { keepDemo, data };
+      closeSheet(true);
+      wipeForNewProfile();
+    };
+  });
+}
+async function deleteProfileData() {
+  const ok = await confirmSheet(t('set.deleteProfileAsk'), t('set.deleteProfileBody'), t('set.deleteProfile'), true);
+  if (!ok) return;
+  try { localStorage.removeItem('lifehub.v1'); } catch (e) {}
+  await clearMediaDb();
+  S = null; unlocked = false; pay = null; work = null; pendingKeep = null;
+  ob = { step: 0, name: '', region: ob.region || 'AU', currency: ob.currency || 'AUD', locale: ob.locale || 'en-AU', method: 'pin', sample: false };
+  closeSheet(true);
+  if (location.hash && location.hash !== '#/' && location.hash !== '#') location.hash = '#/';
+  else render();
+}
+async function clearMediaDb() {
+  await new Promise(res => {
+    try {
+      const req = indexedDB.deleteDatabase('lifehub-media');
+      req.onsuccess = req.onerror = req.onblocked = () => res();
+    } catch (e) { res(); }
+  });
+}
+async function wipeForNewProfile() {
+  try { localStorage.removeItem('lifehub.v1'); } catch (e) {}
+  S = null; unlocked = false; pay = null; work = null;
+  ob = { step: 0, name: '', region: ob.region || 'AU', currency: ob.currency || 'AUD', locale: ob.locale || 'en-AU', method: 'pin', sample: false };
+  closeSheet(true);
+  if (location.hash && location.hash !== '#/' && location.hash !== '#') location.hash = '#/';
+  else render();
+}
 async function wipeAllData() {
-  const ok = await confirmSheet(t("Delete all my data?"), 'This permanently erases LifeHub on this device: your profile, medical details, contacts, calendar, photos and settings. It clears this site\'s local storage, caches and on-device database. This cannot be undone. You will return to the welcome screen.', t("Delete all my data"), true);
+  const ok = await confirmSheet(t('set.deleteDeviceAsk'), t('set.deleteDeviceBody'), t('set.deleteDevice'), true);
   if (!ok) return;
   try { localStorage.clear(); } catch (e) {}
   try { sessionStorage.clear(); } catch (e) {}
@@ -3356,7 +3622,8 @@ async function wipeAllData() {
     else finish(['lifehub-media']);
   });
   S = null; unlocked = false; pay = null; work = null;
-  ob = { step: 0, name: '', region: 'AU', method: 'pin', sample: true };
+  ob = { step: 0, name: '', region: 'AU', currency: 'AUD', locale: 'en-AU', method: 'pin', sample: false };
+  pendingKeep = null;
   closeSheet(true);
   if ((location.hash || '') && location.hash !== '#' && location.hash !== '#/') location.hash = '';
   else render();
@@ -3365,6 +3632,10 @@ async function wipeAllData() {
 /* ---------- actions ---------- */
 const A = {
   obNext: () => { ob.step++; render(); }, obBack: () => { ob.step = Math.max(0, ob.step - 1); render(); },
+  obDemo: () => { ob.sample = true; if (!ob.name) ob.name = demoPersona().full; ob.step = 1; render(); },
+  obScratch: () => { ob.sample = false; ob.name = ''; ob.step = 1; render(); },
+  leaveDemo: () => leaveDemo(),
+  deleteProfile: () => deleteProfileData(),
   obMethod: el => { ob.method = el.dataset.m; render(); },
   obPasskey: async () => { let credId = null; if (passkeySupported()) { try { credId = await createPasskey(ob.name); } catch (e) { toast(t("Passkey not created: using simulated biometric")); } } finishOnboarding({ method: 'passkey', credId }); },
   obSSO: () => finishOnboarding({ method: ob.method }),
@@ -3401,7 +3672,7 @@ const A = {
   gmapsHere: el => gmapsHere(el),
   editProfile, editMoney, editLang, changeLogin, lockNow: lock,
   refreshNow: () => refreshAll(true),
-  setRefresh: el => { const o = REFRESH.find(r => r[0] === el.dataset.v); if (o[2] && !isPremium()) { location.hash = '#/plan'; toast(t("That's a Premium perk")); return; } S.settings.refresh = o[0]; save(); scheduleRefresh(); render(); toast(o[0] === 'manual' ? t("Manual refresh only") : `${esc(t("Refreshing"))} ${o[0] === 'live' ? 'live' : 'every ' + o[1]}`); },
+  testNotify: () => testNotify(),
   hideAd: el => { sessionStorage.setItem('lh.adHidden', '1'); const a = el.closest('.adslot'); if (a) a.remove(); },
   upgrade, cancelSub, restore, resume: () => { S.plan.status = 'active'; localStorage.setItem(RECEIPT_KEY, JSON.stringify(S.plan)); save(); render(); toast(t("Subscription resumed")); },
   endNow: async () => { if (await confirmSheet(t("Switch to Free now?"), t("Testing helper: ends Premium immediately."), t("Switch to Free"), true)) { S.plan = { tier: 'free' }; localStorage.removeItem(RECEIPT_KEY); save(); scheduleRefresh(); render(); toast(t("Now on Free")); } },
@@ -3448,6 +3719,8 @@ document.addEventListener('change', e => {
   if (el.dataset.change === 'glass') { if (!isPremium()) { el.checked = false; location.hash = '#/plan'; toast(t("That's a Premium perk")); return; } S.settings.iconStyle = el.checked ? 'glass' : 'standard'; save(); render(); return; }
   if (el.dataset.change === 'setRegion') { S.profile.region = el.value; save(); render(); toast(t('emerg.regionToast', { name: regionLabel(el.value) })); }
   if (el.dataset.change === 'preferWifi') { S.settings.preferWifi = el.checked; save(); render(); toast(el.checked ? t("Wi‑Fi preferred, mobile data as backup") : t("Using any available network")); }
+  if (el.dataset.change === 'notifyMessages') { setNotify('messages', el.checked); return; }
+  if (el.dataset.change === 'notifyEmergency') { setNotify('emergency', el.checked); return; }
   if (el.dataset.change === 'safetyStrict') { ensureSafety(); S.safety.strict = el.checked; save(); render(); toast(el.checked ? t("Strict mode on. A caution is blocked.") : t("Strict mode off. You can still add a caution.")); }
   if (el.dataset.change === 'budCur') {
     ensureBudget();
@@ -3466,7 +3739,7 @@ document.addEventListener('change', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 window.addEventListener('hashchange', () => { closeSheet(true); render(); });
-window.addEventListener('online', render); window.addEventListener('offline', render);
+window.addEventListener('online', () => { render(); wakeRefresh(); }); window.addEventListener('offline', render); window.addEventListener('focus', () => wakeRefresh());
 if (navigator.connection && navigator.connection.addEventListener) navigator.connection.addEventListener('change', () => { if (/^#\/chat/.test(location.hash)) render(); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyPrefs);
 
@@ -3478,7 +3751,11 @@ setInterval(() => {
   if (unlocked && S) checkEventReminders();
 }, 10000);
 let hiddenAt = 0;
-document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (unlocked && S && S.settings.lockMinutes > 0 && hiddenAt && Date.now() - hiddenAt > S.settings.lockMinutes * 60000) lock(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  if (unlocked && S && S.settings.lockMinutes > 0 && hiddenAt && Date.now() - hiddenAt > S.settings.lockMinutes * 60000) { lock(); return; }
+  wakeRefresh();
+});
 
 function initialLang() {
   try { const saved = localStorage.getItem('lifehub.lang'); if (saved) return saved; } catch (e) {}
@@ -3492,10 +3769,13 @@ async function boot() {
   if (S && S.profile && !S.profile.lang) { S.profile.lang = code; save(); }
   setupUpdates();
   render();
-  if (unlocked) { checkReminders(); absorbInbox(); absorbAddIntent(); openPendingDraft(); }
+  if (unlocked) {
+    checkReminders(); absorbInbox(); absorbAddIntent(); openPendingDraft(); consumeBackgroundRefresh();
+    if (notifyOn('messages') || notifyOn('emergency')) registerBackgroundRefresh().then(bg => { if (S && S.settings && S.settings.notify && bg && S.settings.notify.bg !== bg) { S.settings.notify.bg = bg; save(); } });
+  }
 }
 boot();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.6.2', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
+window.LifeHub = { version: '1.6.3', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
 })();
