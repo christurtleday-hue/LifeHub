@@ -763,41 +763,86 @@ async function openText(key, box) {
   const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(box.iv) }, key, unb64(box.ct));
   return new TextDecoder().decode(pt);
 }
-async function applyPin(pin) {
-  const salt = b64(crypto.getRandomValues(new Uint8Array(16)));
-  const key = await pinKey(pin, salt);
-  const ver = await sealText(key, 'ok');
+const REC_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function recoveryCode() {
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  let s = '';
+  for (let i = 0; i < 24; i++) s += REC_ALPHABET[bytes[i] % REC_ALPHABET.length];
+  return s.match(/.{4}/g).join('-');
+}
+function normRecovery(s) { return String(s || '').toUpperCase().replace(/[^A-Z2-9]/g, ''); }
+async function newDataKey() { return crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']); }
+async function wrapRaw(wrapper, dataKey) {
+  const raw = new Uint8Array(await crypto.subtle.exportKey('raw', dataKey));
+  return sealText(wrapper, b64(raw));
+}
+async function unwrapRaw(wrapper, box) {
+  const raw = unb64(await openText(wrapper, box));
+  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
+}
+let recoveryGate = null;
+let pinReset = false;
+async function installPin(pin, dataKey) {
+  if (!dataKey) dataKey = await newDataKey();
+  const code = recoveryCode();
+  const pinSalt = b64(crypto.getRandomValues(new Uint8Array(16)));
+  const recSalt = b64(crypto.getRandomValues(new Uint8Array(16)));
+  const pinK = await pinKey(pin, pinSalt);
+  const recK = await pinKey(normRecovery(code), recSalt);
   const meta = metaOf(activeId) || { id: activeId, name: S.profile.name, color: (S.profile && S.profile.color) || COLORS[0], region: S.profile.region || 'AU', created: Date.now() };
-  meta.lock = { salt, iv: ver.iv, ct: ver.ct, iters: PIN_ITERS, len: String(pin).length };
   meta.name = S.profile.name;
+  meta.lock = { iters: PIN_ITERS, len: String(pin).length, pinSalt, pinWrap: await wrapRaw(pinK, dataKey), recSalt, recWrap: await wrapRaw(recK, dataKey) };
   writeMeta(meta);
-  profileKey = key;
+  profileKey = dataKey;
   S.auth = { method: 'pin', pinLen: String(pin).length, enc: true };
-  const box = await sealText(key, JSON.stringify(S));
+  const box = await sealText(dataKey, JSON.stringify(S));
   saveGen++;
   localStorage.setItem(pkey('data'), 'LH1:' + JSON.stringify(box));
+  return code;
+}
+async function applyPin(pin) { return installPin(pin, null); }
+async function openEnc(key) {
+  const raw = localStorage.getItem(pkey('data')) || '';
+  if (!isEnc(raw)) return false;
+  S = JSON.parse(await openText(key, JSON.parse(raw.slice(4))));
+  profileKey = key;
+  unlocked = true;
+  return true;
 }
 async function tryPin(pin) {
   const meta = metaOf(activeId) || {};
-  if (meta.lock && meta.lock.ct) {
-    try {
+  try {
+    if (meta.lock && meta.lock.pinWrap) {
+      const pinK = await pinKey(pin, meta.lock.pinSalt);
+      const dataKey = await unwrapRaw(pinK, meta.lock.pinWrap);
+      return openEnc(dataKey);
+    }
+    if (meta.lock && meta.lock.ct) {
       const key = await pinKey(pin, meta.lock.salt);
-      const verdict = await openText(key, meta.lock);
-      if (verdict !== 'ok') return false;
-      const raw = localStorage.getItem(pkey('data')) || '';
-      if (!isEnc(raw)) return false;
-      S = JSON.parse(await openText(key, JSON.parse(raw.slice(4))));
-      profileKey = key;
-      unlocked = true;
+      if (await openText(key, meta.lock) !== 'ok') return false;
+      if (!(await openEnc(key))) return false;
+      const code = await installPin(pin, null);
+      recoveryGate = { code };
       return true;
-    } catch (e) { return false; }
-  }
+    }
+  } catch (e) { return false; }
   if (S && S.auth && S.auth.pinHash && await hash(pin) === S.auth.pinHash) {
     unlocked = true;
-    try { await applyPin(pin); toast(t('prof.encrypted')); } catch (e) { unlocked = true; }
+    try { const code = await installPin(pin, null); recoveryGate = { code }; } catch (e) {}
     return true;
   }
   return false;
+}
+async function tryRecovery(code) {
+  const meta = metaOf(activeId) || {};
+  if (!meta.lock || !meta.lock.recWrap) return 'none';
+  try {
+    const recK = await pinKey(normRecovery(code), meta.lock.recSalt);
+    const dataKey = await unwrapRaw(recK, meta.lock.recWrap);
+    if (!(await openEnc(dataKey))) return 'bad';
+    pinReset = true;
+    return 'ok';
+  } catch (e) { return 'bad'; }
 }
 const passkeySupported = () => !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
 async function createPasskey(name) {
@@ -845,7 +890,7 @@ function lock() { invalidateCache(); unlocked = false; profileKey = null; if ((m
 
 /* ---------- layout ---------- */
 function legalFooter() {
-  return `<footer class="legalfoot"><a href="privacy.html">${esc(t("Privacy"))}</a><a href="terms.html">${esc(t("Terms"))}</a><a href="support.html">${esc(t("Support"))}</a><a href="delete/">${esc(t("Delete data"))}</a></footer>`;
+  return `<footer class="legalfoot"><a href="privacy.html">${esc(t("Privacy"))}</a><a href="terms.html">${esc(t("Terms"))}</a><a href="support.html">${esc(t("Support"))}</a><a href="delete.html">${esc(t("Delete data"))}</a></footer>`;
 }
 function screen({ title, back = '#/home', body, right = '', cls = '', demo = '' }) {
   const line = demo ? `<p class="demoline"><span class="tag amber">${esc(t("Demo"))}</span> ${demo}</p>` : '';
@@ -897,7 +942,7 @@ async function finishOnboarding(pin) {
   S = fresh;
   writeMeta({ id, name: fresh.profile.name, color: fresh.profile.color, region: fresh.profile.region, created: Date.now() });
   try { const persona = localStorage.getItem('lifehub.demoPersona'); if (persona && !localStorage.getItem(pkey('persona', id))) localStorage.setItem(pkey('persona', id), persona); localStorage.removeItem('lifehub.demoPersona'); } catch (e) {}
-  if (pin) { try { await applyPin(pin); } catch (e) { S.auth = { method: null }; save(); } }
+  if (pin) { try { recoveryGate = { code: await applyPin(pin) }; } catch (e) { S.auth = { method: null }; save(); } }
   else save();
   unlocked = true; creating = false; touchSession(); publishProfile();
   ob = { step: 0, name: '', region: ob.region, currency: ob.currency, locale: ob.locale, method: 'pin', sample: true, color: COLORS[0], adding: false };
@@ -918,7 +963,7 @@ function pav(name, color, size) {
 }
 function renderLock() {
   const meta = metaOf(activeId) || {};
-  const enc = !!(meta.lock && meta.lock.ct);
+  const enc = !!(meta.lock && (meta.lock.ct || meta.lock.pinWrap));
   const m = enc ? 'pin' : (S && S.auth && S.auth.method);
   const name = (S && S.profile && S.profile.name) || meta.name || '';
   const first = esc((name || '').split(' ')[0]);
@@ -929,7 +974,7 @@ function renderLock() {
   return `<div class="lock"><div class="logo" style="width:64px;height:64px;border-radius:18px">${pav(name, meta.color || (S && S.profile && S.profile.color), 64)}</div><h1>${esc(t('prof.hi', { name: first }))}</h1><p class="lead">${m === 'pin' ? t('prof.enterPin') : t("LifeHub is locked")}</p>${enc ? `<p class="small muted">${esc(t('prof.pinOn'))}</p>` : ''}${unlockUI}<div class="spacer"></div>
     <div class="lock-emerg">${emerg}</div>
     <button class="linkbtn" data-act="profiles">${esc(t('prof.switch'))}</button>
-    <button class="linkbtn" style="margin-top:6px" data-act="forgot">${esc(enc ? t('prof.forgot') : t("Forgot? Reset LifeHub"))}</button></div>`;
+    <button class="linkbtn" style="margin-top:6px" data-act="${enc ? 'useRecovery' : 'forgot'}">${esc(enc ? t('rec.forgot') : t("Forgot? Reset LifeHub"))}</button></div>`;
 }
 function afterLock() {
   const enc = !!((metaOf(activeId) || {}).lock);
@@ -1751,7 +1796,7 @@ function renderSettings() {
   <a class="li" href="#/location">${ic('pin')}<span class="grow"><b>${esc(t('set.location'))} ${isPremium() ? premBadge() : '<span class="tag">' + esc(t('common.premium')) + '</span>'}</b><span>${S.loc && S.loc.on ? esc(t('set.locOn')) : esc(t('set.locOff'))}</span></span>${ic('chev')}</a></div>
   <div class="sec-h"><h2>${esc(t('set.security'))}</h2></div>
   <div class="list"><button class="li" data-act="changeLogin">${ic('lock')}<span class="grow"><b>${esc(t('prof.pinTitle'))}</b><span>${esc(S.auth && S.auth.method ? methodLabel(S.auth.method) : t('prof.noPin'))}</span></span>${ic('chev')}</button>
-  ${(metaOf(activeId) || {}).lock ? `<p class="small muted" style="margin:8px 2px">${esc(t('prof.pinOn'))}</p>` : `<p class="small muted" style="margin:8px 2px">${esc(t('prof.noPinNote'))}</p>`}
+  ${(metaOf(activeId) || {}).lock ? `<p class="small muted" style="margin:8px 2px">${esc(t('prof.pinOn'))} ${esc(t('rec.bothLost'))}</p><button class="li" data-act="newRecovery">${ic('lock')}<span class="grow"><b>${esc(t('rec.regen'))}</b><span>${esc(t('rec.regenSub'))}</span></span></button>` : `<p class="small muted" style="margin:8px 2px">${esc(t('prof.noPinNote'))}</p>`}
   ${S.auth && S.auth.method ? `<div class="li" style="display:block">${ic('clock')} <b>${esc(t('set.autolock'))}</b><div style="margin-top:8px">${seg('lockMinutes', [[1, t('set.min1')], [5, t('set.min5')], [15, t('set.min15')], [0, t('set.never')]])}</div></div>
   <button class="li" data-act="lockNow">${ic('lock')}<span class="grow"><b>${esc(t('set.lockNow'))}</b></span></button>` : ''}</div>
   <div class="sec-h"><h2>${esc(t('set.display'))}</h2></div>
@@ -1795,7 +1840,7 @@ function renderSettings() {
   <div class="list"><a class="li" href="privacy.html">${ic('shield')}<span class="grow"><b>${esc(t('set.privacy'))}</b><span>${esc(t('set.privacySub'))}</span></span>${ic('chev')}</a>
   <a class="li" href="terms.html">${ic('file')}<span class="grow"><b>${esc(t('set.terms'))}</b></span>${ic('chev')}</a>
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a></div>
-  <p class="footnote">${esc(t('set.version', { v: '1.6.6', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
+  <p class="footnote">${esc(t('set.version', { v: '1.6.7', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
   return screen({ title: t('set.title'), body });
 }
 async function setLanguage(code) {
@@ -1833,7 +1878,7 @@ function changeLogin() {
       if (nm === 'pin' || nm === 'password') formSheet({ title: nm === 'pin' ? t("New PIN") : t("New password"), fields: [{ k: 'a', label: nm === 'pin' ? 'PIN (4–6 digits)' : 'Password (8+ characters)', type: 'password', im: nm === 'pin' ? 'numeric' : '' }, { k: 'b', label: 'Confirm', type: 'password', im: nm === 'pin' ? 'numeric' : '' }],
         intro: nm === 'pin' ? t('prof.pinLead') : '',
         onSave: async v => { if (nm === 'pin' && !/^\d{4,6}$/.test(v.a)) { toast(t("PIN must be 4–6 digits")); return false; } if (nm === 'password' && v.a.length < 8) { toast(t("Use at least 8 characters")); return false; } if (v.a !== v.b) { toast("Those don't match"); return false; }
-          if (nm === 'pin') { await applyPin(v.a); toast(t('prof.encrypted')); }
+          if (nm === 'pin') { const keep = (metaOf(activeId) || {}).lock && (metaOf(activeId) || {}).lock.pinWrap ? profileKey : null; recoveryGate = { code: await installPin(v.a, keep) }; }
           else { profileKey = null; const m = metaOf(activeId); if (m && m.lock) { delete m.lock; writeMeta(m); } S.auth = { method: 'password', pwHash: await hash(v.a) }; save(); toast(t("Sign-in method updated")); } } });
       else if (nm === 'passkey') { let credId = null; if (passkeySupported()) { try { credId = await createPasskey(S.profile.name); } catch (err) { toast(t("Passkey not created: using simulated biometric")); } } profileKey = null; const meta = metaOf(activeId); if (meta && meta.lock) { delete meta.lock; writeMeta(meta); } S.auth = { method: 'passkey', credId }; save(); render(); toast(t("Sign-in method updated")); }
       else { profileKey = null; const meta = metaOf(activeId); if (meta && meta.lock) { delete meta.lock; writeMeta(meta); } S.auth = { method: nm }; save(); render(); toast(t("Sign-in method updated (demo)")); } });
@@ -3790,6 +3835,8 @@ function render() {
   if (cleanupFn) { try { cleanupFn(); } catch (e) {} cleanupFn = null; }
   if (lockUnbind) { lockUnbind(); lockUnbind = null; }
   const app = $('#app');
+  if (recoveryGate) { app.innerHTML = renderRecovery(); afterRecovery(); return; }
+  if (pinReset && unlocked && S) { app.innerHTML = renderNewPin(); afterNewPin(); return; }
   if (creating || !activeId) { app.innerHTML = renderOnboarding(); afterOnboarding(); return; }
   const path = (location.hash || '#/home').slice(1) || '/home';
   if (profileLocked() && !(S && PUBLIC.includes(path))) { app.innerHTML = renderLock(); afterLock(); lastPath = '/lock'; return; }
@@ -3801,6 +3848,59 @@ function render() {
   location.replace('#/home');
 }
 
+function profileLabel() { return (S && S.profile && S.profile.name) || (metaOf(activeId) || {}).name || 'LifeHub'; }
+function recoveryMail(code) {
+  const subject = encodeURIComponent(t('rec.mailSubject'));
+  const body = encodeURIComponent(t('rec.mailBody', { name: profileLabel(), key: code }));
+  return 'mailto:?subject=' + subject + '&body=' + body;
+}
+function renderRecovery() {
+  const code = recoveryGate.code;
+  return `<div class="onb" data-screen="recovery"><h1>${esc(t('rec.title'))}</h1><p class="lead">${esc(t('rec.lead'))}</p>
+    <p class="reckey" id="recCode">${esc(code)}</p>
+    <div class="recactions"><button class="btn full" id="recCopy">${esc(t('rec.copy'))}</button><button class="btn full" id="recDl">${esc(t('rec.download'))}</button><a class="btn full" id="recMail" href="${recoveryMail(code)}">${esc(t('rec.email'))}</a></div>
+    <label class="fld chk"><input type="checkbox" id="recOk"><span>${esc(t('rec.saved'))}</span></label>
+    <button class="btn primary full" id="recGo" disabled>${esc(t('rec.continue'))}</button></div>`;
+}
+function afterRecovery() {
+  const code = recoveryGate.code;
+  const ok = $('#recOk'), go = $('#recGo');
+  if (ok) ok.onchange = () => { go.disabled = !ok.checked; };
+  const copy = $('#recCopy'); if (copy) copy.onclick = async () => { try { await navigator.clipboard.writeText(code); toast(t('rec.copied')); } catch (e) { toast(code); } };
+  const dl = $('#recDl'); if (dl) dl.onclick = () => download('lifehub-recovery-key.txt', t('rec.mailBody', { name: profileLabel(), key: code }));
+  if (go) go.onclick = () => { if (!ok.checked) return; recoveryGate = null; render(); };
+}
+function renderNewPin() {
+  return `<div class="onb" data-screen="newpin"><h1>${esc(t('rec.newPin'))}</h1><p class="lead">${esc(t('rec.newPinLead'))}</p>
+    <form id="setF"><label class="fld"><span>${esc(t('PIN'))}</span><input name="a" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></label>
+    <label class="fld"><span>${esc(t('Confirm PIN'))}</span><input name="b" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></label>
+    <button class="btn primary full">${esc(t('prof.pinSave'))}</button></form>
+    <p class="small muted">${esc(t('rec.bothLost'))}</p></div>`;
+}
+function afterNewPin() {
+  const s = $('#setF'); if (!s) return;
+  s.onsubmit = async e => { e.preventDefault(); const a = s.a.value, b = s.b.value;
+    if (!/^\d{4,6}$/.test(a)) return toast(t('onb.pinRule')); if (a !== b) return toast(t('onb.pinMatch'));
+    pinReset = false; recoveryGate = { code: await installPin(a, profileKey) }; render(); };
+}
+function openRecovery() {
+  openSheet(`<h2>${esc(t('rec.forgot'))}</h2><p>${esc(t('rec.enterLead'))}</p>
+    <label class="fld"><span>${esc(t('rec.enter'))}</span><input id="recIn" autocomplete="off" autocapitalize="characters"></label>
+    <button class="btn primary full" id="recGo">${esc(t('rec.unlock'))}</button>
+    <p class="small muted">${esc(t('rec.bothLost'))}</p>`, async el => {
+    $('#recGo', el).onclick = async () => {
+      const result = await tryRecovery($('#recIn', el).value);
+      if (result === 'none') return toast(t('rec.none'));
+      if (result !== 'ok') return toast(t('rec.bad'));
+      closeSheet(true); render();
+    };
+  });
+}
+function askPinThen(onPin) {
+  openSheet(`<h2>${esc(t('prof.enterPin'))}</h2>${keypadHTML()}<button class="btn full" data-close>${esc(t('Cancel'))}</button>`, el => {
+    bindKeypad(el, async (v, fail) => { if (await tryPin(v)) { closeSheet(true); onPin(v); } else fail(); });
+  });
+}
 function leaveDemo() {
   openSheet(`<h2>${esc(t('demo.leaveTitle'))}</h2><p>${esc(t('demo.leaveLead'))}</p>
     <label class="fld chk"><input type="checkbox" id="keepDemo"><span>${esc(t('demo.keepDemo'))}</span></label>
@@ -3888,6 +3988,8 @@ const A = {
   obColor: el => { ob.color = el.dataset.c || ob.color; render(); },
   obSkipPin: () => finishOnboarding(''),
   profiles: () => openProfiles(),
+  useRecovery: () => openRecovery(),
+  newRecovery: () => askPinThen(async pin => { recoveryGate = { code: await installPin(pin, (metaOf(activeId) || {}).lock && (metaOf(activeId) || {}).lock.pinWrap ? profileKey : null) }; render(); }),
   obDemo: () => { ob.sample = true; if (!ob.name) ob.name = demoPersona().full; ob.step = 1; render(); },
   obScratch: () => { ob.sample = false; ob.name = ''; ob.step = 1; render(); },
   leaveDemo: () => leaveDemo(),
@@ -4039,5 +4141,5 @@ async function boot() {
 boot();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.6.6', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
+window.LifeHub = { version: '1.6.7', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
 })();
