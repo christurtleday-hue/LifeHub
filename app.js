@@ -222,14 +222,133 @@ function methodDesc(k) { return t((METHODS[k] || METHODS.pin).desc); }
 
 /* ---------- state ---------- */
 let S = null;
-try { S = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { S = null; }
-const save = () => { invalidateCache(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast(t('toast.storage')); } };
+let activeId = '';
+let profileKey = null;
+let registry = { active: '', ids: [] };
+let creating = false;
+let saveGen = 0;
+const COLORS = ['#d61f1f', '#2557d6', '#0f766e', '#c2410c', '#7c3aed', '#be185d', '#0e7490', '#a16207'];
+const PIN_ITERS = 120000;
+function pkey(kind, id) { return 'lifehub.' + kind + '.' + (id || activeId); }
+function mediaName(id) { return 'lifehub-media-' + (id || activeId); }
+function readReg() { try { return JSON.parse(localStorage.getItem('lifehub.profiles') || 'null'); } catch (e) { return null; } }
+function writeReg() { try { localStorage.setItem('lifehub.profiles', JSON.stringify(registry)); } catch (e) {} }
+function metaOf(id) { try { return JSON.parse(localStorage.getItem(pkey('meta', id)) || 'null'); } catch (e) { return null; } }
+function writeMeta(m) { try { localStorage.setItem(pkey('meta', m.id), JSON.stringify(m)); } catch (e) {} }
+function isEnc(raw) { return typeof raw === 'string' && raw.startsWith('LH1:'); }
+function save() {
+  invalidateCache();
+  if (!S || !activeId) return;
+  const id = activeId, gen = ++saveGen, text = JSON.stringify(S), key = profileKey;
+  const meta = metaOf(id) || { id, created: Date.now(), color: COLORS[0] };
+  meta.name = (S.profile && S.profile.name) || meta.name || '';
+  meta.color = (S.profile && S.profile.color) || meta.color || COLORS[0];
+  meta.region = (S.profile && S.profile.region) || meta.region || 'AU';
+  writeMeta(meta);
+  const put = value => { if (gen !== saveGen) return; try { localStorage.setItem(pkey('data', id), value); } catch (e) { toast(t('toast.storage')); } };
+  if (key) sealText(key, text).then(box => put('LH1:' + JSON.stringify(box))).catch(() => toast(t('toast.storage')));
+  else put(text);
+}
 let unlocked = false;
-try { const u = JSON.parse(sessionStorage.getItem('lh.session') || 'null'); if (u && S && Date.now() - u.t < (S.settings.lockMinutes || 60) * 60000) unlocked = true; } catch (e) {}
 let lastAct = Date.now();
-const touchSession = () => { lastAct = Date.now(); if (unlocked) sessionStorage.setItem('lh.session', JSON.stringify({ t: lastAct })); };
+function touchSession() { lastAct = Date.now(); if (unlocked && activeId && !(metaOf(activeId) || {}).lock) { try { sessionStorage.setItem('lh.session.' + activeId, JSON.stringify({ t: lastAct })); } catch (e) {} } }
+function restoreSession() {
+  if (!S || !S.auth || !S.auth.method || (metaOf(activeId) || {}).lock) { unlocked = !(metaOf(activeId) || {}).lock; return; }
+  try {
+    const u = JSON.parse(sessionStorage.getItem('lh.session.' + activeId) || 'null');
+    const mins = S.settings && S.settings.lockMinutes;
+    unlocked = !!(u && Date.now() - u.t < ((mins || mins === 0) ? (mins || 60) : 60) * 60000);
+  } catch (e) { unlocked = false; }
+  if (S.settings && S.settings.lockMinutes === 0) unlocked = true;
+}
+function profileLocked() {
+  if (!activeId || creating) return false;
+  if ((metaOf(activeId) || {}).lock) return !profileKey;
+  if (!S || !S.auth || !S.auth.method) return false;
+  return !unlocked;
+}
+function publishProfile() {
+  const id = activeId || '';
+  try { if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ type: 'lh-profile', id }); } catch (e) {}
+  try { caches.open('lifehub-bg').then(c => c.put('./active-profile', new Response(id))).catch(() => {}); } catch (e) {}
+}
+function loadCalView() {
+  calView = 'month';
+  try { const v = localStorage.getItem(pkey('cal')); if (['day', 'week', 'month', 'agenda'].includes(v)) calView = v; } catch (e) {}
+}
+async function hydrate(id) {
+  activeId = id;
+  registry.active = id;
+  writeReg();
+  profileKey = null;
+  if (typeof loadCalView === 'function') loadCalView();
+  const raw = localStorage.getItem(pkey('data', id));
+  if (isEnc(raw)) { S = null; unlocked = false; }
+  else {
+    try { S = raw ? JSON.parse(raw) : null; } catch (e) { S = null; }
+    restoreSession();
+  }
+  publishProfile();
+  const lang = localStorage.getItem(pkey('lang', id)) || (S && S.profile && S.profile.lang) || '';
+  if (lang && window.LH) { try { await LH.load(lang); } catch (e) {} }
+}
+function openMediaDb(name) {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(name, 2);
+    r.onupgradeneeded = () => { const db = r.result; ['images', 'files', 'inbox'].forEach(s => { if (!db.objectStoreNames.contains(s)) db.createObjectStore(s); }); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+async function copyDb(from, to) {
+  let src; try { src = await openMediaDb(from); } catch (e) { return; }
+  const dst = await openMediaDb(to);
+  for (const store of ['images', 'files', 'inbox']) {
+    if (!src.objectStoreNames.contains(store)) continue;
+    const rows = await new Promise(r => { const q = src.transaction(store).objectStore(store); const a = q.getAll(); const k = q.getAllKeys(); let vals, keys; const done = () => { if (vals && keys) r(keys.map((id, i) => [id, vals[i]])); }; a.onsuccess = () => { vals = a.result || []; done(); }; k.onsuccess = () => { keys = k.result || []; done(); }; a.onerror = k.onerror = () => r([]); });
+    if (!rows.length) continue;
+    await new Promise((res, rej) => { const t = dst.transaction(store, 'readwrite'); rows.forEach(([id, val]) => t.objectStore(store).put(val, id)); t.oncomplete = res; t.onerror = () => rej(t.error); });
+  }
+  src.close(); dst.close();
+}
+function deleteDb(name) { return new Promise(res => { try { const r = indexedDB.deleteDatabase(name); r.onsuccess = r.onerror = r.onblocked = () => res(); } catch (e) { res(); } }); }
+async function migrateLegacy() {
+  if (readReg()) { registry = readReg(); return; }
+  const raw = localStorage.getItem(KEY);
+  registry = { active: '', ids: [] };
+  if (!raw) { writeReg(); return; }
+  let data = null; try { data = JSON.parse(raw); } catch (e) {}
+  if (!data || !data.profile) { writeReg(); return; }
+  const id = Math.random().toString(36).slice(2, 10);
+  const meta = { id, name: data.profile.name || 'Me', color: COLORS[0], region: data.profile.region || 'AU', created: data.created || Date.now() };
+  localStorage.setItem(pkey('meta', id), JSON.stringify(meta));
+  localStorage.setItem(pkey('data', id), raw);
+  [['lifehub.lang', 'lang'], ['lifehub.demoPersona', 'persona'], ['lifehub.calView', 'cal'], ['lifehub.receipt', 'receipt']].forEach(([oldK, kind]) => { const v = localStorage.getItem(oldK); if (v != null) localStorage.setItem(pkey(kind, id), v); });
+  try { const oldSess = sessionStorage.getItem('lh.session'); if (oldSess) sessionStorage.setItem('lh.session.' + id, oldSess); } catch (e) {}
+  try { await copyDb('lifehub-media', mediaName(id)); } catch (e) {}
+  localStorage.removeItem(KEY);
+  ['lifehub.lang', 'lifehub.demoPersona', 'lifehub.calView', 'lifehub.receipt'].forEach(k => localStorage.removeItem(k));
+  try { sessionStorage.removeItem('lh.session'); } catch (e) {}
+  await deleteDb('lifehub-media');
+  registry = { active: id, ids: [id] };
+  writeReg();
+}
+async function eraseProfile(id) {
+  if (!id) return;
+  ['data', 'meta', 'lang', 'persona', 'cal', 'receipt'].forEach(k => { try { localStorage.removeItem(pkey(k, id)); } catch (e) {} });
+  try { sessionStorage.removeItem('lh.session.' + id); } catch (e) {}
+  await deleteDb(mediaName(id));
+  registry.ids = (registry.ids || []).filter(x => x !== id);
+  if (activeId === id) {
+    profileKey = null; S = null; unlocked = false;
+    activeId = registry.ids[0] || '';
+    registry.active = activeId;
+    if (activeId) await hydrate(activeId);
+  }
+  writeReg();
+  publishProfile();
+}
 
-const region = () => REGIONS[S?.profile?.region] || REGIONS.AU;
+const region = () => REGIONS[(S && S.profile && S.profile.region) || (metaOf(activeId) || {}).region] || REGIONS.AU;
 const REGION_CURRENCY = {
   AU: 'AUD', NZ: 'NZD', US: 'USD', GB: 'GBP', CA: 'CAD', IE: 'EUR', DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR', NL: 'EUR', BE: 'EUR', AT: 'EUR', PT: 'EUR', FI: 'EUR', GR: 'EUR', LU: 'EUR', SI: 'EUR', SK: 'EUR', EE: 'EUR', LV: 'EUR', LT: 'EUR', MT: 'EUR', CY: 'EUR', HR: 'EUR',
   JP: 'JPY', KR: 'KRW', IN: 'INR', BR: 'BRL', MX: 'MXN', CN: 'CNY', HK: 'HKD', TW: 'TWD', SG: 'SGD', MY: 'MYR', TH: 'THB', ID: 'IDR', PH: 'PHP', VN: 'VND',
@@ -395,12 +514,12 @@ const DEMO_PEOPLE = [
 ];
 function demoPersona() {
   let id = '';
-  try { id = localStorage.getItem('lifehub.demoPersona') || ''; } catch (e) {}
+  try { id = localStorage.getItem(pkey('persona')) || ''; } catch (e) {}
   if (S && S.demoPersona && !id) id = S.demoPersona;
   let person = DEMO_PEOPLE.find(p => p.id === id);
   if (!person) {
     person = DEMO_PEOPLE[Math.floor(Math.random() * DEMO_PEOPLE.length)];
-    try { localStorage.setItem('lifehub.demoPersona', person.id); } catch (e) {}
+    try { localStorage.setItem(activeId ? pkey('persona') : 'lifehub.demoPersona', person.id); } catch (e) {}
   }
   const plain = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
   return { ...person, full: person.first + ' ' + person.last, slug: plain(person.first + person.last), handle: plain(person.first) + '_' + plain(person.last) };
@@ -552,7 +671,7 @@ function applyKept(fresh, kept) {
 
 /* ---------- helpers: toast, sheets, files ---------- */
 let toastT;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+function toast(msg) { const el = $('#toast'); if (!el) return; el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2600); }
 let sheetClose = null;
 function openSheet(html, onMount, onClose) {
   closeSheet(true);
@@ -629,8 +748,57 @@ async function hash(s) {
   try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('lifehub:' + s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
   catch (e) { let h = 7; for (const c of 'lifehub:' + s) h = (h * 31 + c.charCodeAt(0)) | 0; return 'x' + h; }
 }
-const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const b64 = buf => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s); };
 const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function pinKey(pin, saltB64) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(pin)), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: unb64(saltB64), iterations: PIN_ITERS, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function sealText(key, text) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+  return { iv: b64(iv), ct: b64(ct) };
+}
+async function openText(key, box) {
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(box.iv) }, key, unb64(box.ct));
+  return new TextDecoder().decode(pt);
+}
+async function applyPin(pin) {
+  const salt = b64(crypto.getRandomValues(new Uint8Array(16)));
+  const key = await pinKey(pin, salt);
+  const ver = await sealText(key, 'ok');
+  const meta = metaOf(activeId) || { id: activeId, name: S.profile.name, color: (S.profile && S.profile.color) || COLORS[0], region: S.profile.region || 'AU', created: Date.now() };
+  meta.lock = { salt, iv: ver.iv, ct: ver.ct, iters: PIN_ITERS, len: String(pin).length };
+  meta.name = S.profile.name;
+  writeMeta(meta);
+  profileKey = key;
+  S.auth = { method: 'pin', pinLen: String(pin).length, enc: true };
+  const box = await sealText(key, JSON.stringify(S));
+  saveGen++;
+  localStorage.setItem(pkey('data'), 'LH1:' + JSON.stringify(box));
+}
+async function tryPin(pin) {
+  const meta = metaOf(activeId) || {};
+  if (meta.lock && meta.lock.ct) {
+    try {
+      const key = await pinKey(pin, meta.lock.salt);
+      const verdict = await openText(key, meta.lock);
+      if (verdict !== 'ok') return false;
+      const raw = localStorage.getItem(pkey('data')) || '';
+      if (!isEnc(raw)) return false;
+      S = JSON.parse(await openText(key, JSON.parse(raw.slice(4))));
+      profileKey = key;
+      unlocked = true;
+      return true;
+    } catch (e) { return false; }
+  }
+  if (S && S.auth && S.auth.pinHash && await hash(pin) === S.auth.pinHash) {
+    unlocked = true;
+    try { await applyPin(pin); toast(t('prof.encrypted')); } catch (e) { unlocked = true; }
+    return true;
+  }
+  return false;
+}
 const passkeySupported = () => !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
 async function createPasskey(name) {
   const cred = await navigator.credentials.create({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), rp: { name: 'LifeHub' }, user: { id: crypto.getRandomValues(new Uint8Array(16)), name: name || 'lifehub-user', displayName: name || t("LifeHub user") },
@@ -641,12 +809,18 @@ async function verifyPasskey() {
   if (!S.auth.credId || !passkeySupported()) return false;
   try { await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), allowCredentials: [{ type: 'public-key', id: unb64(S.auth.credId) }], userVerification: 'required', timeout: 60000 } }); return true; } catch (e) { return false; }
 }
-function keypadHTML(btn = 'Unlock') { return `<div class="pin-dots" id="pinDots">${'<i></i>'.repeat(S?.auth?.pinLen || 4)}</div><div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map(k => k === '' ? '<span></span>' : `<button type="button" class="key" data-k="${k}" aria-label="${k === '⌫' ? 'Delete' : k}">${k}</button>`).join('')}</div>`; }
+function pinLength() { const m = metaOf(activeId); if (m && m.lock && m.lock.len) return m.lock.len; return (S && S.auth && S.auth.pinLen) || 4; }
+function keypadHTML(btn = 'Unlock') { return `<div class="pin-dots" id="pinDots">${'<i></i>'.repeat(pinLength())}</div><div class="keypad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map(k => k === '' ? '<span></span>' : `<button type="button" class="key" data-k="${k}" aria-label="${k === '⌫' ? 'Delete' : k}">${k}</button>`).join('')}</div>`; }
 function bindKeypad(root, onDone) {
-  let v = ''; const len = S.auth.pinLen || 4; const dots = $('#pinDots', root);
+  let v = ''; let busy = false; const len = pinLength(); const dots = $('#pinDots', root);
   const upd = () => $$('i', dots).forEach((d, i) => d.classList.toggle('on', i < v.length));
   const fail = () => { v = ''; upd(); dots.classList.add('shake'); setTimeout(() => dots.classList.remove('shake'), 400); if (navigator.vibrate) navigator.vibrate(120); };
-  const press = x => { if (x === '⌫') v = v.slice(0, -1); else if (v.length < len) v += x; upd(); if (v.length === len) { const val = v; setTimeout(() => onDone(val, fail), 120); } };
+  const press = x => {
+    if (busy) return;
+    if (x === '⌫') v = v.slice(0, -1); else if (v.length < len) v += x;
+    upd();
+    if (v.length === len) { const val = v; busy = true; setTimeout(() => onDone(val, () => { busy = false; fail(); }), 120); }
+  };
   root.addEventListener('click', e => { const k = e.target.closest('[data-k]'); if (k) press(k.dataset.k); });
   const kh = e => { if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('⌫'); };
   document.addEventListener('keydown', kh); return () => document.removeEventListener('keydown', kh);
@@ -655,8 +829,10 @@ function authorize(reason) {
   return new Promise(res => {
     let done = false; let unbind = null;
     const fin = v => { if (done) return; done = true; if (unbind) unbind(); closeSheet(true); res(v); };
-    const m = S.auth.method; const head = `<h2>${esc(t("Confirm it's you"))}</h2><p class="muted">${esc(reason)}</p>`;
-    if (m === 'pin') openSheet(head + keypadHTML() + "<button class=\"btn full\" data-close>" + esc(t("Cancel")) + "</button>", el => { unbind = bindKeypad(el, async (v, fail) => { if (await hash(v) === S.auth.pinHash) fin(true); else fail(); }); }, () => fin(false));
+    const m = (S && S.auth && S.auth.method) || ((metaOf(activeId) || {}).lock ? 'pin' : '');
+    if (!m) { res(true); return; }
+    const head = `<h2>${esc(t("Confirm it's you"))}</h2><p class="muted">${esc(reason)}</p>`;
+    if (m === 'pin' || (metaOf(activeId) || {}).lock) openSheet(head + keypadHTML() + "<button class=\"btn full\" data-close>" + esc(t("Cancel")) + "</button>", el => { unbind = bindKeypad(el, async (v, fail) => { if (await tryPin(v)) fin(true); else fail(); }); }, () => fin(false));
     else if (m === 'password') openSheet(head + `<form id="pwF"><label class="fld"><span>${esc(t("Password"))}</span><input type="password" name="pw" autocomplete="current-password"></label><div class="row gap"><button type="button" class="btn" data-close>${esc(t("Cancel"))}</button><button class="btn primary">${esc(t("Confirm"))}</button></div></form>`, el => { $('#pwF', el).onsubmit = async e => { e.preventDefault(); if (await hash(e.target.pw.value) === S.auth.pwHash) fin(true); else { toast(t('auth.incorrect')); e.target.pw.select(); } }; }, () => fin(false));
     else if (m === 'passkey') openSheet(head + `<button class="bigbio" id="bio">${ic('finger', 56, 1.6)}<span>${S.auth.credId ? t("Use passkey / biometric") : t("Touch to verify (simulated)")}</span></button>${S.auth.credId ? "<button class=\"linkbtn\" id=\"bioSim\" style=\"width:100%\">" + esc(t("Device not available? Simulate (demo)")) + "</button>" : ''}<button class="btn full" data-close style="margin-top:8px">${esc(t("Cancel"))}</button>`, el => {
       $('#bio', el).onclick = async () => { if (!S.auth.credId) return fin(true); if (await verifyPasskey()) fin(true); else toast(t('auth.passkeyFail')); };
@@ -665,7 +841,7 @@ function authorize(reason) {
   });
 }
 function unlock() { unlocked = true; touchSession(); checkReminders(); if (!location.hash || location.hash === '#/' || location.hash === '#/lock') location.hash = '#/home'; else render(); }
-function lock() { invalidateCache(); unlocked = false; sessionStorage.removeItem('lh.session'); closeSheet(true); render(); }
+function lock() { invalidateCache(); unlocked = false; profileKey = null; if ((metaOf(activeId) || {}).lock) S = null; try { sessionStorage.removeItem('lh.session.' + activeId); } catch (e) {} closeSheet(true); render(); }
 
 /* ---------- layout ---------- */
 function legalFooter() {
@@ -682,10 +858,10 @@ function demoBar() {
 }
 
 /* ---------- onboarding ---------- */
-let ob = { step: 0, name: '', region: 'AU', currency: 'AUD', locale: 'en-AU', method: 'pin', sample: true };
+let ob = { step: 0, name: '', region: 'AU', currency: 'AUD', locale: 'en-AU', method: 'pin', sample: true, color: '#d61f1f', adding: false };
 (function initOb() { const d = detectMoney(); ob.region = d.emergency; ob.currency = d.currency; ob.locale = d.locale; })();
 function renderOnboarding() {
-  const dots = `<div class="onb-dots">${[0, 1, 2, 3].map(i => `<i class="${i <= ob.step ? 'on' : ''}"></i>`).join('')}</div>`;
+  const dots = `<div class="onb-dots">${[0, 1, 2].map(i => `<i class="${i <= ob.step ? 'on' : ''}"></i>`).join('')}</div>`;
   let body = '';
   if (ob.step === 0) body = `<div class="logo">${ic('cross', 40, 2.4)}</div><h1>${esc(t("LifeHub"))}</h1><p class="lead">${esc(t('onb.lead'))}</p>
     <div class="feat"><div>${ic('alert')}${esc(t('onb.f1'))}</div><div>${ic('bank')}${esc(t('onb.f2'))}</div><div>${ic('msg')}${esc(t('onb.f3'))}</div><div>${ic('shield')}${esc(t('onb.f4'))}</div></div>
@@ -695,48 +871,102 @@ function renderOnboarding() {
     <form id="obF"><label class="fld"><span>${esc(t('onb.name'))}</span><input name="name" value="${esc(ob.sample ? (ob.name || demoPersona().full) : ob.name)}" placeholder="${esc(t('onb.namePh', { name: demoPersona().full }))}" autocomplete="name" required></label>
     <label class="fld"><span>${esc(t('onb.region'))}</span><select name="region">${Object.entries(REGIONS).map(([k, r]) => `<option value="${k}" ${k === ob.region ? 'selected' : ''}>${r.flag} ${esc(regionLabel(k))}</option>`).join('')}</select></label>
     <label class="fld"><span>${esc(t('onb.currency'))}</span><select name="currency">${currencyOptionList(ob.currency).map(c => `<option value="${c}" ${c === ob.currency ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+    <span class="fld"><span>${esc(t('prof.colour'))}</span><span class="colours">${COLORS.map(c => `<button type="button" class="${ob.color === c ? 'on' : ''}" style="background:${c}" data-act="obColor" data-c="${c}" aria-label="${esc(t('prof.colour'))}"></button>`).join('')}</span></span>
     <p class="small muted">${esc(ob.sample ? t('onb.demoChosen') : t('onb.scratchChosen'))}</p>
     <div class="spacer"></div><div class="row gap"><button type="button" class="btn" data-act="obBack">${esc(t('common.back'))}</button><button class="btn primary">${esc(t('common.continue'))}</button></div></form>`;
-  if (ob.step === 2) body = `<h1>${esc(t('onb.signIn'))}</h1><p class="lead">${esc(t('onb.signInLead'))}</p>
-    ${Object.entries(METHODS).map(([k, m]) => `<button class="method ${ob.method === k ? 'on' : ''}" data-act="obMethod" data-m="${k}" aria-pressed="${ob.method === k}"><span class="mi">${m.icon}</span><span><b>${esc(methodLabel(k))}</b><span>${esc(methodDesc(k))}</span></span></button>`).join('')}
-    <div class="spacer"></div><div class="row gap"><button class="btn" data-act="obBack">${esc(t('common.back'))}</button><button class="btn primary" data-act="obNext">${esc(t('common.continue'))}</button></div>`;
-  if (ob.step === 3) {
-    const m = ob.method;
-    if (m === 'pin') body = `<h1>${esc(t("Create a PIN"))}</h1><p class="lead">4 to 6 digits. Avoid birthdays or 1234.</p><form id="setF"><label class="fld"><span>${esc(t("PIN"))}</span><input name="a" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></label><label class="fld"><span>${esc(t("Confirm PIN"))}</span><input name="b" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></label><div class="spacer"></div><div class="row gap"><button type="button" class="btn" data-act="obBack">${esc(t("Back"))}</button><button class="btn primary">${esc(t("Finish"))}</button></div></form>`;
-    else if (m === 'password') body = `<h1>${esc(t("Create a password"))}</h1><p class="lead">${esc(t("At least 8 characters."))}</p><form id="setF"><label class="fld"><span>${esc(t("Password"))}</span><input name="a" type="password" autocomplete="new-password"></label><label class="fld"><span>${esc(t("Confirm password"))}</span><input name="b" type="password" autocomplete="new-password"></label><div class="row gap"><button type="button" class="btn" data-act="obBack">${esc(t("Back"))}</button><button class="btn primary">${esc(t("Finish"))}</button></div></form>`;
-    else if (m === 'passkey') body = `<h1>${esc(t("Set up a passkey"))}</h1><p class="lead">${esc(t("Use your face, fingerprint or screen lock to open LifeHub."))}</p><button class="bigbio" data-act="obPasskey">${ic('finger', 64, 1.6)}<span>${passkeySupported() ? t("Create passkey on this device") : t("Passkeys not available here: use simulated biometric")}</span></button><div class="spacer"></div><button class="btn" data-act="obBack">${esc(t("Back"))}</button>`;
-    else body = `<h1>${esc(methodLabel(m))}</h1><p class="lead">${esc(t('onb.ssoLead', { method: m === 'google' ? t('onb.ssoGoogle') : t('onb.ssoApple') }))}</p><button class="btn primary full" data-act="obSSO">${esc(t('onb.ssoGo', { name: m === 'google' ? 'Google' : 'Apple' }))}</button><div class="spacer"></div><button class="btn" data-act="obBack">${esc(t('common.back'))}</button>`;
-  }
+  if (ob.step === 2) body = `<h1>${esc(t('prof.pinTitle'))}</h1><p class="lead">${esc(t('prof.pinLead'))}</p>
+    <form id="setF"><label class="fld"><span>${esc(t('PIN'))}</span><input name="a" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></label><label class="fld"><span>${esc(t('Confirm PIN'))}</span><input name="b" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></label>
+    <div class="row gap"><button type="button" class="btn" data-act="obBack">${esc(t('common.back'))}</button><button class="btn primary">${esc(t('prof.pinSave'))}</button></div></form>
+    <button class="btn ghost full" data-act="obSkipPin">${esc(t('prof.pinSkip'))}</button><p class="small muted">${esc(t('prof.noPinNote'))}</p>`;
   return `<div class="onb">${dots}${body}</div>`;
 }
 let pendingKeep = null;
-async function finishOnboarding(auth) {
+async function finishOnboarding(pin) {
   const keep = pendingKeep; pendingKeep = null;
   const useSample = ob.sample && !(keep && keep.keepDemo);
-  S = seed(ob.name, ob.region, useSample, { currency: ob.currency, locale: ob.locale, lang: LH.code });
-  if (keep) { applyKept(S, keep.data); if (keep.keepDemo) S.sample = false; }
-  S.auth = auth; save(); unlocked = true; touchSession(); ob.step = 0; location.hash = '#/home'; render(); toast(t('onb.welcome', { name: S.profile.name.split(' ')[0] }));
+  if (creating && activeId && S) save();
+  const fresh = seed(ob.name, ob.region, useSample, { currency: ob.currency, locale: ob.locale, lang: LH.code });
+  if (keep) { applyKept(fresh, keep.data); if (keep.keepDemo) fresh.sample = false; }
+  fresh.profile.color = ob.color || COLORS[0];
+  fresh.auth = { method: null };
+  const id = Math.random().toString(36).slice(2, 10);
+  if (!registry.ids) registry.ids = [];
+  registry.ids.push(id);
+  activeId = id; registry.active = id; writeReg();
+  profileKey = null;
+  S = fresh;
+  writeMeta({ id, name: fresh.profile.name, color: fresh.profile.color, region: fresh.profile.region, created: Date.now() });
+  try { const persona = localStorage.getItem('lifehub.demoPersona'); if (persona && !localStorage.getItem(pkey('persona', id))) localStorage.setItem(pkey('persona', id), persona); localStorage.removeItem('lifehub.demoPersona'); } catch (e) {}
+  if (pin) { try { await applyPin(pin); } catch (e) { S.auth = { method: null }; save(); } }
+  else save();
+  unlocked = true; creating = false; touchSession(); publishProfile();
+  ob = { step: 0, name: '', region: ob.region, currency: ob.currency, locale: ob.locale, method: 'pin', sample: true, color: COLORS[0], adding: false };
+  location.hash = '#/home'; render(); toast(t('onb.welcome', { name: S.profile.name.split(' ')[0] }));
 }
 function afterOnboarding() {
   const f = $('#obF'); if (f) f.onsubmit = e => { e.preventDefault(); const n = f.name.value.trim(); if (!n) { toast(t('onb.needName')); f.name.focus(); return; } ob.name = n; ob.region = f.region.value; ob.currency = f.currency.value || ob.currency; ob.step = 2; render(); };
   const s = $('#setF'); if (s) s.onsubmit = async e => { e.preventDefault(); const a = s.a.value, b = s.b.value;
-    if (ob.method === 'pin') { if (!/^\d{4,6}$/.test(a)) return toast(t('onb.pinRule')); if (a !== b) return toast(t('onb.pinMatch')); finishOnboarding({ method: 'pin', pinHash: await hash(a), pinLen: a.length }); }
-    else { if (a.length < 8) return toast(t('onb.pwRule')); if (a !== b) return toast(t('onb.pwMatch')); finishOnboarding({ method: 'password', pwHash: await hash(a) }); } };
+    if (!/^\d{4,6}$/.test(a)) return toast(t('onb.pinRule')); if (a !== b) return toast(t('onb.pinMatch')); await finishOnboarding(a); };
 }
 
 /* ---------- lock screen ---------- */
 let lockUnbind = null;
+function pav(name, color, size) {
+  const ch = esc((name || '?').trim().charAt(0).toUpperCase() || '?');
+  const px = size || 36;
+  return `<span class="pav" style="background:${color || COLORS[0]};width:${px}px;height:${px}px;font-size:${Math.round(px * .42)}px">${ch}</span>`;
+}
 function renderLock() {
-  const m = S.auth.method, first = esc(S.profile.name.split(' ')[0]);
+  const meta = metaOf(activeId) || {};
+  const enc = !!(meta.lock && meta.lock.ct);
+  const m = enc ? 'pin' : (S && S.auth && S.auth.method);
+  const name = (S && S.profile && S.profile.name) || meta.name || '';
+  const first = esc((name || '').split(' ')[0]);
   const unlockUI = m === 'pin' ? keypadHTML() : m === 'password' ? `<form id="lockPw"><label class="fld"><span>${esc(t("Password"))}</span><input type="password" name="pw" autocomplete="current-password"></label><button class="btn primary full">${esc(t("Unlock"))}</button></form>`
-    : `<button class="btn primary full" data-act="lockAuth">${m === 'passkey' ? ic('finger', 20) + t(" Unlock with passkey") : `Continue with ${m === 'apple' ? 'Apple' : 'Google'}`}</button>`;
-  return `<div class="lock"><div class="logo" style="width:64px;height:64px;border-radius:18px">${ic('lock', 30, 2.2)}</div><h1>Hi ${first}</h1><p class="lead">${m === 'pin' ? t("Enter your PIN") : t("LifeHub is locked")}</p>${unlockUI}<div class="spacer"></div>
-    <div class="lock-emerg"><a class="btn redb" href="#/emergency">${ic('alert', 18)} ${esc(t('lock.emergency'))}</a><a class="btn" href="#/medical-id" style="color:var(--red)">${ic('cross', 18)} ${esc(t('lock.medicalId'))}</a></div>
-    <button class="linkbtn" style="margin-top:10px" data-act="forgot">${esc(t("Forgot? Reset LifeHub"))}</button></div>`;
+    : `<button class="btn primary full" data-act="lockAuth">${m === 'passkey' ? ic('finger', 20) + ' ' + t('auth.unlockPasskey') : t('prof.continue')}</button>`;
+  const emerg = S ? `<a class="btn redb" href="#/emergency">${ic('alert', 18)} ${esc(t('lock.emergency'))}</a><a class="btn" href="#/medical-id" style="color:var(--red)">${ic('cross', 18)} ${esc(t('lock.medicalId'))}</a>`
+    : `<a class="btn redb" href="tel:${region().primary}">${ic('phone', 18)} ${esc(t('onb.call', { num: region().primary }))}</a>`;
+  return `<div class="lock"><div class="logo" style="width:64px;height:64px;border-radius:18px">${pav(name, meta.color || (S && S.profile && S.profile.color), 64)}</div><h1>${esc(t('prof.hi', { name: first }))}</h1><p class="lead">${m === 'pin' ? t('prof.enterPin') : t("LifeHub is locked")}</p>${enc ? `<p class="small muted">${esc(t('prof.pinOn'))}</p>` : ''}${unlockUI}<div class="spacer"></div>
+    <div class="lock-emerg">${emerg}</div>
+    <button class="linkbtn" data-act="profiles">${esc(t('prof.switch'))}</button>
+    <button class="linkbtn" style="margin-top:6px" data-act="forgot">${esc(enc ? t('prof.forgot') : t("Forgot? Reset LifeHub"))}</button></div>`;
 }
 function afterLock() {
-  if (S.auth.method === 'pin') lockUnbind = bindKeypad($('.lock'), async (v, fail) => { if (await hash(v) === S.auth.pinHash) unlock(); else fail(); });
-  const f = $('#lockPw'); if (f) f.onsubmit = async e => { e.preventDefault(); if (await hash(f.pw.value) === S.auth.pwHash) unlock(); else { toast(t('auth.incorrect')); f.pw.select(); } };
+  const enc = !!((metaOf(activeId) || {}).lock);
+  const m = enc ? 'pin' : (S && S.auth && S.auth.method);
+  if (m === 'pin') lockUnbind = bindKeypad($('.lock'), async (v, fail) => { if (await tryPin(v)) unlock(); else fail(); });
+  const f = $('#lockPw'); if (f) f.onsubmit = async e => { e.preventDefault(); if (S && S.auth && await hash(f.pw.value) === S.auth.pwHash) unlock(); else { toast(t('auth.incorrect')); f.pw.select(); } };
+}
+function openProfiles() {
+  const rows = (registry.ids || []).map(id => {
+    const m = metaOf(id) || { name: '', color: COLORS[0] };
+    const on = id === activeId;
+    return `<button class="li" data-pid="${id}">${pav(m.name, m.color)}<span class="grow"><b>${esc(m.name || '')}</b>${on ? `<span>${esc(t('prof.current'))}</span>` : ''}</span>${on ? ic('check', 18) : ''}</button>`;
+  }).join('');
+  openSheet(`<h2>${esc(t('prof.switch'))}</h2><div class="list">${rows}</div><button class="btn primary full" id="addProfile">${esc(t('prof.add'))}</button><p class="small muted">${esc(t('prof.deviceOnly'))}</p>`, el => {
+    el.addEventListener('click', e => {
+      const b = e.target.closest('[data-pid]'); if (!b) return;
+      switchProfile(b.dataset.pid);
+    });
+    $('#addProfile', el).onclick = () => startAddProfile();
+  });
+}
+async function switchProfile(id) {
+  if (!id || id === activeId) { closeSheet(true); return; }
+  if (S && activeId) save();
+  closeSheet(true);
+  await hydrate(id);
+  location.hash = '#/home';
+  render();
+  if (!profileLocked()) toast(t('prof.switched', { name: (metaOf(id) || {}).name || '' }));
+}
+function startAddProfile() {
+  if (S && activeId) save();
+  closeSheet(true);
+  const d = detectMoney();
+  ob = { step: 0, name: '', region: d.emergency, currency: d.currency, locale: d.locale, method: 'pin', sample: false, color: COLORS[Math.floor(Math.random() * COLORS.length)], adding: true };
+  creating = true;
+  render();
 }
 
 /* ---------- home ---------- */
@@ -765,7 +995,8 @@ function renderHome() {
   const html = items.map(b => { const B = BANNERS[b.id]; const i = bannerInfo(b.id);
     return `<a class="banner ${b.id === 'emergency' ? 'emergency' : ''}" href="${B.href}"><span class="chip" style="${b.id === 'emergency' ? '' : `background:${B.color}`}">${ic(B.icon, b.id === 'emergency' ? 30 : 26, 2.2)}</span><span class="txt"><b>${esc(bannerTitle(b.id))}</b><span>${i.raw ? i.sub : esc(i.sub)}</span></span>${i.badge ? `<span class="badge">${i.badge}</span>` : ''}<span class="chev">${ic('chev')}</span></a>`; }).join('');
   const groups = S.groups.filter(g => g.onHome).map(g => { const n = S.apps.filter(a => a.groupId === g.id).length; return `<a class="banner" href="#/group/${g.id}"><span class="chip" style="background:var(--card2);border:1px solid var(--line)">${esc(g.emoji || '📁')}</span><span class="txt"><b>${esc(g.name)}</b><span>${esc(t('home.groupApps', { n }))}</span></span><span class="chev">${ic('chev')}</span></a>`; }).join('');
-  return `<header class="home-head"><div class="hello"><small>${esc(greet)}</small><b>${esc(S.profile.name.split(' ')[0])}</b>${isPremium() ? ' ' + premBadge() : ''}</div><a class="iconbtn" href="#/search" aria-label="${esc(t('common.search'))}">${ic('search')}</a><a class="iconbtn" href="#/settings" aria-label="${esc(t('common.settings'))}">${ic('settings')}</a></header>
+  const who = S.profile.name || '';
+  return `<header class="home-head"><button class="who" data-act="profiles" aria-label="${esc(t('prof.who'))}">${pav(who, S.profile.color, 40)}<span class="hello"><small>${esc(greet)}</small><b>${esc(who.split(' ')[0])}</b>${isPremium() ? ' ' + premBadge() : ''}</span></button><a class="iconbtn" href="#/search" aria-label="${esc(t('common.search'))}">${ic('search')}</a><a class="iconbtn" href="#/settings" aria-label="${esc(t('common.settings'))}">${ic('settings')}</a></header>
   ${demoBar()}
   <nav class="banners" data-screen="home" aria-label="${esc(t('Main sections'))}">${html}${groups}</nav>
   <div class="dropzone home-drop" data-drop="home"><b>${esc(t('home.dropTitle'))}</b><span>${esc(t('home.dropBody'))}</span></div>
@@ -1084,7 +1315,7 @@ async function pickContacts() {
 
 /* ---------- plans: Free vs Premium ---------- */
 /* Premium price is filled by a store later (Play Billing, Digital Goods API, or Microsoft Store) via S.plan.storePrice = { amount, currency, period, source }. */
-const RECEIPT_KEY = 'lifehub.receipt';
+const receiptKey = () => pkey('receipt');
 const ACCENTS = { blue: ['Blue', '#2557d6', false], ocean: ['Ocean', '#0e7490', true], emerald: ['Emerald', '#047857', true], sunset: ['Sunset', '#c2410c', true], grape: ['Grape', '#7c3aed', true], rose: ['Rose', '#be185d', true] };
 const SKINS = { midnight: t("Midnight (OLED)"), forest: t("Tassie Forest") };
 function ensurePlan() {
@@ -1164,16 +1395,16 @@ function upgrade() {
     const ok = $('#coOk', el), go = $('#coGo', el); ok.onchange = () => go.disabled = !ok.checked;
     go.onclick = async () => { closeSheet(true); if (!(await authorize(t("Subscribe to LifeHub Premium (demo, no charge)")))) return toast(t("Checkout cancelled"));
       const now = Date.now(); S.plan = { tier: 'premium', status: 'active', since: now, renews: now + 30 * 86400000, receipt: 'demo_' + uid() };
-      localStorage.setItem(RECEIPT_KEY, JSON.stringify(S.plan)); save(); invalidateCache(); scheduleRefresh(); render(); toast(t("Welcome to Premium ★ Ads removed"));
+      localStorage.setItem(receiptKey(), JSON.stringify(S.plan)); save(); invalidateCache(); scheduleRefresh(); render(); toast(t("Welcome to Premium ★ Ads removed"));
     };
   });
 }
 async function cancelSub() {
   if (!(await confirmSheet(t("Cancel Premium?"), `${esc(t("You'll keep Premium until"))} ${fmtLong(S.plan.renews)}. After that, LifeHub moves to Free and shows one small ad on Home.`, t("Cancel subscription"), true))) return;
-  S.plan.status = 'cancelled'; localStorage.setItem(RECEIPT_KEY, JSON.stringify(S.plan)); save(); render(); toast(t("Subscription cancelled"));
+  S.plan.status = 'cancelled'; localStorage.setItem(receiptKey(), JSON.stringify(S.plan)); save(); render(); toast(t("Subscription cancelled"));
 }
 function restore() {
-  let r = null; try { r = JSON.parse(localStorage.getItem(RECEIPT_KEY) || 'null'); } catch (e) {}
+  let r = null; try { r = JSON.parse(localStorage.getItem(receiptKey()) || 'null'); } catch (e) {}
   if (r && r.tier === 'premium' && (r.status === 'active' || Date.now() < r.renews)) { S.plan = r; save(); invalidateCache(); scheduleRefresh(); render(); toast(t("Premium restored")); }
   else toast(t("No active subscription found on this device"));
 }
@@ -1193,9 +1424,30 @@ async function processImage(file) {
   return { blob: blob || file, w, h, note: prem ? `Full quality · ${w}×${h}` : `Standard quality · ${w}×${h}` };
 }
 /* images live in IndexedDB (too big for localStorage) */
-const idb = () => new Promise((res, rej) => { const r = indexedDB.open('lifehub-media', 2); r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('images')) db.createObjectStore('images'); if (!db.objectStoreNames.contains('files')) db.createObjectStore('files'); if (!db.objectStoreNames.contains('inbox')) db.createObjectStore('inbox'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-async function putImage(id, blob) { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction('images', 'readwrite'); t.objectStore('images').put(blob, id); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
-async function getImage(id) { const db = await idb(); return new Promise(res => { const q = db.transaction('images').objectStore('images').get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
+const idb = () => openMediaDb(mediaName());
+async function putStore(store, id, blob) {
+  const db = await idb();
+  let value = blob;
+  if (profileKey && blob && typeof blob.arrayBuffer === 'function') {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, profileKey, await blob.arrayBuffer()));
+    value = { e: 1, iv, ct, type: blob.type || '' };
+  }
+  return new Promise((res, rej) => { const tx = db.transaction(store, 'readwrite'); tx.objectStore(store).put(value, id); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+}
+async function getStore(store, id) {
+  const db = await idb();
+  const value = await new Promise(res => { const q = db.transaction(store).objectStore(store).get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); });
+  if (!value) return null;
+  if (value.e === 1) {
+    if (!profileKey) return null;
+    try { const buf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: value.iv }, profileKey, value.ct); return new Blob([buf], { type: value.type || '' }); } catch (e) { return null; }
+  }
+  if (profileKey && typeof Blob !== 'undefined' && value instanceof Blob) putStore(store, id, value);
+  return value;
+}
+async function putImage(id, blob) { return putStore('images', id, blob); }
+async function getImage(id) { return getStore('images', id); }
 async function delImage(id) { try { const db = await idb(); db.transaction('images', 'readwrite').objectStore('images').delete(id); } catch (e) {} }
 
 /* Free never waits longer than 5 minutes. Premium polls often while the app is open, and refreshes again when the tab is focused. A real feed would use its own push; nothing here calls a server. */
@@ -1498,9 +1750,10 @@ function renderSettings() {
   <a class="li" href="#/plan">${ic('star')}<span class="grow"><b>${esc(isPremium() ? t('set.planPrem') : t('set.planFree'))} ${isPremium() ? premBadge(S.plan.status === 'cancelled' ? t('set.ends') : t('set.active')) : ''}</b><span>${isPremium() ? esc(t('set.planSubPrem')) : esc(t('set.planSubFree', { price: premiumPrice().label }))}</span></span>${ic('chev')}</a>
   <a class="li" href="#/location">${ic('pin')}<span class="grow"><b>${esc(t('set.location'))} ${isPremium() ? premBadge() : '<span class="tag">' + esc(t('common.premium')) + '</span>'}</b><span>${S.loc && S.loc.on ? esc(t('set.locOn')) : esc(t('set.locOff'))}</span></span>${ic('chev')}</a></div>
   <div class="sec-h"><h2>${esc(t('set.security'))}</h2></div>
-  <div class="list"><button class="li" data-act="changeLogin">${ic('lock')}<span class="grow"><b>${esc(t('set.signin'))}</b><span>${esc(methodLabel(S.auth.method))}</span></span>${ic('chev')}</button>
-  <div class="li" style="display:block">${ic('clock')} <b>${esc(t('set.autolock'))}</b><div style="margin-top:8px">${seg('lockMinutes', [[1, t('set.min1')], [5, t('set.min5')], [15, t('set.min15')], [0, t('set.never')]])}</div></div>
-  <button class="li" data-act="lockNow">${ic('lock')}<span class="grow"><b>${esc(t('set.lockNow'))}</b></span></button></div>
+  <div class="list"><button class="li" data-act="changeLogin">${ic('lock')}<span class="grow"><b>${esc(t('prof.pinTitle'))}</b><span>${esc(S.auth && S.auth.method ? methodLabel(S.auth.method) : t('prof.noPin'))}</span></span>${ic('chev')}</button>
+  ${(metaOf(activeId) || {}).lock ? `<p class="small muted" style="margin:8px 2px">${esc(t('prof.pinOn'))}</p>` : `<p class="small muted" style="margin:8px 2px">${esc(t('prof.noPinNote'))}</p>`}
+  ${S.auth && S.auth.method ? `<div class="li" style="display:block">${ic('clock')} <b>${esc(t('set.autolock'))}</b><div style="margin-top:8px">${seg('lockMinutes', [[1, t('set.min1')], [5, t('set.min5')], [15, t('set.min15')], [0, t('set.never')]])}</div></div>
+  <button class="li" data-act="lockNow">${ic('lock')}<span class="grow"><b>${esc(t('set.lockNow'))}</b></span></button>` : ''}</div>
   <div class="sec-h"><h2>${esc(t('set.display'))}</h2></div>
   <div class="list"><div class="li" style="display:block">${ic('type')} <b>${esc(t('set.text'))}</b><div style="margin-top:8px">${seg('textSize', [['normal', t('set.textStd')], ['large', t('set.textLg')], ['xl', t('set.textXl')]])}</div></div>
   <div class="li" style="display:block">${ic('sun')} <b>${esc(t('set.theme'))}</b><div style="margin-top:8px">${seg('theme', [['system', t('set.themeAuto')], ['light', t('set.themeLight')], ['dark', t('set.themeDark')]])}</div></div>
@@ -1542,12 +1795,12 @@ function renderSettings() {
   <div class="list"><a class="li" href="privacy.html">${ic('shield')}<span class="grow"><b>${esc(t('set.privacy'))}</b><span>${esc(t('set.privacySub'))}</span></span>${ic('chev')}</a>
   <a class="li" href="terms.html">${ic('file')}<span class="grow"><b>${esc(t('set.terms'))}</b></span>${ic('chev')}</a>
   <a class="li" href="support.html">${ic('msg')}<span class="grow"><b>${esc(t('set.support'))}</b><span>support@lifehubapp.app</span></span>${ic('chev')}</a></div>
-  <p class="footnote">${esc(t('set.version', { v: '1.6.3', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
+  <p class="footnote">${esc(t('set.version', { v: '1.6.4', net: navigator.onLine ? t('common.online') : t('common.offline') }))}</p>`;
   return screen({ title: t('set.title'), body });
 }
 async function setLanguage(code) {
   const use = await LH.load(code);
-  try { localStorage.setItem('lifehub.lang', use); } catch (e) {}
+  try { if (activeId) localStorage.setItem(pkey('lang'), use); localStorage.setItem('lifehub.lang', use); } catch (e) {}
   if (S && S.profile) { S.profile.lang = use; save(); }
   render();
   toast(t('set.langSaved'));
@@ -1578,10 +1831,12 @@ function changeLogin() {
     el.addEventListener('click', async e => { const b = e.target.closest('[data-m]'); if (!b) return; const nm = b.dataset.m; closeSheet(true);
       if (!(await authorize(t("Confirm to change your sign-in method")))) return;
       if (nm === 'pin' || nm === 'password') formSheet({ title: nm === 'pin' ? t("New PIN") : t("New password"), fields: [{ k: 'a', label: nm === 'pin' ? 'PIN (4–6 digits)' : 'Password (8+ characters)', type: 'password', im: nm === 'pin' ? 'numeric' : '' }, { k: 'b', label: 'Confirm', type: 'password', im: nm === 'pin' ? 'numeric' : '' }],
+        intro: nm === 'pin' ? t('prof.pinLead') : '',
         onSave: async v => { if (nm === 'pin' && !/^\d{4,6}$/.test(v.a)) { toast(t("PIN must be 4–6 digits")); return false; } if (nm === 'password' && v.a.length < 8) { toast(t("Use at least 8 characters")); return false; } if (v.a !== v.b) { toast("Those don't match"); return false; }
-          S.auth = nm === 'pin' ? { method: 'pin', pinHash: await hash(v.a), pinLen: v.a.length } : { method: 'password', pwHash: await hash(v.a) }; toast(t("Sign-in method updated")); } });
-      else if (nm === 'passkey') { let credId = null; if (passkeySupported()) { try { credId = await createPasskey(S.profile.name); } catch (err) { toast(t("Passkey not created: using simulated biometric")); } } S.auth = { method: 'passkey', credId }; save(); render(); toast(t("Sign-in method updated")); }
-      else { S.auth = { method: nm }; save(); render(); toast(t("Sign-in method updated (demo)")); } });
+          if (nm === 'pin') { await applyPin(v.a); toast(t('prof.encrypted')); }
+          else { profileKey = null; const m = metaOf(activeId); if (m && m.lock) { delete m.lock; writeMeta(m); } S.auth = { method: 'password', pwHash: await hash(v.a) }; save(); toast(t("Sign-in method updated")); } } });
+      else if (nm === 'passkey') { let credId = null; if (passkeySupported()) { try { credId = await createPasskey(S.profile.name); } catch (err) { toast(t("Passkey not created: using simulated biometric")); } } profileKey = null; const meta = metaOf(activeId); if (meta && meta.lock) { delete meta.lock; writeMeta(meta); } S.auth = { method: 'passkey', credId }; save(); render(); toast(t("Sign-in method updated")); }
+      else { profileKey = null; const meta = metaOf(activeId); if (meta && meta.lock) { delete meta.lock; writeMeta(meta); } S.auth = { method: nm }; save(); render(); toast(t("Sign-in method updated (demo)")); } });
   });
 }
 async function importData() {
@@ -1627,11 +1882,10 @@ const DEMO_PLACES = [
   { label: 'Invermay', lat: -41.4185, lng: 147.1468 },
 ];
 let calView = 'month';
-try { const savedView = localStorage.getItem('lifehub.calView'); if (['day', 'week', 'month', 'agenda'].includes(savedView)) calView = savedView; } catch (e) {}
 function setCalView(v) {
   if (!['day', 'week', 'month', 'agenda'].includes(v)) return;
   calView = v;
-  try { localStorage.setItem('lifehub.calView', v); } catch (e) {}
+  try { if (activeId) localStorage.setItem(pkey('cal'), v); } catch (e) {}
   if (S && S.cal) S.cal.view = v;
 }
 let calCursor = '';
@@ -2923,8 +3177,8 @@ function ensureDocs() {
   if (!Array.isArray(S.docs.items)) { S.docs.items = []; changed = true; }
   return changed;
 }
-async function putFile(id, blob) { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction('files', 'readwrite'); t.objectStore('files').put(blob, id); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
-async function getFile(id) { const db = await idb(); return new Promise(res => { const q = db.transaction('files').objectStore('files').get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
+async function putFile(id, blob) { return putStore('files', id, blob); }
+async function getFile(id) { return getStore('files', id); }
 async function delFile(id) { try { const db = await idb(); db.transaction('files', 'readwrite').objectStore('files').delete(id); } catch (e) {} }
 async function inboxAll() { try { const db = await idb(); return await new Promise(res => { const q = db.transaction('inbox').objectStore('inbox').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }); } catch (e) { return []; } }
 async function inboxClear() { try { const db = await idb(); await new Promise(res => { const t = db.transaction('inbox', 'readwrite'); t.objectStore('inbox').clear(); t.oncomplete = res; t.onerror = res; }); } catch (e) {} }
@@ -3535,12 +3789,14 @@ function maybeDelete() {
 function render() {
   if (cleanupFn) { try { cleanupFn(); } catch (e) {} cleanupFn = null; }
   if (lockUnbind) { lockUnbind(); lockUnbind = null; }
-  ensurePlan(); if (S && S.auth && S.auth.method) ensureHub(); applyPrefs(); const app = $('#app');
-  maybeDelete();
-  if (!S || !S.auth || !S.auth.method) { app.innerHTML = renderOnboarding(); afterOnboarding(); return; }
+  const app = $('#app');
+  if (creating || !activeId) { app.innerHTML = renderOnboarding(); afterOnboarding(); return; }
   const path = (location.hash || '#/home').slice(1) || '/home';
+  if (profileLocked() && !(S && PUBLIC.includes(path))) { app.innerHTML = renderLock(); afterLock(); lastPath = '/lock'; return; }
+  if (!S) { app.innerHTML = renderOnboarding(); afterOnboarding(); return; }
+  ensurePlan(); if (S && S.auth) ensureHub(); applyPrefs();
+  maybeDelete();
   if (path !== '/banking/pay' && pay && pay.step !== 'tap') pay = null;
-  if (!unlocked && !PUBLIC.includes(path)) { app.innerHTML = renderLock(); afterLock(); lastPath = '/lock'; return; }
   for (const [re, fn] of ROUTES) { const m = path.match(re); if (m) { const out = (isPremium() && routeCache.get(path)) || fn(...m.slice(1)); if (isPremium() && PRELOAD.includes(path)) routeCache.delete(path); if (out === '') return; app.innerHTML = typeof out === 'string' ? out : out.html; if (out.after) out.after(); if (path !== lastPath) { window.scrollTo(0, 0); lastPath = path; } if (path === '/home') { mountAds(); preloadSections(); } if (unlocked) announceConflicts(); return; } }
   location.replace('#/home');
 }
@@ -3570,12 +3826,11 @@ function leaveDemo() {
 async function deleteProfileData() {
   const ok = await confirmSheet(t('set.deleteProfileAsk'), t('set.deleteProfileBody'), t('set.deleteProfile'), true);
   if (!ok) return;
-  try { localStorage.removeItem('lifehub.v1'); } catch (e) {}
-  await clearMediaDb();
-  S = null; unlocked = false; pay = null; work = null; pendingKeep = null;
-  ob = { step: 0, name: '', region: ob.region || 'AU', currency: ob.currency || 'AUD', locale: ob.locale || 'en-AU', method: 'pin', sample: false };
+  const id = activeId;
+  await eraseProfile(id);
+  creating = false; pay = null; work = null; pendingKeep = null;
   closeSheet(true);
-  if (location.hash && location.hash !== '#/' && location.hash !== '#') location.hash = '#/';
+  if (!activeId && location.hash && location.hash !== '#/' && location.hash !== '#') location.hash = '#/';
   else render();
 }
 async function clearMediaDb() {
@@ -3586,13 +3841,11 @@ async function clearMediaDb() {
     } catch (e) { res(); }
   });
 }
-async function wipeForNewProfile() {
-  try { localStorage.removeItem('lifehub.v1'); } catch (e) {}
-  S = null; unlocked = false; pay = null; work = null;
-  ob = { step: 0, name: '', region: ob.region || 'AU', currency: ob.currency || 'AUD', locale: ob.locale || 'en-AU', method: 'pin', sample: false };
+function wipeForNewProfile() {
   closeSheet(true);
-  if (location.hash && location.hash !== '#/' && location.hash !== '#') location.hash = '#/';
-  else render();
+  ob = { step: 0, name: '', region: ob.region || 'AU', currency: ob.currency || 'AUD', locale: ob.locale || 'en-AU', method: 'pin', sample: false, color: COLORS[0], adding: true };
+  creating = true;
+  render();
 }
 async function wipeAllData() {
   const ok = await confirmSheet(t('set.deleteDeviceAsk'), t('set.deleteDeviceBody'), t('set.deleteDevice'), true);
@@ -3631,7 +3884,10 @@ async function wipeAllData() {
 
 /* ---------- actions ---------- */
 const A = {
-  obNext: () => { ob.step++; render(); }, obBack: () => { ob.step = Math.max(0, ob.step - 1); render(); },
+  obNext: () => { ob.step++; render(); }, obBack: () => { if (ob.step <= 0 && creating) { creating = false; render(); return; } ob.step = Math.max(0, ob.step - 1); render(); },
+  obColor: el => { ob.color = el.dataset.c || ob.color; render(); },
+  obSkipPin: () => finishOnboarding(''),
+  profiles: () => openProfiles(),
   obDemo: () => { ob.sample = true; if (!ob.name) ob.name = demoPersona().full; ob.step = 1; render(); },
   obScratch: () => { ob.sample = false; ob.name = ''; ob.step = 1; render(); },
   leaveDemo: () => leaveDemo(),
@@ -3640,7 +3896,7 @@ const A = {
   obPasskey: async () => { let credId = null; if (passkeySupported()) { try { credId = await createPasskey(ob.name); } catch (e) { toast(t("Passkey not created: using simulated biometric")); } } finishOnboarding({ method: 'passkey', credId }); },
   obSSO: () => finishOnboarding({ method: ob.method }),
   lockAuth: async () => { if (await authorize(t("Unlock LifeHub"))) unlock(); },
-  forgot: () => wipeAllData(),
+  forgot: () => { if ((metaOf(activeId) || {}).lock) { confirmSheet(t('prof.forgot'), t('prof.forgotBody'), t('set.deleteProfile'), true).then(ok => { if (ok) eraseProfile(activeId).then(() => render()); }); return; } wipeAllData(); },
   wipeData: () => wipeAllData(),
   shareLoc: shareLocation,
   medAdd: el => editMedItem(el.dataset.k), medEdit: el => editMedItem(el.dataset.k, el.dataset.id), medBasics: editMedBasics,
@@ -3674,8 +3930,8 @@ const A = {
   refreshNow: () => refreshAll(true),
   testNotify: () => testNotify(),
   hideAd: el => { sessionStorage.setItem('lh.adHidden', '1'); const a = el.closest('.adslot'); if (a) a.remove(); },
-  upgrade, cancelSub, restore, resume: () => { S.plan.status = 'active'; localStorage.setItem(RECEIPT_KEY, JSON.stringify(S.plan)); save(); render(); toast(t("Subscription resumed")); },
-  endNow: async () => { if (await confirmSheet(t("Switch to Free now?"), t("Testing helper: ends Premium immediately."), t("Switch to Free"), true)) { S.plan = { tier: 'free' }; localStorage.removeItem(RECEIPT_KEY); save(); scheduleRefresh(); render(); toast(t("Now on Free")); } },
+  upgrade, cancelSub, restore, resume: () => { S.plan.status = 'active'; localStorage.setItem(receiptKey(), JSON.stringify(S.plan)); save(); render(); toast(t("Subscription resumed")); },
+  endNow: async () => { if (await confirmSheet(t("Switch to Free now?"), t("Testing helper: ends Premium immediately."), t("Switch to Free"), true)) { S.plan = { tier: 'free' }; localStorage.removeItem(receiptKey()); save(); scheduleRefresh(); render(); toast(t("Now on Free")); } },
   prem: el => { if (!isPremium()) { location.hash = '#/plan'; toast(t("That's a Premium perk")); return; } S.settings[el.dataset.k] = el.dataset.v; save(); render(); },
   setPref: el => { const k = el.dataset.k; S.settings[k] = k === 'lockMinutes' ? Number(el.dataset.v) : el.dataset.v; save(); render(); },
   mvBanner: el => { const i = +el.dataset.i, d = +el.dataset.d, b = S.settings.banners; [b[i], b[i + d]] = [b[i + d], b[i]]; save(); render(); },
@@ -3758,14 +4014,20 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function initialLang() {
+  if (activeId) {
+    try { const saved = localStorage.getItem(pkey('lang')); if (saved) return saved; } catch (e) {}
+    if (S && S.profile && S.profile.lang) return S.profile.lang;
+  }
   try { const saved = localStorage.getItem('lifehub.lang'); if (saved) return saved; } catch (e) {}
-  if (S && S.profile && S.profile.lang) return S.profile.lang;
   return LH.matchLang(navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en']);
 }
 async function boot() {
+  try { await migrateLegacy(); registry = readReg() || { active: '', ids: [] }; } catch (e) { registry = readReg() || { active: '', ids: [] }; }
+  const id = registry.active && (registry.ids || []).includes(registry.active) ? registry.active : ((registry.ids || [])[0] || '');
+  if (id) { try { await hydrate(id); } catch (e) {} }
   let code = 'en';
   try { code = await LH.load(initialLang()); } catch (e) { try { code = await LH.load('en'); } catch (e2) {} }
-  try { localStorage.setItem('lifehub.lang', code); } catch (e) {}
+  if (!activeId) { try { localStorage.setItem('lifehub.lang', code); } catch (e) {} }
   if (S && S.profile && !S.profile.lang) { S.profile.lang = code; save(); }
   setupUpdates();
   render();
@@ -3777,5 +4039,5 @@ async function boot() {
 boot();
 document.addEventListener('input', invalidateCache, true);
 scheduleRefresh();
-window.LifeHub = { version: '1.6.3', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
+window.LifeHub = { version: '1.6.4', isPremium: () => isPremium(), showUpdateBanner, safeToReload, addDocFiles, matchAppLink, linkCheckContext, ensureCatalog, detectMoney, formatMoney, matchLang: LH.matchLang, t, push: { config: PUSH_CONFIG, enable: enableWebPush }, cal: { parseRoster, parseICS, rangesOverlap, onDay, weekStart } };
 })();

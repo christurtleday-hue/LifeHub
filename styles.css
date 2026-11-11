@@ -79,6 +79,14 @@ html:is([lang|=ja],[lang|=zh],[lang|=ko]) .banner .txt b,html:is([lang|=ja],[lan
 .btn.ghost{background:transparent}
 .btn.danger{color:var(--red)}
 .btn.full{width:100%}
+.who{display:flex;align-items:center;gap:10px;min-width:0;flex:1;background:none;border:0;padding:0;color:inherit;text-align:start}
+.who .hello{min-width:0}
+.who .hello small,.who .hello b{display:block}
+.who .hello b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pav{display:grid;place-items:center;border-radius:50%;color:#fff;font-weight:750;flex:none;line-height:1}
+.colours{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.colours button{width:36px;height:36px;border-radius:50%;border:3px solid transparent;padding:0}
+.colours button.on{border-color:var(--text)}
 .onb .choice{display:flex;flex-direction:column;gap:10px}
 .onb .choice .btn{min-height:68px;font-size:1.08rem}
 .demobar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0 0 12px;padding:10px 12px;border-radius:14px;border:1px dashed var(--line);background:var(--card);color:var(--muted);font-size:.9rem;text-align:start}

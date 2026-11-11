@@ -1,11 +1,21 @@
-const CACHE = 'lifehub-v14';
+const CACHE = 'lifehub-v15';
 const SHARE_CACHE = 'lifehub-share';
 const BG_CACHE = 'lifehub-bg';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './i18n.js', './safety.js', './lang/en.json', './manifest.webmanifest', './privacy.html', './terms.html', './support.html', './delete-account.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
 
+let profileId = '';
+async function currentProfile() {
+  if (profileId) return profileId;
+  try {
+    const cache = await caches.open(BG_CACHE);
+    const res = await cache.match('./active-profile');
+    if (res) profileId = (await res.text()).trim();
+  } catch (e) {}
+  return profileId || '';
+}
 function openDb() {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open('lifehub-media', 2);
+  return currentProfile().then(id => new Promise((res, rej) => {
+    const r = indexedDB.open(id ? 'lifehub-media-' + id : 'lifehub-media', 2);
     r.onupgradeneeded = () => {
       const db = r.result;
       if (!db.objectStoreNames.contains('images')) db.createObjectStore('images');
@@ -14,7 +24,7 @@ function openDb() {
     };
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
-  });
+  }));
 }
 
 self.addEventListener('install', e => {
@@ -31,7 +41,9 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('message', e => {
-  if (e.data && e.data.type === 'skipWaiting') self.skipWaiting();
+  if (!e.data) return;
+  if (e.data.type === 'skipWaiting') self.skipWaiting();
+  if (e.data.type === 'lh-profile') profileId = e.data.id || '';
 });
 
 async function backgroundRefresh() {
