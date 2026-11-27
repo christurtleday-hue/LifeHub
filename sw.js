@@ -1,7 +1,7 @@
-const CACHE = 'lifehub-v19';
+const CACHE = 'lifehub-v20';
 const SHARE_CACHE = 'lifehub-share';
 const BG_CACHE = 'lifehub-bg';
-const ASSETS = ['./', './index.html', './styles.css', './app.js', './i18n.js', './safety.js', './lang/en.json', './manifest.webmanifest', './version.json', './privacy.html', './terms.html', './support.html', './delete-account.html', './delete.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
+const ASSETS = ['./', './index.html', './styles.css', './app.js', './i18n.js', './safety.js', './lang/en.json', './manifest.webmanifest', './version.json', './businesses.json', './privacy.html', './terms.html', './support.html', './delete-account.html', './delete.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];
 
 let profileId = '';
 async function currentProfile() {
@@ -60,8 +60,20 @@ async function backgroundRefresh() {
   const at = Date.now();
   try {
     const cache = await caches.open(BG_CACHE);
+    const key = new Request(new URL('./version.json', self.registration.scope));
+    const prev = await cache.match(key);
+    const headers = {};
+    if (prev) {
+      const et = prev.headers.get('etag');
+      const lm = prev.headers.get('last-modified');
+      if (et) headers['If-None-Match'] = et;
+      if (lm) headers['If-Modified-Since'] = lm;
+    }
+    const res = await fetch(key, { cache: 'no-store', headers });
+    if (res.status === 304) return;
+    if (res.ok) await cache.put(key, res.clone());
     await cache.put(new Request(new URL('./bg-refresh.json', self.registration.scope)), new Response(JSON.stringify({ at }), { headers: { 'Content-Type': 'application/json' } }));
-  } catch (err) {}
+  } catch (err) { return; }
   const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
   open.forEach(c => { try { c.postMessage({ type: 'lh-refresh', at }); } catch (err) {} });
 }

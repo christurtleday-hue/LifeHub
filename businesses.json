@@ -1,0 +1,16 @@
+{
+  "note": "Placeholder entries only. These are not real businesses and the deal is not a real offer.",
+  "businesses": [
+    {
+      "id": "sample-cafe",
+      "name": "Sample Cafe (placeholder)",
+      "lat": -41.4332,
+      "lon": 147.1441,
+      "category": "cafe",
+      "socials": ["https://example.com/sample-cafe"],
+      "website": "https://example.com/sample-cafe",
+      "deal": { "text": "Placeholder deal. Not a real offer.", "saving": 4 },
+      "tier": "free"
+    }
+  ]
+}

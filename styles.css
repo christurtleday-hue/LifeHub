@@ -400,3 +400,14 @@ html.can-drop .home-drop{display:block}
 .safebadge.blocked{background:var(--red-soft);color:var(--red)}
 .safer{margin:0 0 14px;padding-inline-start:1.2rem}
 .safer li{margin:6px 0}
+.clockline{display:flex;align-items:baseline;justify-content:space-between;gap:8px;width:calc(100% - 32px);margin:0 16px 12px;padding:10px 14px;border:1px solid var(--line);border-radius:16px;background:var(--card);text-align:start}
+.clockline b{font-size:1.45rem;font-weight:800;letter-spacing:-.02em}
+.clockline span{color:var(--muted);font-size:.82rem}
+.fin-svg{width:100%;height:140px;display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:4px}
+.lvlbar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0}
+.lvlbar span{display:block;height:100%;background:#7c3aed}
+.deal{border:1px dashed var(--line);border-radius:12px;padding:8px 10px;margin-top:8px}
+.lvl-aurora{background:linear-gradient(180deg,#f4f0ff,#fff)}
+html[data-theme=dark] .lvl-aurora{background:linear-gradient(180deg,#1b1430,#141a25)}
