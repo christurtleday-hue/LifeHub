@@ -1418,7 +1418,7 @@
   "clock.remove": "移除",
   "clock.empty": "你的时钟跟随这台设备。其他城市加在这里。",
   "clock.travelTitle": "时区变了",
-  "clock.travelBody": "这台设备现在在 {zone}。要把地区改成 {region} 吗？货币保持不变。",
+  "clock.travelBody": "这台设备现在在 {zone}。要把地区改成 {region} 吗？",
   "clock.keep": "保持我的地区",
   "clock.updateRegion": "更新地区",
   "clock.noRegion": "这台设备现在在 {zone}。LifeHub 没有对应地区，所以没有改动。货币保持不变。",
@@ -1468,5 +1468,6 @@
   "set.importHub": "导入中心",
   "set.importHubSub": "日历、通讯录、财务文件、文档和照片",
   "bg.note": "在浏览器允许时，Premium 可以在后台刷新。LifeHub 只在有变化时才请求，空闲时放慢，并在电量低、流量节省、按流量计费或 2G、以及离线时暂停。",
-  "refresh.every1": "每分钟"
+  "refresh.every1": "每分钟",
+  "clock.switchCur": "同时把货币换成 {code}"
 }

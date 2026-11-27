@@ -1418,7 +1418,7 @@
   "clock.remove": "Xóa",
   "clock.empty": "Đồng hồ của bạn theo thiết bị này. Thêm thành phố khác tại đây.",
   "clock.travelTitle": "Múi giờ đã đổi",
-  "clock.travelBody": "Thiết bị này đang ở {zone}. Cập nhật vùng của bạn thành {region}? Tiền tệ không đổi.",
+  "clock.travelBody": "Thiết bị này đang ở {zone}. Cập nhật vùng của bạn thành {region}?",
   "clock.keep": "Giữ vùng của tôi",
   "clock.updateRegion": "Cập nhật vùng",
   "clock.noRegion": "Thiết bị này đang ở {zone}. LifeHub không có vùng tương ứng, nên không đổi gì. Tiền tệ giữ nguyên.",
@@ -1468,5 +1468,6 @@
   "set.importHub": "Nơi nhập dữ liệu",
   "set.importHubSub": "Lịch, danh bạ, tệp tiền, tài liệu và ảnh",
   "bg.note": "Premium có thể làm mới ở nền khi trình duyệt cho phép. LifeHub chỉ hỏi khi có thay đổi, chậm lại khi không dùng, và tạm dừng khi pin yếu, Tiết kiệm dữ liệu, mạng tính cước hoặc 2G, và khi ngoại tuyến.",
-  "refresh.every1": "Mỗi phút"
+  "refresh.every1": "Mỗi phút",
+  "clock.switchCur": "Đổi cả tiền tệ sang {code}"
 }

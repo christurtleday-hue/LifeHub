@@ -1,4 +1,4 @@
-const CACHE = 'lifehub-v20';
+const CACHE = 'lifehub-v21';
 const SHARE_CACHE = 'lifehub-share';
 const BG_CACHE = 'lifehub-bg';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './i18n.js', './safety.js', './lang/en.json', './manifest.webmanifest', './version.json', './businesses.json', './privacy.html', './terms.html', './support.html', './delete-account.html', './delete.html', './favicon.ico', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-192.png', './icons/icon-maskable-512.png'];

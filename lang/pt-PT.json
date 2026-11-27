@@ -1418,7 +1418,7 @@
   "clock.remove": "Remover",
   "clock.empty": "O seu relógio segue este dispositivo. Adicione outras cidades aqui.",
   "clock.travelTitle": "O fuso mudou",
-  "clock.travelBody": "Este dispositivo está agora em {zone}. Atualizar a sua região para {region}? A moeda não muda.",
+  "clock.travelBody": "Este dispositivo está agora em {zone}. Atualizar a sua região para {region}?",
   "clock.keep": "Manter a minha região",
   "clock.updateRegion": "Atualizar região",
   "clock.noRegion": "Este dispositivo está agora em {zone}. O LifeHub não tem uma região correspondente, por isso nada foi alterado. A moeda mantém-se.",
@@ -1468,5 +1468,6 @@
   "set.importHub": "Centro de importação",
   "set.importHubSub": "Calendários, contactos, ficheiros de dinheiro, documentos e fotos",
   "bg.note": "O Premium pode atualizar em segundo plano quando o navegador o permite. O LifeHub só pergunta se algo mudou, abranda quando está parado e pausa com bateria fraca, Poupança de dados, uma ligação medida ou 2G, e offline.",
-  "refresh.every1": "A cada minuto"
+  "refresh.every1": "A cada minuto",
+  "clock.switchCur": "Também mudar a moeda para {code}"
 }

@@ -1418,7 +1418,7 @@
   "clock.remove": "Verwijderen",
   "clock.empty": "Jouw klok volgt dit apparaat. Voeg hier andere steden toe.",
   "clock.travelTitle": "Tijdzone is veranderd",
-  "clock.travelBody": "Dit apparaat staat nu in {zone}. Je regio bijwerken naar {region}? Je valuta blijft zoals hij is.",
+  "clock.travelBody": "Dit apparaat staat nu in {zone}. Je regio bijwerken naar {region}?",
   "clock.keep": "Mijn regio houden",
   "clock.updateRegion": "Regio bijwerken",
   "clock.noRegion": "Dit apparaat staat nu in {zone}. LifeHub heeft geen passende regio, dus er is niets gewijzigd. Je valuta blijft zoals hij is.",
@@ -1468,5 +1468,6 @@
   "set.importHub": "Importhub",
   "set.importHubSub": "Agenda’s, contacten, geldbestanden, documenten en foto’s",
   "bg.note": "Premium kan op de achtergrond verversen als de browser dat toestaat. LifeHub vraagt alleen of er iets is veranderd, gaat langzamer als het niets doet, en pauzeert bij een lage batterij, Databesparing, een betaalde of 2G-verbinding, en offline.",
-  "refresh.every1": "Elke minuut"
+  "refresh.every1": "Elke minuut",
+  "clock.switchCur": "Ook de valuta wijzigen naar {code}"
 }

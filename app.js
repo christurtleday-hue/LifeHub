@@ -3814,7 +3814,7 @@ function fillMapsYou() {
 }
 
 /* ---------- installed-copy updates ---------- */
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.7.1';
 let updateReady = false, updateReloading = false;
 function safeToReload() {
   if (document.querySelector('.sheet-wrap')) return false;
@@ -3971,8 +3971,15 @@ function watchTravel() {
     if (!next) openSheet(`<h2>${esc(t('clock.travelTitle'))}</h2><p>${esc(t('clock.noRegion', { zone: z }))}</p><button class="btn primary full" data-close>${esc(t('clock.keep'))}</button>`);
     return;
   }
-  openSheet(`<h2>${esc(t('clock.travelTitle'))}</h2><p>${esc(t('clock.travelBody', { zone: z, region: regionLabel(next) }))}</p><button class="btn primary full" id="yesR">${esc(t('clock.updateRegion'))}</button><button class="btn full" id="noR" style="margin-top:8px">${esc(t('clock.keep'))}</button>`, el => {
-    $('#yesR', el).onclick = () => { S.profile.region = next; S.profile.seenZone = z; const meta = metaOf(activeId); if (meta) { meta.region = next; writeMeta(meta); } closeSheet(true); save(); render(); };
+  const nextCur = (REGIONS[next] || {}).currency || '';
+  openSheet(`<h2>${esc(t('clock.travelTitle'))}</h2><p>${esc(t('clock.travelBody', { zone: z, region: regionLabel(next) }))}</p><label class="fld chk"><input id="swCur" type="checkbox" checked><span>${esc(t('clock.switchCur', { code: nextCur }))}</span></label><button class="btn primary full" id="yesR">${esc(t('clock.updateRegion'))}</button><button class="btn full" id="noR" style="margin-top:8px">${esc(t('clock.keep'))}</button>`, el => {
+    $('#yesR', el).onclick = () => {
+      S.profile.region = next; S.profile.seenZone = z;
+      const meta = metaOf(activeId); if (meta) { meta.region = next; writeMeta(meta); }
+      const box = $('#swCur', el);
+      if (box && box.checked && nextCur && nextCur !== homeCurrency()) setHomeMoney(homeLocale(), nextCur);
+      closeSheet(true); save(); render();
+    };
     $('#noR', el).onclick = () => { S.profile.seenZone = z; closeSheet(true); save(); };
   }, remember);
 }

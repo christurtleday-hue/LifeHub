@@ -1418,7 +1418,7 @@
   "clock.remove": "Kaldır",
   "clock.empty": "Saatin bu cihazı izler. Başka şehirleri buraya ekle.",
   "clock.travelTitle": "Saat dilimi değişti",
-  "clock.travelBody": "Bu cihaz şimdi {zone} diliminde. Bölgen {region} olsun mu? Para birimin değişmez.",
+  "clock.travelBody": "Bu cihaz şimdi {zone} diliminde. Bölgen {region} olsun mu?",
   "clock.keep": "Bölgemi koru",
   "clock.updateRegion": "Bölgeyi güncelle",
   "clock.noRegion": "Bu cihaz şimdi {zone} diliminde. LifeHub için uygun bir bölge yok, bu yüzden hiçbir şey değişmedi. Para birimin aynı kalır.",
@@ -1468,5 +1468,6 @@
   "set.importHub": "İçe aktarma merkezi",
   "set.importHubSub": "Takvimler, kişiler, para dosyaları, belgeler ve fotoğraflar",
   "bg.note": "Premium, tarayıcı izin verirse arka planda yenilenebilir. LifeHub yalnızca bir şey değiştiyse sorar, boştayken yavaşlar ve düşük pil, Veri Tasarrufu, ücretli veya 2G bağlantı ve çevrimdışıyken durur.",
-  "refresh.every1": "Her dakika"
+  "refresh.every1": "Her dakika",
+  "clock.switchCur": "Para birimini de {code} yap"
 }

@@ -1418,7 +1418,7 @@
   "clock.remove": "移除",
   "clock.empty": "你的時鐘跟隨這台裝置。其他城市加在這裡。",
   "clock.travelTitle": "時區變了",
-  "clock.travelBody": "這台裝置現在在 {zone}。要把地區改成 {region} 嗎？貨幣保持不變。",
+  "clock.travelBody": "這台裝置現在在 {zone}。要把地區改成 {region} 嗎？",
   "clock.keep": "保持我的地區",
   "clock.updateRegion": "更新地區",
   "clock.noRegion": "這台裝置現在在 {zone}。LifeHub 沒有對應地區，所以沒有改動。貨幣保持不變。",
@@ -1468,5 +1468,6 @@
   "set.importHub": "匯入中心",
   "set.importHubSub": "日曆、聯絡人、財務檔案、文件和照片",
   "bg.note": "在瀏覽器允許時，Premium 可以在背景重新整理。LifeHub 只在有變化時才要求，閒置時放慢，並在電量低、數據節省、按流量計費或 2G、以及離線時暫停。",
-  "refresh.every1": "每分鐘"
+  "refresh.every1": "每分鐘",
+  "clock.switchCur": "同時把貨幣換成 {code}"
 }

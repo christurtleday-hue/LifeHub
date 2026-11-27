@@ -1418,7 +1418,7 @@
   "clock.remove": "Entfernen",
   "clock.empty": "Deine Uhr folgt diesem Gerät. Weitere Städte fügst du hier hinzu.",
   "clock.travelTitle": "Zeitzone hat sich geändert",
-  "clock.travelBody": "Dieses Gerät ist jetzt in {zone}. Region auf {region} aktualisieren? Die Währung bleibt.",
+  "clock.travelBody": "Dieses Gerät ist jetzt in {zone}. Region auf {region} aktualisieren?",
   "clock.keep": "Region behalten",
   "clock.updateRegion": "Region aktualisieren",
   "clock.noRegion": "Dieses Gerät ist jetzt in {zone}. LifeHub hat keine passende Region, darum wurde nichts geändert. Die Währung bleibt.",
@@ -1468,5 +1468,6 @@
   "set.importHub": "Import-Zentrale",
   "set.importHubSub": "Kalender, Kontakte, Gelddateien, Dokumente und Fotos",
   "bg.note": "Premium kann sich im Hintergrund aktualisieren, wenn der Browser das zulässt. LifeHub fragt nur, ob sich etwas geändert hat, wird im Leerlauf langsamer und pausiert bei schwachem Akku, Datensparmodus, einer kostenpflichtigen oder 2G-Verbindung und offline.",
-  "refresh.every1": "Jede Minute"
+  "refresh.every1": "Jede Minute",
+  "clock.switchCur": "Auch die Währung auf {code} umstellen"
 }

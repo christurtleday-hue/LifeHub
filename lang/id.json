@@ -1418,7 +1418,7 @@
   "clock.remove": "Hapus",
   "clock.empty": "Jam Anda mengikuti perangkat ini. Tambahkan kota lain di sini.",
   "clock.travelTitle": "Zona waktu berubah",
-  "clock.travelBody": "Perangkat ini sekarang di {zone}. Perbarui wilayah ke {region}? Mata uang tidak berubah.",
+  "clock.travelBody": "Perangkat ini sekarang di {zone}. Perbarui wilayah ke {region}?",
   "clock.keep": "Pertahankan wilayah saya",
   "clock.updateRegion": "Perbarui wilayah",
   "clock.noRegion": "Perangkat ini sekarang di {zone}. LifeHub tidak punya wilayah yang cocok, jadi tidak ada yang diubah. Mata uang tetap.",
@@ -1468,5 +1468,6 @@
   "set.importHub": "Pusat impor",
   "set.importHubSub": "Kalender, kontak, berkas uang, dokumen, dan foto",
   "bg.note": "Premium bisa menyegarkan di latar belakang jika peramban mengizinkan. LifeHub hanya bertanya jika ada perubahan, melambat saat diam, dan berhenti saat baterai lemah, Penghemat Data, koneksi berbayar atau 2G, serta offline.",
-  "refresh.every1": "Setiap menit"
+  "refresh.every1": "Setiap menit",
+  "clock.switchCur": "Ubah juga mata uang ke {code}"
 }

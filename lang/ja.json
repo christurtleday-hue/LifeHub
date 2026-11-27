@@ -1418,7 +1418,7 @@
   "clock.remove": "削除",
   "clock.empty": "時計はこの端末に従います。ほかの都市はここに追加します。",
   "clock.travelTitle": "タイムゾーンが変わりました",
-  "clock.travelBody": "この端末は今 {zone} です。地域を {region} に更新しますか？通貨はそのままです。",
+  "clock.travelBody": "この端末は今 {zone} です。地域を {region} に更新しますか？",
   "clock.keep": "地域はこのまま",
   "clock.updateRegion": "地域を更新",
   "clock.noRegion": "この端末は今 {zone} です。LifeHub に合う地域がないため、何も変えていません。通貨はそのままです。",
@@ -1468,5 +1468,6 @@
   "set.importHub": "読み込みハブ",
   "set.importHubSub": "カレンダー、連絡先、お金のファイル、書類、写真",
   "bg.note": "ブラウザが許す範囲で、Premium はバックグラウンドでも更新できます。LifeHub は変化があるときだけ取りに行き、操作がないときは遅くなり、電池残量が少ないとき、データセーバー、従量制または 2G、オフラインでは止まります。",
-  "refresh.every1": "1 分ごと"
+  "refresh.every1": "1 分ごと",
+  "clock.switchCur": "通貨も {code} に切り替える"
 }

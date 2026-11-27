@@ -1418,7 +1418,7 @@
   "clock.remove": "제거",
   "clock.empty": "시계는 이 기기를 따릅니다. 다른 도시는 여기에 추가합니다.",
   "clock.travelTitle": "시간대가 바뀌었습니다",
-  "clock.travelBody": "이 기기는 지금 {zone}입니다. 지역을 {region}(으)로 업데이트할까요? 통화는 그대로입니다.",
+  "clock.travelBody": "이 기기는 지금 {zone}입니다. 지역을 {region}(으)로 업데이트할까요?",
   "clock.keep": "내 지역 유지",
   "clock.updateRegion": "지역 업데이트",
   "clock.noRegion": "이 기기는 지금 {zone}입니다. LifeHub에 맞는 지역이 없어 바꾸지 않았습니다. 통화는 그대로입니다.",
@@ -1468,5 +1468,6 @@
   "set.importHub": "가져오기 허브",
   "set.importHubSub": "캘린더, 연락처, 금액 파일, 문서, 사진",
   "bg.note": "브라우저가 허용하면 Premium은 백그라운드에서 새로 고칠 수 있습니다. LifeHub는 변화가 있을 때만 요청하고, 가만히 있으면 늦추며, 배터리가 낮거나 데이터 절약, 종량제 또는 2G, 오프라인이면 멈춥니다.",
-  "refresh.every1": "1분마다"
+  "refresh.every1": "1분마다",
+  "clock.switchCur": "통화도 {code}(으)로 바꾸기"
 }
